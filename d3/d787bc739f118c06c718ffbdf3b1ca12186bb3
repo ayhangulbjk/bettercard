@@ -1,0 +1,36 @@
+lib/games/spades_batak/spades_batak_match_state.dart
+  s_2d62d2fd117845::t_7ee4e4e61768c2 1-148
+docs/MAC_KURULUM.md
+  s_2d62d2fd117845::t_b721c87daed4dc 1-168
+lib/games/spades_batak/spades_batak_scorer.dart
+  s_2d62d2fd117845::t_0f6de42d727a87 1-74
+lib/games/spades_batak/spades_batak_engine.dart
+  s_2d62d2fd117845::t_4be5750ddad4bd 1-187
+.gitignore
+  s_2d62d2fd117845::t_24dc9cea19110f 29-31
+test/unit/spades_batak_scorer_test.dart
+  s_2d62d2fd117845::t_ea230a5992c080 24,38,50,60
+  s_2d62d2fd117845::t_cf4fb562c3a355 1-23,25-37,39-49,51-59,61-114
+test/unit/spades_batak_engine_test.dart
+  s_2d62d2fd117845::t_b7bbcc0ecf83ae 1-9,11-141,143-194
+  s_2d62d2fd117845::t_5037dd7d1fccd7 10,142
+README.md
+  s_2d62d2fd117845::t_90f4a1292d99c3 122
+  s_2d62d2fd117845::t_03717e84243c48 118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d3d787bc739f118c06c718ffbdf3b1ca12186bb3",
+  "prompts": {},
+  "sessions": {
+    "s_2d62d2fd117845": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7336c599-dc2c-45f2-aa11-171fb1977577",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ayhan Gul <ayhangulbjk@gmail.com>"
+    }
+  }
+}
