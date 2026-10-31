@@ -4,6 +4,10 @@ import 'app_strings.dart';
 ///
 /// Written for players, not for developers: short labels, no jargon, and no
 /// English loanwords where a natural Turkish term exists.
+///
+/// Full diacritics. The earlier ASCII-only restriction (D-7) existed because
+/// the authoring toolchain could not write UTF-8 reliably; that is no longer
+/// true and was verified before this file was rewritten.
 final class TurkishStrings implements AppStrings {
   const TurkishStrings();
 
@@ -14,10 +18,10 @@ final class TurkishStrings implements AppStrings {
   String get appTitle => 'Batak & King';
 
   @override
-  String get appTagline => 'Tamamen cevrimdisi Turk kagit oyunlari';
+  String get appTagline => 'Tamamen çevrimdışı Türk kağıt oyunları';
 
   @override
-  String get homePlayTitle => 'Oyun Sec';
+  String get homePlayTitle => 'Oyun Seç';
 
   @override
   String get homeContinueMatch => 'Devam Et';
@@ -26,27 +30,27 @@ final class TurkishStrings implements AppStrings {
   String get homeSettings => 'Ayarlar';
 
   @override
-  String get homeStatistics => 'Istatistikler';
+  String get homeStatistics => 'İstatistikler';
 
   @override
   String get homeRules => 'Kurallar';
 
   @override
-  String get homeAiLab => 'Yapay Zeka Laboratuvari';
+  String get homeAiLab => 'Yapay Zeka Laboratuvarı';
 
   @override
-  String get homeOfflineBadge => 'Internet gerekmez';
+  String get homeOfflineBadge => 'İnternet gerekmez';
 
   @override
-  String get modeNotPlayableBadge => 'Hazir degil';
+  String get modeNotPlayableBadge => 'Hazır değil';
 
   @override
   String get modeNotPlayableExplanation =>
-      'Bu oyun modunun kurallari ve yapay zekasi henuz tamamlanmadi. Simdilik '
-      'yalnizca masa duzenini onizleyebilirsiniz.';
+      'Bu oyun modunun kuralları ve yapay zekası henüz tamamlanmadı. Şimdilik '
+      'yalnızca masa düzenini önizleyebilirsiniz.';
 
   @override
-  String get previewTableTitle => 'Masa Onizlemesi';
+  String get previewTableTitle => 'Masa Önizlemesi';
 
   @override
   String get setupTitle => 'Oyun Kurulumu';
@@ -58,25 +62,25 @@ final class TurkishStrings implements AppStrings {
   String get setupDifficulty => 'Zorluk';
 
   @override
-  String get setupStart => 'Basla';
+  String get setupStart => 'Başla';
 
   @override
   String get setupRuleIssuesTitle => 'Kural Denetimi';
 
   @override
-  String get setupNoIssues => 'Kural seti tutarli.';
+  String get setupNoIssues => 'Kural seti tutarlı.';
 
   @override
-  String get setupPlayerCount => 'Oyuncu sayisi';
+  String get setupPlayerCount => 'Oyuncu sayısı';
 
   @override
-  String get setupTricksPerHand => 'El basina oyun sayisi';
+  String get setupTricksPerHand => 'Dağıtım başına el sayısı';
 
   @override
   String get gameplayTrickLabel => 'El';
 
   @override
-  String get gameplayYourTurn => 'Sira sizde';
+  String get gameplayYourTurn => 'Sıra sizde';
 
   @override
   String get gameplayWaiting => 'Bekleniyor';
@@ -91,7 +95,7 @@ final class TurkishStrings implements AppStrings {
   String get gameplayScoreLabel => 'Puan';
 
   @override
-  String get gameplayLeaveMatch => 'Masadan ayril';
+  String get gameplayLeaveMatch => 'Masadan ayrıl';
 
   @override
   String get settingsTitle => 'Ayarlar';
@@ -100,86 +104,86 @@ final class TurkishStrings implements AppStrings {
   String get settingsGeneral => 'Genel';
 
   @override
-  String get settingsPresentation => 'Gorunum';
+  String get settingsPresentation => 'Görünüm';
 
   @override
-  String get settingsAnimationSpeed => 'Animasyon hizi';
+  String get settingsAnimationSpeed => 'Animasyon hızı';
 
   @override
   String get settingsSound => 'Ses';
 
   @override
-  String get settingsHaptics => 'Titresim';
+  String get settingsHaptics => 'Titreşim';
 
   @override
-  String get settingsPlayerName => 'Oyuncu adi';
+  String get settingsPlayerName => 'Oyuncu adı';
 
   @override
   String get settingsLanguage => 'Dil';
 
   @override
-  String get settingsAiDifficulty => 'Yapay zeka zorlugu';
+  String get settingsAiDifficulty => 'Yapay zeka zorluğu';
 
   @override
-  String get settingsQuickPlay => 'Hizli oyun';
+  String get settingsQuickPlay => 'Hızlı oyun';
 
   @override
-  String get speedSlow => 'Yavas';
+  String get speedSlow => 'Yavaş';
 
   @override
   String get speedNormal => 'Normal';
 
   @override
-  String get speedFast => 'Hizli';
+  String get speedFast => 'Hızlı';
 
   @override
   String get speedInstant => 'Animasyonsuz';
 
   @override
-  String get statisticsTitle => 'Istatistikler';
+  String get statisticsTitle => 'İstatistikler';
 
   @override
   String get statisticsEmpty =>
-      'Henuz tamamlanmis parti yok. Oyun modlari oynanabilir hale geldiginde '
+      'Henüz tamamlanmış parti yok. Oyun modları oynanabilir hâle geldiğinde '
       'istatistikleriniz burada birikecek.';
 
   @override
   String get rulesTitle => 'Kurallar';
 
   @override
-  String get rulesOpenQuestionsTitle => 'Acik kural sorulari';
+  String get rulesOpenQuestionsTitle => 'Açık kural soruları';
 
   @override
-  String get aiLabTitle => 'Yapay Zeka Laboratuvari';
+  String get aiLabTitle => 'Yapay Zeka Laboratuvarı';
 
   @override
-  String get aiLabRunBaseline => 'Temel cizgiyi calistir';
+  String get aiLabRunBaseline => 'Temel çizgiyi çalıştır';
 
   @override
-  String get aiLabRunning => 'Calisiyor...';
+  String get aiLabRunning => 'Çalışıyor...';
 
   @override
-  String get aiLabHandCount => 'El sayisi';
+  String get aiLabHandCount => 'El sayısı';
 
   @override
   String get aiLabNoStrengthClaim =>
-      'Su anda yalnizca kurallara uyan rastgele oyuncu uygulanmistir. Daha '
-      'guclu seviyeler henuz yok; buradaki sonuclar bir guc iddiasi degildir.';
+      'Şu anda yalnızca kurallara uyan rastgele oyuncu uygulanmıştır. Daha '
+      'güçlü seviyeler henüz yok; buradaki sonuçlar bir güç iddiası değildir.';
 
   @override
   String get commonBack => 'Geri';
 
   @override
-  String get commonCancel => 'Vazgec';
+  String get commonCancel => 'Vazgeç';
 
   @override
   String get commonClose => 'Kapat';
 
   @override
-  String get commonOn => 'Acik';
+  String get commonOn => 'Açık';
 
   @override
-  String get commonOff => 'Kapali';
+  String get commonOff => 'Kapalı';
 
   @override
   String seatName(int seat) => seat == 0 ? 'Siz' : 'Oyuncu ${seat + 1}';

@@ -43,7 +43,7 @@ final class PlaceholderBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  title ?? 'Onizleme',
+                  title ?? 'Önizleme',
                   style: text.titleMedium?.copyWith(
                     color: AppColors.warning,
                   ),

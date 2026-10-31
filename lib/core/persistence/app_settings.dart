@@ -20,7 +20,7 @@ enum AnimationSpeed {
 
 /// Table felt options.
 enum TableTheme {
-  emerald('Zumrut'),
+  emerald('Zümrüt'),
   forest('Orman'),
   midnight('Gece'),
   burgundy('Bordo');
@@ -33,8 +33,8 @@ enum TableTheme {
 /// Card back options.
 enum CardBackStyle {
   classicBlue('Klasik Mavi'),
-  goldLattice('Altin Kafes'),
-  deepGreen('Koyu Yesil');
+  goldLattice('Altın Kafes'),
+  deepGreen('Koyu Yeşil');
 
   const CardBackStyle(this.turkishName);
 

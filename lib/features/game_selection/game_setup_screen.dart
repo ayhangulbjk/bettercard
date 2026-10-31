@@ -121,18 +121,18 @@ class _ProfileFacts extends StatelessWidget {
             strings.gameplayTrumpLabel,
             profile.fixedTrump?.turkishName ??
                 (profile.biddingRules.declarerNamesTrump
-                    ? 'Ihaleyi alan secer'
+                    ? 'İhaleyi alan seçer'
                     : strings.gameplayNoTrump),
           ),
           if (profile.biddingRules.hasAuction)
             _row(
               text,
-              'Ihale araligi',
+              'İhale aralığı',
               '${profile.biddingRules.minimumBid} - '
                   '${profile.biddingRules.maximumBid}',
             ),
           if (profile.buryRules.enabled)
-            _row(text, 'Gomulecek kart', '${profile.buryRules.cardsToBury}'),
+            _row(text, 'Gömülecek kart', '${profile.buryRules.cardsToBury}'),
           if (profile.kingRules != null)
             _row(text, 'Toplam el', '${profile.kingRules!.totalHands}'),
         ],

@@ -12,7 +12,7 @@ enum KingContract {
     id: 'koz',
     turkishName: 'Koz',
     isPenalty: false,
-    unitDescription: 'alinan her el',
+    unitDescription: 'alınan her el',
   ),
 
   /// El Almaz: avoid taking tricks.
@@ -20,15 +20,15 @@ enum KingContract {
     id: 'el_almaz',
     turkishName: 'El Almaz',
     isPenalty: true,
-    unitDescription: 'alinan her el',
+    unitDescription: 'alınan her el',
   ),
 
   /// Kiz Almaz: avoid the four queens.
   queens(
     id: 'kiz_almaz',
-    turkishName: 'Kiz Almaz',
+    turkishName: 'Kız Almaz',
     isPenalty: true,
-    unitDescription: 'alinan her kiz',
+    unitDescription: 'alınan her kız',
   ),
 
   /// Erkek Almaz: avoid the jacks and kings.
@@ -36,21 +36,21 @@ enum KingContract {
     id: 'erkek_almaz',
     turkishName: 'Erkek Almaz',
     isPenalty: true,
-    unitDescription: 'alinan her vale ve papaz',
+    unitDescription: 'alınan her vale ve papaz',
   ),
 
   /// Rifki: avoid the king of hearts.
   heartsKing(
     id: 'rifki',
-    turkishName: 'Rifki',
+    turkishName: 'Rıfkı',
     isPenalty: true,
-    unitDescription: 'kupa papazi',
+    unitDescription: 'kupa papazı',
   ),
 
   /// Son Iki: avoid the last two tricks.
   lastTwoTricks(
     id: 'son_iki',
-    turkishName: 'Son Iki',
+    turkishName: 'Son İki',
     isPenalty: true,
     unitDescription: 'son iki elden her biri',
   );

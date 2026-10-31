@@ -74,7 +74,7 @@ abstract final class RuleProfileValidator {
         severity: RuleIssueSeverity.error,
         code: 'deck.not_divisible',
         turkishMessage: 'Oynanacak ${profile.playableCardCount} kart '
-            '${profile.playerCount} oyuncuya esit dagitilamiyor.',
+            '${profile.playerCount} oyuncuya eşit dağıtılamıyor.',
       ));
     }
     final int surplus =
@@ -83,8 +83,8 @@ abstract final class RuleProfileValidator {
       issues.add(RuleIssue(
         severity: RuleIssueSeverity.error,
         code: 'deck.surplus_mismatch',
-        turkishMessage: 'Dagitimdan artan $surplus kart, gomulecek '
-            '${profile.cardsSetAside} kart ile uyusmuyor.',
+        turkishMessage: 'Dağıtımdan artan $surplus kart, gömülecek '
+            '${profile.cardsSetAside} kart ile uyuşmuyor.',
       ));
     }
     for (final int id in profile.deckExclusions) {
@@ -92,7 +92,7 @@ abstract final class RuleProfileValidator {
         issues.add(RuleIssue(
           severity: RuleIssueSeverity.error,
           code: 'deck.bad_exclusion',
-          turkishMessage: 'Gecersiz kart kimligi desteden cikarilmis: $id.',
+          turkishMessage: 'Geçersiz kart kimliği desteden çıkarılmış: $id.',
         ));
       }
     }
@@ -109,8 +109,8 @@ abstract final class RuleProfileValidator {
         severity: RuleIssueSeverity.error,
         code: 'bidding.mode_mismatch',
         turkishMessage: modeWantsAuction
-            ? '${profile.mode.turkishName} ihale gerektirir ama ihale kapali.'
-            : '${profile.mode.turkishName} ihalesizdir ama ihale acik.',
+            ? '${profile.mode.turkishName} ihale gerektirir ama ihale kapalı.'
+            : '${profile.mode.turkishName} ihalesizdir ama ihale açık.',
       ));
     }
     if (!profileHasAuction) {
@@ -120,7 +120,7 @@ abstract final class RuleProfileValidator {
       issues.add(const RuleIssue(
         severity: RuleIssueSeverity.error,
         code: 'bidding.inverted_range',
-        turkishMessage: 'En kucuk ihale en buyuk ihaleden buyuk olamaz.',
+        turkishMessage: 'En küçük ihale en büyük ihaleden büyük olamaz.',
       ));
     }
     if (profile.biddingRules.maximumBid > profile.tricksPerHand) {
@@ -128,8 +128,8 @@ abstract final class RuleProfileValidator {
         severity: RuleIssueSeverity.error,
         code: 'bidding.max_above_tricks',
         turkishMessage:
-            'En buyuk ihale (${profile.biddingRules.maximumBid}) eldeki el '
-            'sayisindan (${profile.tricksPerHand}) fazla olamaz.',
+            'En büyük ihale (${profile.biddingRules.maximumBid}) eldeki el '
+            'sayısından (${profile.tricksPerHand}) fazla olamaz.',
       ));
     }
     // Note: a minimum bid below half the tricks is NOT flagged. Standard
@@ -140,7 +140,7 @@ abstract final class RuleProfileValidator {
       issues.add(const RuleIssue(
         severity: RuleIssueSeverity.error,
         code: 'bidding.min_below_one',
-        turkishMessage: 'En kucuk ihale en az 1 el olmalidir.',
+        turkishMessage: 'En küçük ihale en az 1 el olmalıdır.',
       ));
     }
     if (!profile.biddingRules.declarerNamesTrump &&
@@ -149,7 +149,7 @@ abstract final class RuleProfileValidator {
         severity: RuleIssueSeverity.error,
         code: 'bidding.no_trump_source',
         turkishMessage:
-            'Koz ne ihaleyi alan tarafindan secilir ne de kurallarda sabittir.',
+            'Koz ne ihaleyi alan tarafından seçilir ne de kurallarda sabittir.',
       ));
     }
     return issues;
@@ -162,7 +162,7 @@ abstract final class RuleProfileValidator {
         issues.add(const RuleIssue(
           severity: RuleIssueSeverity.error,
           code: 'bury.required_for_mode',
-          turkishMessage: 'Gommeli Batak gomme kurallari olmadan oynanamaz.',
+          turkishMessage: 'Gömmeli Batak gömme kuralları olmadan oynanamaz.',
         ));
       }
       return issues;
@@ -173,15 +173,15 @@ abstract final class RuleProfileValidator {
         severity: RuleIssueSeverity.error,
         code: 'bury.count_mismatch',
         turkishMessage:
-            'Ihaleyi alana verilen fazla kart sayisi gomulecek kart sayisina '
-            'esit olmalidir, yoksa eller farkli buyuklukte kalir.',
+            'İhaleyi alana verilen fazla kart sayısı gömülecek kart sayısına '
+            'eşit olmalıdır, yoksa eller farklı büyüklükte kalır.',
       ));
     }
     if (profile.buryRules.cardsToBury <= 0) {
       issues.add(const RuleIssue(
         severity: RuleIssueSeverity.error,
         code: 'bury.zero_cards',
-        turkishMessage: 'Gomme acik ama gomulecek kart sayisi sifir.',
+        turkishMessage: 'Gömme açık ama gömülecek kart sayısı sıfır.',
       ));
     }
     return issues;
@@ -197,7 +197,7 @@ abstract final class RuleProfileValidator {
                 severity: RuleIssueSeverity.warning,
                 code: 'king.rules_ignored',
                 turkishMessage:
-                    'King sozlesme ayarlari bu oyun modunda yok sayilacak.',
+                    'King sözleşme ayarları bu oyun modunda yok sayılacak.',
               ),
             ];
     }
@@ -206,7 +206,7 @@ abstract final class RuleProfileValidator {
         RuleIssue(
           severity: RuleIssueSeverity.error,
           code: 'king.missing_rules',
-          turkishMessage: 'King profili sozlesme ayarlari icermiyor.',
+          turkishMessage: 'King profili sözleşme ayarları içermiyor.',
         ),
       ];
     }
@@ -218,7 +218,7 @@ abstract final class RuleProfileValidator {
         severity: RuleIssueSeverity.error,
         code: 'king.no_active_contracts',
         turkishMessage:
-            'En az bir sozlesmenin kotasi sifirdan buyuk olmalidir.',
+            'En az bir sözleşmenin kotası sıfırdan büyük olmalıdır.',
       ));
     }
     if (king.playerCount != profile.playerCount) {
@@ -226,8 +226,8 @@ abstract final class RuleProfileValidator {
         severity: RuleIssueSeverity.error,
         code: 'king.player_count_mismatch',
         turkishMessage:
-            'King oyuncu sayisi (${king.playerCount}) mod oyuncu sayisiyla '
-            '(${profile.playerCount}) uyusmuyor.',
+            'King oyuncu sayısı (${king.playerCount}) mod oyuncu sayısıyla '
+            '(${profile.playerCount}) uyuşmuyor.',
       ));
     }
     for (final KingContractRule rule in king.contracts) {
@@ -236,7 +236,7 @@ abstract final class RuleProfileValidator {
           severity: RuleIssueSeverity.error,
           code: 'king.negative_quota',
           turkishMessage:
-              '${rule.contract.turkishName} icin kota negatif olamaz.',
+              '${rule.contract.turkishName} için kota negatif olamaz.',
         ));
       }
       if (rule.quotaPerPlayer <= 0) {
@@ -250,10 +250,10 @@ abstract final class RuleProfileValidator {
           severity: RuleIssueSeverity.error,
           code: 'king.points_sign',
           turkishMessage: rule.contract.isPenalty
-              ? '${rule.contract.turkishName} bir ceza sozlesmesidir; puani '
-                  'negatif olmalidir.'
-              : '${rule.contract.turkishName} puan kazandirir; puani pozitif '
-                  'olmalidir.',
+              ? '${rule.contract.turkishName} bir ceza sözleşmesidir; puanı '
+                  'negatif olmalıdır.'
+              : '${rule.contract.turkishName} puan kazandırır; puanı pozitif '
+                  'olmalıdır.',
         ));
       }
     }
@@ -261,7 +261,7 @@ abstract final class RuleProfileValidator {
       issues.add(const RuleIssue(
         severity: RuleIssueSeverity.error,
         code: 'king.zero_hands',
-        turkishMessage: 'Kotalardan hesaplanan el sayisi sifir.',
+        turkishMessage: 'Kotalardan hesaplanan el sayısı sıfır.',
       ));
     }
     return issues;
@@ -273,21 +273,21 @@ abstract final class RuleProfileValidator {
       issues.add(const RuleIssue(
         severity: RuleIssueSeverity.error,
         code: 'scoring.negative_trick_points',
-        turkishMessage: 'El basina puan negatif olamaz.',
+        turkishMessage: 'El başına puan negatif olamaz.',
       ));
     }
     if (profile.scoringRules.roundCount <= 0) {
       issues.add(const RuleIssue(
         severity: RuleIssueSeverity.error,
         code: 'scoring.non_positive_rounds',
-        turkishMessage: 'Parti el sayisi pozitif olmalidir.',
+        turkishMessage: 'Parti el sayısı pozitif olmalıdır.',
       ));
     }
     if (profile.scoringRules.targetScore <= 0) {
       issues.add(const RuleIssue(
         severity: RuleIssueSeverity.error,
         code: 'scoring.non_positive_target',
-        turkishMessage: 'Hedef puan pozitif olmalidir.',
+        turkishMessage: 'Hedef puan pozitif olmalıdır.',
       ));
     }
     return issues;

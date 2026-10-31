@@ -214,3 +214,47 @@ registered in a loop around `testWidgets` rather than looping inside one test.
 "3 el  -  13 kart"; it now truncates rather than overflowing, which is correct
 but not good. The seat panel needs a deliberate redesign (vertical stack, or
 stats moved to a shared score strip) before any mode ships.
+
+## D-14: Web is not a viable platform, because the domain owns a 64-bit PRNG
+
+**Decision.** Android and iOS only. No `web/`, no `windows/`. An attempt to add
+web for a quick visual preview was reverted.
+
+**Why it cannot work.** `dart2js`/`dartdevc` compile Dart `int` to a JavaScript
+`number`, which is a double with a 53-bit mantissa. `SeededRandom` is
+xorshift64* with a SplitMix64 finalizer and depends on exact 64-bit wrapping
+arithmetic. The compiler rejects the constants outright:
+
+```
+lib/core/util/seeded_random.dart:25:35: Error: The integer literal
+0x9E3779B97F4A7C15 can't be represented exactly in JavaScript.
+```
+
+This is not a defect. It is the direct consequence of D-5, which chose to own
+the generator so that reproducibility is a property of this repository rather
+than of the SDK. Web support would require one of:
+
+- reimplementing 64-bit arithmetic over 16-bit chunks (a 64x64 multiply needs
+  16 partial products, because even a 32x32 product exceeds 2^53 on web) —
+  exact, but fiddly and slow, on the most correctness-critical file here;
+- `package:fixnum` `Int64`, which is emulated on every platform and would slow
+  the native path that the benchmark harness depends on;
+- a conditional import giving the VM native ints and web an emulation — two
+  implementations of the determinism-critical path that **cannot be tested
+  against each other on a single platform**.
+
+All three trade real risk for a convenience on a platform the product never
+targeted. Rejected.
+
+**Consequence.** `flutter run -d chrome` fails to compile, by design. Seeing
+the app run requires one of the two real targets:
+
+| Target | Requirement |
+|---|---|
+| Android | A device with USB debugging, or an emulator (needs the WHPX Windows feature, which is disabled here) |
+| iOS | macOS with Xcode. Cannot be built from Windows at all — Apple restriction |
+
+A Windows desktop build was also considered, since `int` is a true 64 bits
+there, but it needs Visual Studio with the C++ workload and that install is
+blocked by policy on the development machine (the installer returns 16389 even
+with an elevated token). Not pursued.

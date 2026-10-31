@@ -23,7 +23,7 @@ final class RandomLegalPolicy implements AiPolicy {
   String get id => 'random-legal';
 
   @override
-  String get displayName => 'Rastgele (temel cizgi)';
+  String get displayName => 'Rastgele (temel çizgi)';
 
   @override
   Future<PlayingCard> chooseCard(

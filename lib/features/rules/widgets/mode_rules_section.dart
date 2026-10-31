@@ -57,7 +57,7 @@ final class ModeRulesSection extends StatelessWidget {
         if (profile.trickRules.mustPlayTrumpWhenVoid) 'koz kesme zorunlu',
         if (profile.trickRules.mustOvertrumpWhenPossible) 'ustune koz zorunlu',
         if (profile.buryRules.enabled)
-          '${profile.buryRules.cardsToBury} kart gomme',
+          '${profile.buryRules.cardsToBury} kart gömme',
         if (profile.kingRules != null)
           '${profile.kingRules!.totalHands} el parti',
       ].join('  -  ');

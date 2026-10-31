@@ -21,12 +21,12 @@ final class RulesScreen extends ConsumerWidget {
   /// Rule ambiguities carried as explicit open questions. Full discussion in
   /// docs/RULE_PROFILES.md.
   static const List<String> openQuestions = <String>[
-    'B-1: Ihaleyi tutan fazla el alirsa fazlasi puan yazar mi?',
-    'B-2: Ihale batarsa ceza ihale kadar mi, iki kati mi?',
-    'B-3: Koz kesme zorunlulugu her masada var mi?',
-    'B-4: Uclu gommeli Batakta kac kart gomulur, gomulen kime yazar?',
-    'K-1: King partisinde her oyuncu kac sozlesme secer?',
-    'K-2: Rifki ve Son Iki sozlesmeleri standart partiye dahil mi?',
+    'B-1: İhaleyi tutan fazla el alırsa fazlası puan yazar mı?',
+    'B-2: İhale batarsa ceza ihale kadar mı, iki katı mı?',
+    'B-3: Koz kesme zorunluluğu her masada var mı?',
+    'B-4: Üçlü gömmeli Batak oyununda kaç kart gömülür, gömülen kime yazar?',
+    'K-1: King partisinde her oyuncu kaç sözleşme seçer?',
+    'K-2: Rıfkı ve Son İki sözleşmeleri standart partiye dahil mi?',
   ];
 
   @override

@@ -14,10 +14,10 @@ import 'trick_rules.dart';
 /// open-question id rather than being resolved by invention: the preset picks
 /// the most commonly reported reading and the setting stays adjustable.
 abstract final class RulePresets {
-  /// Herkes Tek Ihaleli Batak, four players, 13 tricks, bids from 5.
+  /// Herkes Tek İhaleli Batak, four players, 13 tricks, bids from 5.
   static RuleProfile auctionBatakStandard() => const RuleProfile(
         id: 'auction_batak_standard',
-        turkishName: 'Tek Ihaleli Batak - Standart',
+        turkishName: 'Tek İhaleli Batak - Standart',
         mode: GameMode.auctionBatak,
         trickRules: TrickRules.batakStandard,
         biddingRules: BiddingRules.fourPlayerStandard,
@@ -25,10 +25,10 @@ abstract final class RulePresets {
         buryRules: BuryRules.disabled,
       );
 
-  /// Esli Ihaleli Batak: same card play, partnership scoring.
+  /// Eşli İhaleli Batak: same card play, partnership scoring.
   static RuleProfile partnershipBatakStandard() => const RuleProfile(
         id: 'partnership_batak_standard',
-        turkishName: 'Esli Ihaleli Batak - Standart',
+        turkishName: 'Eşli İhaleli Batak - Standart',
         mode: GameMode.partnershipBatak,
         trickRules: TrickRules.batakStandard,
         biddingRules: BiddingRules.fourPlayerStandard,
@@ -39,11 +39,11 @@ abstract final class RulePresets {
         buryRules: BuryRules.disabled,
       );
 
-  /// Koz Maca: spades permanently trump, no auction, trump may not be led
+  /// Koz Maça: spades permanently trump, no auction, trump may not be led
   /// until broken.
   static RuleProfile kozMacaStandard() => const RuleProfile(
         id: 'spades_batak_standard',
-        turkishName: 'Koz Maca - Standart',
+        turkishName: 'Koz Maça - Standart',
         mode: GameMode.spadesBatak,
         trickRules: TrickRules.kozMaca,
         biddingRules: BiddingRules.none,
@@ -55,14 +55,14 @@ abstract final class RulePresets {
         fixedTrump: Suit.spades,
       );
 
-  /// Uclu Gommeli Batak on the full 52-card deck: 17 cards each leaves one
+  /// Üçlü Gömmeli Batak on the full 52-card deck: 17 cards each leaves one
   /// card over, the declarer takes it and buries one, so every seat plays 17
   /// tricks. The deck is deliberately not divisible by three; the surplus is
   /// what the bury resolves. See open question B-4 for the variants that
   /// instead strip a card or bury three.
   static RuleProfile buriedBatakStandard() => const RuleProfile(
         id: 'buried_batak_standard',
-        turkishName: 'Uclu Gommeli Batak - Standart',
+        turkishName: 'Üçlü Gömmeli Batak - Standart',
         mode: GameMode.buriedBatak,
         trickRules: TrickRules.batakStandard,
         biddingRules: BiddingRules.threePlayerBuried,

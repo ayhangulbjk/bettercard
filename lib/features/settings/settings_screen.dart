@@ -38,9 +38,9 @@ final class SettingsScreen extends ConsumerWidget {
             ),
             children: <Widget>[
               const PlaceholderBanner(
-                title: 'Kalici kayit yok',
-                message: 'Ayarlar su anda yalnizca uygulama acikken saklanir. '
-                    'Diske kayit, platform klasorleri olusturuldugunda '
+                title: 'Kalıcı kayıt yok',
+                message: 'Ayarlar şu anda yalnızca uygulama açıkken saklanır. '
+                    'Diske kayıt, platform klasörleri oluşturulduğunda '
                     'eklenecek.',
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -72,7 +72,7 @@ final class SettingsScreen extends ConsumerWidget {
                       title: Text('Oynanabilir kart vurgusu',
                           style: text.bodyLarge),
                       subtitle: Text(
-                        'Yalnizca kurallarin size zaten izin verdigi kartlari '
+                        'Yalnızca kuralların size zaten izin verdigi kartlari '
                         'gosterir; rakip eli asla aciga cikarmaz.',
                         style: text.bodySmall,
                       ),
@@ -84,7 +84,7 @@ final class SettingsScreen extends ConsumerWidget {
                     ),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
-                      title: Text('Surukleyerek oyna', style: text.bodyLarge),
+                      title: Text('Sürükleyerek oyna', style: text.bodyLarge),
                       value: settings.allowDragToPlay,
                       onChanged: (bool value) => controller.update(
                         (AppSettings s) => s.copyWith(allowDragToPlay: value),
@@ -121,9 +121,9 @@ final class SettingsScreen extends ConsumerWidget {
                       contentPadding: EdgeInsets.zero,
                       title:
                           Text(strings.settingsLanguage, style: text.bodyLarge),
-                      trailing: Text('Turkce', style: text.titleMedium),
+                      trailing: Text('Türkçe', style: text.titleMedium),
                       subtitle: Text(
-                        'Ingilizce destegi icin altyapi hazir, metinler henuz '
+                        'İngilizce desteği için altyapi hazir, metinler henüz '
                         'eklenmedi.',
                         style: text.bodySmall,
                       ),

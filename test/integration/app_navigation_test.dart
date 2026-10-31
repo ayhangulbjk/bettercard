@@ -84,7 +84,7 @@ void main() {
       expect(
         find.descendant(
           of: find.widgetWithText(GameModeCard, mode.turkishName),
-          matching: find.text('Hazir degil'),
+          matching: find.text('Hazır değil'),
         ),
         findsOneWidget,
         reason: '${mode.id} must be badged as not ready',
@@ -103,8 +103,8 @@ void main() {
     expect(find.text('Kural Denetimi'), findsOneWidget);
 
     // All six shipped presets validate clean, so the audit must say so.
-    await reveal(tester, find.text('Kural seti tutarli.'));
-    expect(find.text('Kural seti tutarli.'), findsOneWidget);
+    await reveal(tester, find.text('Kural seti tutarlı.'));
+    expect(find.text('Kural seti tutarlı.'), findsOneWidget);
   });
 
   testWidgets('setup leads to the table preview, clearly labelled', (
@@ -115,10 +115,10 @@ void main() {
     await revealAndTap(tester, find.text(GameMode.auctionBatak.turkishName));
     await revealAndTap(
       tester,
-      find.widgetWithText(FilledButton, 'Masa Onizlemesi'),
+      find.widgetWithText(FilledButton, 'Masa Önizlemesi'),
     );
 
-    expect(find.textContaining('Masa Onizlemesi'), findsWidgets);
+    expect(find.textContaining('Masa Önizlemesi'), findsWidgets);
   });
 
   testWidgets('the AI lab runs a real baseline batch and reports it', (
@@ -126,14 +126,14 @@ void main() {
   ) async {
     await pumpPortraitApp(tester);
 
-    await revealAndTap(tester, find.text('Yapay Zeka Laboratuvari'));
+    await revealAndTap(tester, find.text('Yapay Zeka Laboratuvarı'));
 
     // Narrowed to the chip: the report text can contain the same number.
     await revealAndTap(tester, find.widgetWithText(ChoiceChip, '50'));
-    await revealAndTap(tester, find.text('Temel cizgiyi calistir'));
+    await revealAndTap(tester, find.text('Temel çizgiyi çalıştır'));
 
-    await reveal(tester, find.text('Kural disi hamle yok'));
-    expect(find.text('Kural disi hamle yok'), findsOneWidget);
+    await reveal(tester, find.text('Kural dışı hamle yok'));
+    expect(find.text('Kural dışı hamle yok'), findsOneWidget);
     expect(find.textContaining('Hands:'), findsOneWidget);
     expect(find.textContaining('Illegal:'), findsOneWidget);
   });
@@ -146,8 +146,8 @@ void main() {
   for (final String label in <String>[
     'Ayarlar',
     'Kurallar',
-    'Istatistikler',
-    'Yapay Zeka Laboratuvari',
+    'İstatistikler',
+    'Yapay Zeka Laboratuvarı',
   ]) {
     testWidgets('the $label screen opens from the home screen', (
       WidgetTester tester,

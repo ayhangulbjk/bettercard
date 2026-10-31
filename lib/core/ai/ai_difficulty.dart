@@ -8,7 +8,7 @@ import 'package:meta/meta.dart';
 /// the legal-random baseline is implemented, and no level above it has any
 /// measured strength claim attached to it.
 enum AiDifficulty {
-  beginner('Baslangic'),
+  beginner('Başlangıç'),
   normal('Normal'),
   hard('Zor'),
   expert('Uzman'),

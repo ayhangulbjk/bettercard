@@ -7,7 +7,7 @@ enum Suit {
   clubs('Sinek', '♣'),
   diamonds('Karo', '♦'),
   hearts('Kupa', '♥'),
-  spades('Maca', '♠');
+  spades('Maça', '♠');
 
   const Suit(this.turkishName, this.symbol);
 

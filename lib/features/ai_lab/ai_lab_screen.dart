@@ -70,7 +70,7 @@ class _AiLabScreenState extends ConsumerState<AiLabScreen> {
             ),
             children: <Widget>[
               PlaceholderBanner(
-                title: 'Guc iddiasi yok',
+                title: 'Güç iddiası yok',
                 message: strings.aiLabNoStrengthClaim,
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -131,7 +131,7 @@ class _ReportPanel extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  clean ? 'Kural disi hamle yok' : 'Kural disi hamle bulundu',
+                  clean ? 'Kural dışı hamle yok' : 'Kural dışı hamle bulundu',
                   style: text.titleMedium,
                 ),
               ),

@@ -1,41 +1,75 @@
 # Batak & King
 
-Offline Turkish card games for Android and iOS. Flutter, Dart, Riverpod.
-Portrait only, free, no ads, no accounts, no network.
+Android ve iOS için **tamamen çevrimdışı** Türk kağıt oyunları.
+Flutter, Dart, Riverpod. Yalnızca dikey (portre), ücretsiz, reklamsız,
+hesapsız, ağ bağlantısı olmadan.
 
-Five modes planned: Herkes Tek Ihaleli Batak, Esli Ihaleli Batak, Koz Maca,
-Uclu Gommeli Batak, King.
+Planlanan beş mod: **Herkes Tek İhaleli Batak**, **Eşli İhaleli Batak**,
+**Koz Maça**, **Üçlü Gömmeli Batak**, **King**.
 
-## Status: milestone 1, foundation only
+---
 
-**No game mode is playable yet.** This repository contains the domain
-foundation, the AI information architecture, the Turkish UI shell and the test
-and benchmark harness. `GameMode.isPlayable` is `false` for every mode and the
-app labels them accordingly.
+## Durum: 1. kilometre taşı — yalnızca temel
 
-| Area | State |
+> **Henüz hiçbir oyun modu oynanabilir değil.** Bu depo; alan modelini (domain),
+> yapay zekanın bilgi mimarisini, Türkçe arayüz kabuğunu ve test/benchmark
+> altyapısını içerir. `GameMode.isPlayable` her mod için `false` ve uygulama
+> bunu ekranda açıkça belirtiyor.
+
+| Alan | Durum |
 |---|---|
-| Card model, seeded dealing | Implemented, tested |
-| Shared trick core (legality, resolution, engine) | Implemented, tested |
-| Rule profiles for all five modes, with validation | Implemented, tested |
-| AI no-cheating boundary, card tracker, hand sampler | Implemented, tested |
-| Legal-random baseline policy | Implemented, tested |
-| Headless simulator and benchmark CLI | Implemented, tested |
-| Turkish UI shell (7 screens) | Implemented |
-| Per-mode lifecycles (auction, contract, bury, scoring) | **Not started** |
-| AI above the baseline | **Not started** |
-| Disk persistence, sound, animation | **Not started** |
+| Kart modeli, tohumlu (seeded) dağıtım | ✅ Yazıldı, test edildi |
+| Ortak el (trick) çekirdeği: kurallılık, kazanan, motor | ✅ Yazıldı, test edildi |
+| Beş modun kural profilleri + doğrulama | ✅ Yazıldı, test edildi |
+| YZ hile yapamama sınırı, kart takipçisi, el örnekleyici | ✅ Yazıldı, test edildi |
+| Kurallı-rastgele temel çizgi politikası | ✅ Yazıldı, test edildi |
+| Başsız (headless) simülatör ve benchmark CLI | ✅ Yazıldı, test edildi |
+| Türkçe arayüz kabuğu (7 ekran) | ✅ Yazıldı |
+| Mod yaşam döngüleri (ihale, sözleşme, gömme, puanlama) | ❌ **Başlanmadı** |
+| Temel çizginin üstünde YZ | ❌ **Başlanmadı** |
+| Diske kayıt, ses, animasyon | ❌ **Başlanmadı** |
 
-See `docs/ROADMAP.md` for what comes next and `docs/DECISIONS.md` for why
-things are the way they are.
+Sıradaki işler için `docs/ROADMAP.md`, kararların gerekçeleri için
+`docs/DECISIONS.md`, mimari için `docs/ARCHITECTURE.md`.
 
-## Setup
+---
 
-Flutter 3.47.9 (Dart 3.13.7) was used to verify this code. Install Flutter
-from <https://docs.flutter.dev/get-started/install>, then:
+## Mimari — kuşbakışı
+
+```mermaid
+flowchart TD
+    UI["lib/features/ · lib/app/<br/>Ekranlar, tema, rotalar, Türkçe metinler"]
+    LC["lib/games/(mod)/<br/>Mod yaşam döngüsü: ihale, sözleşme, gömme, puanlama<br/>(2. kilometre taşı — şu an boş)"]
+    AI["lib/core/ai/<br/>Gözlem filtresi, kart takipçisi,<br/>el örnekleyici, politikalar"]
+    EN["lib/core/game_engine/<br/>Komutlar, el çekirdeği, oturma düzeni"]
+    RU["lib/core/rules/<br/>Kural profilleri,<br/>hazır setler, doğrulama"]
+    CA["lib/core/cards/ · lib/core/util/<br/>Deste, kart, SeededRandom"]
+
+    UI -->|"durumu okur, komut gönderir"| LC
+    LC --> EN
+    LC --> RU
+    AI -->|"yalnızca SeatObservation"| EN
+    EN --> RU
+    EN --> CA
+    AI --> CA
+    RU --> CA
+```
+
+**Tek kural: bağımlılıklar yalnızca aşağı doğru akar.** `lib/core/` hiçbir
+zaman Flutter'ı import etmez — ne widget, ne `dart:ui`, ne `dart:io`, ne de
+saat. Böylece alan modeli ekransız, cihazsız ve saatsiz test edilebilir.
+
+Ayrıntılı diyagramlar (komut akışı, YZ sınırı, el çekirdeği) için
+`docs/ARCHITECTURE.md`.
+
+---
+
+## Kurulum
+
+Bu kod **Flutter 3.47.9 / Dart 3.13.7** ile doğrulandı.
 
 ```bash
-# Generate the native host folders (not committed).
+# Yerel platform klasörleri depoda tutulmuyor, üretilmesi gerekiyor:
 flutter create . --platforms=android,ios --project-name batak_king
 
 flutter pub get
@@ -45,13 +79,22 @@ flutter test
 flutter run
 ```
 
-> Verified on Flutter 3.47.9 / Dart 3.13.7 (Windows, 2026-10-31):
-> `dart format .` leaves no diff, `flutter analyze` reports no issues, and
-> `flutter test` passes 138 tests. The 2000-hand baseline benchmark reports
-> zero illegal commands with all invariants holding. See `docs/DECISIONS.md`
-> D-1 for the toolchain and D-13 for the layout defects this surfaced.
+### Doğrulanmış durum (Windows, 2026-10-31)
 
-## Benchmarks
+| Komut | Sonuç |
+|---|---|
+| `dart format .` | 80 dosya, 0 değişiklik — fark bırakmıyor |
+| `flutter analyze` | `No issues found!` |
+| `flutter test` | **138 testin tamamı geçti** |
+| `dart run tool/benchmarks/run_baseline.dart --hands 2000` | 104.000 karar, **0 kural dışı hamle** |
+| `flutter build apk --debug` | `app-debug.apk` üretildi |
+
+Araç zinciri ve bu doğrulamanın ortaya çıkardığı layout hataları için
+`docs/DECISIONS.md` D-1 ve D-13.
+
+---
+
+## Benchmark
 
 ```bash
 dart run tool/benchmarks/run_baseline.dart --hands 2000 --players 4
@@ -59,26 +102,30 @@ dart run tool/benchmarks/run_baseline.dart --hands 2000 --rules kozmaca
 dart run tool/benchmarks/run_baseline.dart --hands 2000 --rules notrump
 ```
 
-This measures correctness (zero illegal commands, invariants hold every ply)
-and throughput. It is **not** a strength benchmark: the only agent implemented
-is the legal-random baseline. See `docs/AI_BENCHMARKS.md`.
+Bu ölçüm **doğruluk** (sıfır kural dışı komut, her hamlede değişmezlerin
+tutması) ve **verim** ölçer. **Güç ölçümü değildir:** şu an yazılmış tek ajan
+kurallı-rastgele temel çizgidir. Bkz. `docs/AI_BENCHMARKS.md`.
 
-## Documentation
+---
 
-| File | Contents |
+## Dokümanlar
+
+| Dosya | İçerik |
 |---|---|
-| `CLAUDE.md` | Permanent project instructions and architecture rules |
-| `docs/ARCHITECTURE.md` | Layering, determinism, command model, AI boundary |
-| `docs/RULE_PROFILES.md` | Rule variants, presets, and the open rule questions |
-| `docs/AI_STRATEGY.md` | No-cheating guarantee, inference, difficulty design |
-| `docs/AI_BENCHMARKS.md` | Measurement protocol and the no-claims-without-evidence rule |
-| `docs/ROADMAP.md` | Milestones |
-| `docs/DECISIONS.md` | Decision log |
+| `CLAUDE.md` | Kalıcı proje talimatları ve mimari kurallar |
+| `docs/ARCHITECTURE.md` | Katmanlar, determinizm, komut modeli, YZ sınırı (diyagramlı) |
+| `docs/ROADMAP.md` | Kilometre taşları, görev listesi, nerede kaldığımız |
+| `docs/RULE_PROFILES.md` | Kural varyantları, hazır setler ve açık kural soruları |
+| `docs/AI_STRATEGY.md` | Hile yapamama garantisi, çıkarım, zorluk tasarımı |
+| `docs/AI_BENCHMARKS.md` | Ölçüm protokolü ve "kanıtsız iddia yok" kuralı |
+| `docs/DECISIONS.md` | Karar günlüğü (D-1 … D-13) |
 
-## Principles
+---
 
-1. Offline at runtime. No network, ever.
-2. The AI never sees hidden information.
-3. No invented rules: variants are documented and configurable.
-4. No fake functionality: incomplete features are labelled in the product.
-5. No strength claims without benchmark evidence.
+## İlkeler
+
+1. **Çalışma anında çevrimdışı.** Asla ağ yok.
+2. **YZ gizli bilgiyi asla görmez.** Tek geçit `SeatObservation.fromState`.
+3. **Uydurma kural yok.** Varyantlar belgelenir ve yapılandırılabilir.
+4. **Sahte işlevsellik yok.** Tamamlanmamış özellik üründe etiketlenir.
+5. **Benchmark kanıtı olmadan güç iddiası yok.**

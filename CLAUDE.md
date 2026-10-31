@@ -50,10 +50,22 @@ Portrait only. No network, ever.
 
 ## Turkish and English
 
-User-visible text is Turkish and goes through `AppStrings` - never a literal
-in a widget. Code, comments, identifiers, docs and commit messages are English.
-ASCII-only in source: Turkish copy in `strings_tr.dart` is written without
-diacritics for now (see `docs/DECISIONS.md` D-7).
+**User-visible app text is Turkish** and goes through `AppStrings` - never a
+literal in a widget.
+
+**Code, comments, identifiers and commit messages are English.**
+
+**Reader-facing docs are Turkish**, because the owner reads them:
+`README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`. The remaining docs
+(`RULE_PROFILES`, `AI_STRATEGY`, `AI_BENCHMARKS`, `DECISIONS`) are still
+English; translate one when it is next substantially edited rather than in a
+separate churn commit.
+
+**Dart source stays ASCII-only.** Markdown may use full Turkish diacritics -
+verified to round-trip as UTF-8. The original reason for ASCII-only Turkish
+copy in `strings_tr.dart` (D-7) no longer holds and that file is queued for
+diacritics; see `docs/ROADMAP.md`. Changing it also changes the text
+assertions in `test/integration/app_navigation_test.dart`.
 
 ## Commands
 
@@ -72,30 +84,15 @@ First-time setup in a fresh clone also needs the native host folders, which
 are generated rather than committed:
 
 ```bash
-flutter create . --platforms=android,ios --project-name batak_king
+flutter create . --platforms=android,ios --project-name batak_king --org com.batakking
 ```
 
-## Definition of done for a change
+**Every `flutter create` run re-adds `test/widget_test.dart`**, a template test
+for a counter app that does not exist here, so it fails to compile. Delete it
+afterwards. `flutter create` also appends platform `exclude` entries to
+`analysis_options.yaml` (keep those) and leaves `pubspec.yaml` and
+`lib/main.dart` alone (verified).
 
-- `dart format .` leaves no diff.
-- `flutter analyze` reports no issues.
-- `flutter test` passes.
-- New domain logic has unit tests, including the failure cases.
-- A rule change updates `docs/RULE_PROFILES.md`.
-- An architectural choice is recorded in `docs/DECISIONS.md`.
-- A claim about AI strength cites a benchmark run.
-
-## Where things live
-
-| Path | Responsibility |
-|---|---|
-| `lib/core/cards/` | Cards, deck, seeded dealing |
-| `lib/core/util/` | `SeededRandom` |
-| `lib/core/game_engine/` | Seating, commands, engine interface, trick core |
-| `lib/core/rules/` | Rule profiles, presets, validation |
-| `lib/core/ai/` | Observation filter, trackers, samplers, policies |
-| `lib/core/persistence/` | Settings, saved matches, codecs |
-| `lib/core/simulation/` | Headless simulator, statistics |
-| `lib/games/<mode>/` | Per-mode round lifecycle (empty in milestone 1) |
-| `lib/features/<area>/` | Screens and widgets |
-| `lib/app/` | Entry point, theme, routes, providers, strings |
+Only Android and iOS are targets. `web` and `windows` are not, and web
+**cannot** work: the domain owns a 64-bit PRNG that JavaScript cannot
+represent. See `docs/DECISIONS.md` D-14 before trying `-d chrome`.

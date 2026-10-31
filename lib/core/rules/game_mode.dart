@@ -7,9 +7,9 @@ enum GameMode {
   /// the contract, declarer names trump.
   auctionBatak(
     id: 'auction_batak',
-    turkishName: 'Herkes Tek Ihaleli Batak',
-    turkishShortName: 'Tek Ihaleli',
-    turkishTagline: 'Dort oyuncu, herkes kendi icin, ihaleli',
+    turkishName: 'Herkes Tek İhaleli Batak',
+    turkishShortName: 'Tek İhaleli',
+    turkishTagline: 'Dört oyuncu, herkes kendi için, ihaleli',
     playerCount: 4,
     hasPartnerships: false,
     hasAuction: true,
@@ -18,9 +18,9 @@ enum GameMode {
   /// Esli Ihaleli Batak: four players in two fixed partnerships.
   partnershipBatak(
     id: 'partnership_batak',
-    turkishName: 'Esli Ihaleli Batak',
-    turkishShortName: 'Esli Batak',
-    turkishTagline: 'Karsi karsiya esler, ortak ihale',
+    turkishName: 'Eşli İhaleli Batak',
+    turkishShortName: 'Eşli Batak',
+    turkishTagline: 'Karşı karşıya eşler, ortak ihale',
     playerCount: 4,
     hasPartnerships: true,
     hasAuction: true,
@@ -29,9 +29,9 @@ enum GameMode {
   /// Koz Maca: spades are permanently trump, no auction for trump.
   spadesBatak(
     id: 'spades_batak',
-    turkishName: 'Koz Maca',
-    turkishShortName: 'Koz Maca',
-    turkishTagline: 'Koz her zaman maca',
+    turkishName: 'Koz Maça',
+    turkishShortName: 'Koz Maça',
+    turkishTagline: 'Koz her zaman maça',
     playerCount: 4,
     hasPartnerships: false,
     hasAuction: false,
@@ -40,9 +40,9 @@ enum GameMode {
   /// Uclu Gommeli Batak: three players, the declarer buries cards face down.
   buriedBatak(
     id: 'buried_batak',
-    turkishName: 'Uclu Gommeli Batak',
-    turkishShortName: 'Gommeli',
-    turkishTagline: 'Uc oyuncu, ihaleyi alan gomer',
+    turkishName: 'Üçlü Gömmeli Batak',
+    turkishShortName: 'Gömmeli',
+    turkishTagline: 'Üç oyuncu, ihaleyi alan gömer',
     playerCount: 3,
     hasPartnerships: false,
     hasAuction: true,
