@@ -1,0 +1,264 @@
+lib/core/game_engine/trick/trick.dart
+  s_2d62d2fd117845::t_4cfdc3347e7018 1-137
+lib/features/rules/widgets/mode_rules_section.dart
+  s_2d62d2fd117845::t_0a9dfd6726d158 1-64
+lib/core/cards/deck.dart
+  s_2d62d2fd117845::t_d0a6c1f9d98ffe 1-93
+lib/core/game_engine/game_engine.dart
+  s_2d62d2fd117845::t_13a1bc30371bf7 1-54
+lib/features/gameplay/widgets/playing_card_view.dart
+  s_2d62d2fd117845::t_b443ce14867c8b 61-63
+  s_2d62d2fd117845::t_8815b4b5e1e970 1-60,64-183
+test/unit/trick_resolver_test.dart
+  s_2d62d2fd117845::t_cd7a71616314df 1-113
+test/unit/legal_moves_test.dart
+  s_2d62d2fd117845::t_add5a760c94ae8 144-252
+  s_2d62d2fd117845::t_323eb765a0acdc 1-143,253
+test/unit/rule_validation_test.dart
+  s_2d62d2fd117845::t_bf655c8aa16739 124-128,135-136
+  s_2d62d2fd117845::t_559130ac91fb24 37-39,41-48
+  s_2d62d2fd117845::t_47d5eb385dabe7 1-36,40,49-123,129-134,137-140
+docs/RULE_PROFILES.md
+  s_2d62d2fd117845::t_58177e8db027b4 1-143
+assets/audio/.gitkeep
+  s_2d62d2fd117845::t_bfc13b6b9c625d 1-6
+lib/core/game_engine/trick/trick_legal_moves.dart
+  s_2d62d2fd117845::t_a2238e8a5276f7 1-200
+lib/core/game_engine/game_command.dart
+  s_2d62d2fd117845::t_61d34300aec1e3 106
+  s_2d62d2fd117845::t_13a1bc30371bf7 1-96,98,102,105,107-128
+  s_2d62d2fd117845::t_96ae3066f35af9 97,99-101,103-104
+lib/app/l10n/strings_tr.dart
+  s_2d62d2fd117845::t_957777b402d043 1-192
+lib/features/settings/settings_screen.dart
+  s_2d62d2fd117845::t_00fe75a101a105 1-187
+lib/app/providers.dart
+  s_2d62d2fd117845::t_2fec4959afa7e8 3-18,20-21,24-28,31-33,35-45,52-58,62,64-65,67-71,75-81,83-86
+  s_2d62d2fd117845::t_38cc2d9bc5bead 72
+  s_2d62d2fd117845::t_df4be5425856e6 1-2,19,22-23,29-30,34,46-51,59-61,63,66,73-74,82
+lib/features/game_selection/widgets/difficulty_selector.dart
+  s_2d62d2fd117845::t_c1f2a4ebca9743 1-46
+test/unit/seeded_random_test.dart
+  s_2d62d2fd117845::t_e6b8d57a54b04a 1-146
+lib/core/ai/seat_observation.dart
+  s_2d62d2fd117845::t_7be6a03ceda6cb 1-121
+lib/core/game_engine/trick/trick_play_engine.dart
+  s_2d62d2fd117845::t_349210e49dfba9 57-58
+  s_2d62d2fd117845::t_fe559db6e938ad 1-56,59-133
+lib/core/persistence/app_settings.dart
+  s_2d62d2fd117845::t_0f2960226a9e56 18
+  s_2d62d2fd117845::t_91ee5dfe06dea7 1-17,19-209
+README.md
+  s_2d62d2fd117845::t_7a36eda0cce8b3 1-33,36-47,53-84
+  s_2d62d2fd117845::t_896e5a9b0b0654 34-35,48-52
+lib/core/rules/rule_validation.dart
+  s_2d62d2fd117845::t_35864810209a5d 69-72,76-87
+  s_2d62d2fd117845::t_5d73b2d7cf423f 1-68,73-75,88-134,140,144-156,295
+  s_2d62d2fd117845::t_19321b397e6da1 135-139,141-143
+  s_2d62d2fd117845::t_4f2deb1b5c63c6 157-294
+lib/features/home/home_screen.dart
+  s_2d62d2fd117845::t_4a38b7c651b03f 1-226
+lib/core/simulation/statistics.dart
+  s_2d62d2fd117845::t_1e40e7f70f04c0 1-130
+lib/core/cards/card_sorting.dart
+  s_2d62d2fd117845::t_d0a6c1f9d98ffe 1-41
+test/unit/trick_play_engine_test.dart
+  s_2d62d2fd117845::t_7511c039a29fcf 1-178
+lib/app/app.dart
+  s_2d62d2fd117845::t_a58b831aa2303f 1-37
+lib/features/gameplay/table_preview_screen.dart
+  s_2d62d2fd117845::t_70adf5ee66a187 14,23-27,39,47-49,55-57,78,102,109-120,123-124
+  s_2d62d2fd117845::t_2ac92670492693 1-13,15-22,28-38,40-46,50-54,58-77,79-101,103-108,121-122,125-149
+test/unit/ai_information_filter_test.dart
+  s_2d62d2fd117845::t_7c0887f9f5eb1f 1-137
+assets/avatars/.gitkeep
+  s_2d62d2fd117845::t_bfc13b6b9c625d 1-6
+lib/core/cards/suit.dart
+  s_2d62d2fd117845::t_56a2c70fac5bb9 1-22
+lib/core/rules/rule_violation.dart
+  s_2d62d2fd117845::t_1cf8b2d2b62c41 1-65
+test/unit/legal_moves_validate_test.dart
+  s_2d62d2fd117845::t_e370ff94dd7e6e 1-142
+lib/core/game_engine/trick/trick_resolver.dart
+  s_2d62d2fd117845::t_4cfdc3347e7018 1-55
+lib/features/gameplay/widgets/felt_background.dart
+  s_2d62d2fd117845::t_3bd70f63d6ec54 38-44,63-70,72,77
+  s_2d62d2fd117845::t_3f9c3150b6011e 1-37,45-62,71,73-76,78-80
+lib/features/gameplay/widgets/trick_area.dart
+  s_2d62d2fd117845::t_4e853123c6cb7a 1-153
+lib/games/README.md
+  s_2d62d2fd117845::t_57546d3052871e 1-22
+test/unit/deck_test.dart
+  s_2d62d2fd117845::t_ead0025d1ccb3d 1-120
+test/simulation/headless_simulator_test.dart
+  s_2d62d2fd117845::t_93d732c33b720a 1,3-152
+  s_2d62d2fd117845::t_2964685b226646 2
+.gitignore
+  s_2d62d2fd117845::t_e4978002e1a43f 1-28
+lib/app/theme/app_colors.dart
+  s_2d62d2fd117845::t_5f24b10558c303 1-51
+lib/core/persistence/saved_match.dart
+  s_2d62d2fd117845::t_b4138836b4c725 1-82
+lib/core/simulation/headless_simulator.dart
+  s_2d62d2fd117845::t_e77450070b6c44 10,18-21
+  s_2d62d2fd117845::t_7454ddbc074f99 1-9,11-17,22-117,120-145,153,174-188
+  s_2d62d2fd117845::t_341da7e1e3aaeb 146-152,154-173
+  s_2d62d2fd117845::t_c14bbfe477eb15 118-119
+lib/app/l10n/app_strings.dart
+  s_2d62d2fd117845::t_549d186e8f8252 1-100
+lib/features/gameplay/widgets/hand_fan.dart
+  s_2d62d2fd117845::t_78aa247cd6c32f 1-118
+lib/core/cards/playing_card.dart
+  s_2d62d2fd117845::t_d0a6c1f9d98ffe 1-38,40-58
+  s_2d62d2fd117845::t_7bcf430cc6a62d 39
+lib/core/cards/rank.dart
+  s_2d62d2fd117845::t_56a2c70fac5bb9 1-30
+lib/features/gameplay/preview_state.dart
+  s_2d62d2fd117845::t_349210e49dfba9 39
+  s_2d62d2fd117845::t_39361b948ede77 1-38,40-79
+lib/features/ai_lab/ai_lab_screen.dart
+  s_2d62d2fd117845::t_c2502f15f9e6d0 1-131,137-152
+  s_2d62d2fd117845::t_37f06885f5d857 132-136
+test/unit/hidden_hand_sampler_test.dart
+  s_2d62d2fd117845::t_9c18eb04882316 1-128
+test/unit/state_invariants_test.dart
+  s_2d62d2fd117845::t_c11089d7b40f52 1-194
+lib/features/rules/rules_screen.dart
+  s_2d62d2fd117845::t_430ecdf2b25500 1-88
+lib/core/rules/bury_rules.dart
+  s_2d62d2fd117845::t_0977457cad3dfd 34-37
+  s_2d62d2fd117845::t_d4338984fe620c 1-33,38-97
+lib/core/ai/ai_policy.dart
+  s_2d62d2fd117845::t_66ef05d61bc117 1-40
+docs/ROADMAP.md
+  s_2d62d2fd117845::t_1b3a550a8449c6 1-93
+lib/app/theme/app_theme.dart
+  s_2d62d2fd117845::t_5553b7c40596c9 1-59,63-183
+  s_2d62d2fd117845::t_a6a53ac9afb653 60-62
+pubspec.yaml
+  s_2d62d2fd117845::t_7bcf430cc6a62d 17-19
+  s_2d62d2fd117845::t_eab6565b60c790 13-15
+  s_2d62d2fd117845::t_e4978002e1a43f 1-12,16,20-38
+lib/games/buried_batak/README.md
+  s_2d62d2fd117845::t_57546d3052871e 1-5
+lib/features/gameplay/widgets/seat_panel.dart
+  s_2d62d2fd117845::t_19bb883a8571dd 64
+  s_2d62d2fd117845::t_5e3715f8e077cc 1-11,18-63,66-68,92-97
+  s_2d62d2fd117845::t_c147e63042543a 12-17,65,69-91
+lib/features/home/widgets/game_mode_card.dart
+  s_2d62d2fd117845::t_8a1b29114add8f 1-188
+test/support/test_positions.dart
+  s_2d62d2fd117845::t_9c18eb04882316 1-66
+lib/core/rules/king_rules.dart
+  s_2d62d2fd117845::t_cc5f1206f9d73a 134-267
+  s_2d62d2fd117845::t_36838aa5d04711 1-133
+lib/core/simulation/simulation_report.dart
+  s_2d62d2fd117845::t_ec53eb47e61030 1-92
+test/unit/rule_profile_test.dart
+  s_2d62d2fd117845::t_e083119168e8f3 1-99
+assets/cards/.gitkeep
+  s_2d62d2fd117845::t_bfc13b6b9c625d 1-6
+lib/core/ai/policies/random_legal_policy.dart
+  s_2d62d2fd117845::t_63e1a44bcf95db 1-44
+lib/core/rules/scoring_rules.dart
+  s_2d62d2fd117845::t_1bbc5e2407356c 1-133
+lib/core/simulation/simulation_config.dart
+  s_2d62d2fd117845::t_1d0e8201705316 1-21,23-53,61-67
+  s_2d62d2fd117845::t_f21c0c9fa29abf 22,54-60
+lib/core/ai/ai_decision_service.dart
+  s_2d62d2fd117845::t_63e1a44bcf95db 1-73
+lib/features/game_selection/widgets/rule_profile_option.dart
+  s_2d62d2fd117845::t_c1f2a4ebca9743 1-54
+lib/core/game_engine/trick/trick_play_state.dart
+  s_2d62d2fd117845::t_be05cfda05c6a8 1-191
+lib/features/statistics/statistics_screen.dart
+  s_2d62d2fd117845::t_18cd220747c53f 1-53
+lib/core/game_engine/seating.dart
+  s_2d62d2fd117845::t_eab6565b60c790 1-118
+lib/core/rules/rule_profile.dart
+  s_2d62d2fd117845::t_2fc138e72c6978 1-66,68-69,81,83,85-165,167-180,182-195
+  s_2d62d2fd117845::t_4ed3e286a9ebab 67,70-80,82,84
+  s_2d62d2fd117845::t_4932aabfd2469d 166,181
+lib/games/auction_batak/README.md
+  s_2d62d2fd117845::t_57546d3052871e 1-5
+test/integration/app_navigation_test.dart
+  s_2d62d2fd117845::t_c058116f57bd4e 3,25,27-35,37-46,50,53,78-92,129,131-132
+  s_2d62d2fd117845::t_41e6d94d94b5cf 140-165
+  s_2d62d2fd117845::t_f695e37f2e142d 137-138
+  s_2d62d2fd117845::t_414ac4a568aed0 1-2,4-9,57-60,62-63,65-75,93-97,99,101,103,107-112,114,120-126,128,130,134,136,139,166
+  s_2d62d2fd117845::t_30863a3ddb2108 10-24,26,36,47-49,51-52,54-56,61,64,76-77,98,100,102,104-106,113,115-119,127,133,135
+tool/benchmarks/run_baseline.dart
+  s_2d62d2fd117845::t_0b030f4535ec19 1-75
+CLAUDE.md
+  s_2d62d2fd117845::t_ac546a3a01feaf 1-101
+docs/ARCHITECTURE.md
+  s_2d62d2fd117845::t_f98d091e931fc5 1-61
+  s_2d62d2fd117845::t_f1fe0a8fabda89 62-190
+assets/tables/.gitkeep
+  s_2d62d2fd117845::t_bfc13b6b9c625d 1-6
+lib/core/ai/ai_difficulty.dart
+  s_2d62d2fd117845::t_66ef05d61bc117 1-76
+lib/core/util/seeded_random.dart
+  s_2d62d2fd117845::t_56a2c70fac5bb9 1-20,25-73,75-78,84-94
+  s_2d62d2fd117845::t_f1e341effbf764 21-24,74,79-83
+lib/core/rules/bidding_rules.dart
+  s_2d62d2fd117845::t_dd134a08508a22 1-123
+analysis_options.yaml
+  s_2d62d2fd117845::t_e4978002e1a43f 1-9,14-28
+  s_2d62d2fd117845::t_6edf83d857df55 10-13
+lib/core/ai/hidden_hand_sampler.dart
+  s_2d62d2fd117845::t_32db7d48c081be 1-187
+lib/core/rules/rule_presets.dart
+  s_2d62d2fd117845::t_2fe127227f6733 1-57,64-68,70-124
+  s_2d62d2fd117845::t_81338172496027 58-63,69
+lib/games/spades_batak/README.md
+  s_2d62d2fd117845::t_57546d3052871e 1-5
+docs/AI_STRATEGY.md
+  s_2d62d2fd117845::t_ea753588e563a3 1-136
+docs/AI_BENCHMARKS.md
+  s_2d62d2fd117845::t_3c0db35fd55ac0 1-131
+lib/games/king/README.md
+  s_2d62d2fd117845::t_57546d3052871e 1-5
+lib/core/persistence/settings_repository.dart
+  s_2d62d2fd117845::t_4dcd5aff2a7a01 1-70
+docs/DECISIONS.md
+  s_2d62d2fd117845::t_ec83b4a5f1d358 179-216
+  s_2d62d2fd117845::t_2b9d92ab2f8ee1 1-5,7,10,15-21,34-94
+  s_2d62d2fd117845::t_3eb45d217c5378 95-178
+  s_2d62d2fd117845::t_1c44cd16d49bb8 6,8-9,11-14,22-33
+lib/core/rules/trick_rules.dart
+  s_2d62d2fd117845::t_1cf8b2d2b62c41 1-120
+lib/app/routes.dart
+  s_2d62d2fd117845::t_bb75320bd5bde7 27-35,37,39,41,43-47,51-55
+  s_2d62d2fd117845::t_a58b831aa2303f 1-26,36,38,40,42,48-50,56
+lib/core/ai/card_tracker.dart
+  s_2d62d2fd117845::t_8af6ceb05baa54 1-151
+lib/features/gameplay/widgets/placeholder_banner.dart
+  s_2d62d2fd117845::t_5e3715f8e077cc 1-60
+lib/features/game_selection/widgets/rule_issue_list.dart
+  s_2d62d2fd117845::t_c228c07bc22c71 1-70
+lib/games/partnership_batak/README.md
+  s_2d62d2fd117845::t_57546d3052871e 1-5
+lib/features/game_selection/game_setup_screen.dart
+  s_2d62d2fd117845::t_92303a2c9b8c15 1-152
+lib/core/rules/game_mode.dart
+  s_2d62d2fd117845::t_c307dcdc9174d6 1-106
+lib/main.dart
+  s_2d62d2fd117845::t_a58b831aa2303f 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "de246097354f9d3ec7b7549f4c6b9d799b89d3bb",
+  "prompts": {},
+  "sessions": {
+    "s_2d62d2fd117845": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7336c599-dc2c-45f2-aa11-171fb1977577",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ayhan Gul <ayhangulbjk@gmail.com>"
+    }
+  }
+}
