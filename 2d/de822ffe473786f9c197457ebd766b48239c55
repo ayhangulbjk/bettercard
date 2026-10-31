@@ -1,0 +1,30 @@
+test/unit/spades_batak_scorer_test.dart
+  s_2d62d2fd117845::t_7cbae0f73975d5 98
+  s_2d62d2fd117845::t_10dcaeadf53e48 24-25,39-40,52-53,63-64
+test/unit/rule_validation_test.dart
+  s_2d62d2fd117845::t_f261b8f61e62b9 139-176
+docs/DECISIONS.md
+  s_2d62d2fd117845::t_0d2075293ee489 261-285
+README.md
+  s_2d62d2fd117845::t_0d2075293ee489 122
+docs/ROADMAP.md
+  s_2d62d2fd117845::t_1fb9c72887790c 97-123,125-135
+lib/core/rules/rule_profile.dart
+  s_2d62d2fd117845::t_f9ec712952ef65 87-96,106-107,118-119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2dde822ffe473786f9c197457ebd766b48239c55",
+  "prompts": {},
+  "sessions": {
+    "s_2d62d2fd117845": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7336c599-dc2c-45f2-aa11-171fb1977577",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ayhan Gul <ayhangulbjk@gmail.com>"
+    }
+  }
+}
