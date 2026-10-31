@@ -1,0 +1,79 @@
+lib/core/persistence/app_settings.dart
+  s_2d62d2fd117845::t_f864e958ff7552 23,36-37
+lib/features/rules/widgets/mode_rules_section.dart
+  s_2d62d2fd117845::t_d3640a4be8b3dc 60
+lib/core/rules/king_rules.dart
+  s_2d62d2fd117845::t_a1f44afeda3230 15,23,31,39,47
+  s_2d62d2fd117845::t_f864e958ff7552 29,45,53
+lib/core/rules/rule_validation.dart
+  s_2d62d2fd117845::t_d3640a4be8b3dc 165,176-177,184,200
+  s_2d62d2fd117845::t_c2068ba4184d4b 77,86-87,95,112-113,123,131-132,143,152,209,221,229-230,239,253-256,264,276,283,290
+lib/features/rules/rules_screen.dart
+  s_2d62d2fd117845::t_542e009084929d 24-26
+  s_2d62d2fd117845::t_24b80f7eb7d7c8 27
+  s_2d62d2fd117845::t_0d8af5f9e0725d 28-29
+docs/ROADMAP.md
+  s_2d62d2fd117845::t_2a87dfaf608354 26-60
+  s_2d62d2fd117845::t_20d3a4171c544b 1-25,61-196
+docs/ARCHITECTURE.md
+  s_2d62d2fd117845::t_d3707e07c4328a 164-166,168-170,172,174-180,182,185,190-196,198-199,201-215,222-290,292,295-298,301-302
+  s_2d62d2fd117845::t_2dc877f9f9d126 14,18,22-27,197,200,216-221
+  s_2d62d2fd117845::t_00bf28d10c4b55 1-13,15-17,19-21,28-40,42-45,47,49,51-57,59-61,63,65,67,69-77,79-81,83,85,87,96-114,116,118-126,128-130,132,134,136-139,141-161
+lib/core/ai/ai_difficulty.dart
+  s_2d62d2fd117845::t_f864e958ff7552 11
+lib/app/l10n/strings_tr.dart
+  s_2d62d2fd117845::t_e9d25e7b28a4fc 7-10,21,24,33,39,42,45,49-50,53,65,71,74,77,83,98,107,110,116,119,125,128,131,137,143,147,154,157,160,163,166,170-171,177,183,186
+lib/core/cards/suit.dart
+  s_2d62d2fd117845::t_b459022c77f485 10
+docs/DECISIONS.md
+  s_2d62d2fd117845::t_eaeef692a94667 217-260
+CLAUDE.md
+  s_2d62d2fd117845::t_6398d4bffffc24 87,90-98
+  s_2d62d2fd117845::t_8fddb73e67d560 53-68
+lib/core/rules/game_mode.dart
+  s_2d62d2fd117845::t_778c00b07621c9 10-12,21-23,32-34,43-45
+lib/core/ai/policies/random_legal_policy.dart
+  s_2d62d2fd117845::t_f864e958ff7552 26
+lib/core/rules/rule_presets.dart
+  s_2d62d2fd117845::t_d3640a4be8b3dc 17,20,28,31
+  s_2d62d2fd117845::t_a067112a81326f 42,46,58,65
+README.md
+  s_2d62d2fd117845::t_d1c9acd9290bf2 3-5,7-8,10,12,14-19,21-40,47-60,62-63,65,67-69,72,82,84-97,105-109,111,113,115-131
+  s_2d62d2fd117845::t_2dc877f9f9d126 41-46
+lib/core/cards/rank.dart
+  s_2d62d2fd117845::t_b459022c77f485 6-10,16
+test/integration/app_navigation_test.dart
+  s_2d62d2fd117845::t_59f70d67df9044 87,106-107,118,121,129,133,135-136,149-150
+analysis_options.yaml
+  s_2d62d2fd117845::t_e76f45ebed58d2 14
+lib/features/ai_lab/ai_lab_screen.dart
+  s_2d62d2fd117845::t_538df4404a3eb7 73,134
+lib/features/game_selection/game_setup_screen.dart
+  s_2d62d2fd117845::t_625a9dc177ca33 124,130,135
+lib/features/gameplay/widgets/placeholder_banner.dart
+  s_2d62d2fd117845::t_ecd53a7bbf1082 46
+lib/features/settings/settings_screen.dart
+  s_2d62d2fd117845::t_d9f3deb30e870b 41-43,75,87,124,126
+.metadata
+  s_2d62d2fd117845::t_e7cc1ecc4ab508 18
+.playwright-mcp/console-2026-10-31T18-27-53-407Z.log
+  s_2d62d2fd117845::t_d68f786543cc00 1
+.playwright-mcp/page-2026-10-31T18-27-53-928Z.yml
+  s_2d62d2fd117845::t_a3c16074082e0e 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "02ef43ad5217d4fe798226a45bcdf53de027d175",
+  "prompts": {},
+  "sessions": {
+    "s_2d62d2fd117845": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7336c599-dc2c-45f2-aa11-171fb1977577",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ayhan Gul <ayhangulbjk@gmail.com>"
+    }
+  }
+}
