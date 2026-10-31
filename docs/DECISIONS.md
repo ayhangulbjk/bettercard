@@ -258,3 +258,28 @@ A Windows desktop build was also considered, since `int` is a true 64 bits
 there, but it needs Visual Studio with the C++ workload and that install is
 blocked by policy on the development machine (the installer returns 16389 even
 with an elevated token). Not pursued.
+
+## D-15: A nullable field is cleared through an explicit flag, never by passing null
+
+**Decision.** Where `copyWith` covers a nullable field, clearing it takes a
+separate boolean: `RuleProfile.copyWith(clearFixedTrump: true)`,
+`SpadesBatakMatchState.copyWith(clearHand: true)`. Passing `null` means "leave
+it alone", which is what `field ?? this.field` already does.
+
+**Why.** The idiomatic one-liner cannot distinguish the two intents, so
+`copyWith(fixedTrump: null)` silently kept the old trump. That is worse than a
+compile error: the call looks correct and does nothing.
+
+**How it was found.** A Koz Maca test tried to build a profile with no fixed
+trump to check that the engine refuses it. The test failed because the engine
+*correctly* accepted a profile that still had its trump. Chasing it showed the
+real damage: `RuleProfileValidator` has branches for `bidding.no_trump_source`
+and `king.missing_rules`, and **neither had a test**, because the condition
+could not be constructed through `copyWith` at all. Two error paths were
+unverified.
+
+**Consequence.** Both branches now have tests, and so does the trap itself:
+`copyWith(fixedTrump: null)` must preserve the value while
+`copyWith(clearFixedTrump: true)` must clear it. That second test exists so
+nobody later "fixes" `copyWith` to treat `null` as clearing and silently
+changes the meaning of every existing call.

@@ -136,5 +136,43 @@ void main() {
       expect(lastError, greaterThanOrEqualTo(0), reason: 'no error');
       expect(firstWarning, greaterThan(lastError));
     });
+
+    // These two branches were unreachable through copyWith until it gained
+    // explicit clear flags: `field ?? this.field` silently kept the old value,
+    // so a test could not construct a profile with no trump source or a King
+    // profile with no contract rules. Both are real states the validator is
+    // supposed to catch.
+    test('a mode with neither a declarer nor a fixed trump is rejected', () {
+      final RuleProfile broken = RulePresets.kozMacaStandard().copyWith(
+        clearFixedTrump: true,
+        biddingRules: const BiddingRules(
+          minimumBid: 5,
+          maximumBid: 13,
+          declarerNamesTrump: false,
+        ),
+      );
+      expect(codesOf(broken), contains('bidding.no_trump_source'));
+    });
+
+    test('a King profile without contract rules is rejected', () {
+      final RuleProfile broken =
+          RulePresets.kingClassic().copyWith(clearKingRules: true);
+      expect(codesOf(broken), contains('king.missing_rules'));
+    });
+
+    test('clearing a field is distinguishable from leaving it alone', () {
+      final RuleProfile base = RulePresets.kozMacaStandard();
+      expect(base.fixedTrump, isNotNull);
+
+      // Passing null must NOT clear: that is the trap this guards.
+      expect(base.copyWith(fixedTrump: null).fixedTrump, base.fixedTrump);
+      // The explicit flag must clear.
+      expect(base.copyWith(clearFixedTrump: true).fixedTrump, isNull);
+
+      final RuleProfile king = RulePresets.kingClassic();
+      expect(king.kingRules, isNotNull);
+      expect(king.copyWith(kingRules: null).kingRules, king.kingRules);
+      expect(king.copyWith(clearKingRules: true).kingRules, isNull);
+    });
   });
 }

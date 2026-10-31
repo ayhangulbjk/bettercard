@@ -91,26 +91,48 @@ Gönderilmedi ve üründe öyle etiketli:
 ---
 
 ## 2. kilometre taşı — ilk oynanabilir mod
-
 **Hedef: Koz Maça, uçtan uca.** En basit mod (ihale yok), bu yüzden ihale
 yaşam döngüsü olmadan tüm dikey dilimi sınar.
 
-- [ ] `lib/games/spades_batak/`: tur durumu, motor, puanlayıcı
-- [ ] Maç denetleyicisi: dağıt → oyna → puanla → sonraki el → parti sonu
-- [ ] Masayı canlı duruma bağlamak; dokunarak ve sürükleyerek kart oynamak
-- [ ] Yapılandırılan hızda el animasyonları
-- [ ] `HeuristicPolicy` (Normal için), Başlangıç için zayıflatılmış varyantı
-- [ ] Diske kayıt: `shared_preferences` veya JSON dosyası,
-      `SettingsRepository` arkasında; otomatik kayıt ve hızlı devam
-- [ ] İlk gerçek benchmark girdisi: sezgisel vs rastgele, **eşleştirilmiş
-      dağıtımlar ve döndürülmüş koltuklar** ile
-- [ ] `GameMode.isPlayable`'ı yalnızca Koz Maça için `true` yapmak ve
-      `test/integration/app_navigation_test.dart` rozet testini bilinçli
-      güncellemek
+### Alan modeli ✅ (2026-10-31)
 
-**Bitti sayılma koşulu:** tam bir Koz Maça partisi oynanabiliyor ve devam
-ettirilebiliyor; sezgisel politika rastgeleyi **sıfırı dışlayan bir güven
-aralığıyla** yeniyor.
+- [x] `lib/games/spades_batak/spades_batak_scorer.dart` — el puanlaması
+- [x] `lib/games/spades_batak/spades_batak_match_state.dart` — değişmez maç
+      anlık görüntüsü, değişmez denetimi dahil
+- [x] `lib/games/spades_batak/spades_batak_engine.dart` — dağıt → oyna →
+      puanla → sonraki el → parti sonu, tek `apply` içinde
+- [x] 22 yeni test: tam 8 ellik maç her hamlede değişmez kontrolüyle,
+      tohum tekrarlanabilirliği, hedef-puan bitişi, reddetmeler
+
+Üç tasarım kararı:
+
+1. **İhaleyi alan yok, uydurulmadı.** `BatakScoringRules` bir declarer
+   etrafında kurulu ama Koz Maça'da ihale yok; puanlayıcı o alanları
+   kasıtlı yok sayıyor, geçerli tek alan `pointsPerTrickForOthers`.
+2. **Sonraki el `apply` içinde dağıtılır**, ayrı adım yok — yarım geçiş
+   oluşması imkânsız.
+3. **Tohum `baseSeed + turIndex`** — motor saf kalır, replay çalışır.
+
+El açma sırası her elde döner (`handIndex % playerCount`); puanlama kuralı
+değil usul olduğu için `RuleProfile` seçeneği yapılmadı.
+
+### Kalan işler — mod HÂLÂ oynanabilir değil
+
+- [ ] Riverpod maç denetleyicisi (`NotifierProvider`), komutları motora iletir
+- [ ] Masayı canlı duruma bağlamak — şu an statik önizleme gösteriyor
+- [ ] İnsan oyuncu için dokunarak ve sürükleyerek kart oynama
+- [ ] Yapılandırılan hızda el animasyonları
+- [ ] `HeuristicPolicy` (Normal), Başlangıç için zayıflatılmış varyantı
+- [ ] Diske kayıt: `SettingsRepository` arkasına gerçek depo, otomatik
+      kayıt ve hızlı devam
+- [ ] İlk gerçek benchmark girdisi: sezgisel vs rastgele, eşleştirilmiş
+      dağıtımlar ve döndürülmüş koltuklar
+- [ ] **En son:** `GameMode.isPlayable`'ı yalnızca Koz Maça için `true` yap
+      ve `app_navigation_test.dart` rozet testini bilinçli güncelle
+
+**Bitti sayılma koşulu:** tam bir Koz Maça partisi oynanıp devam
+ettirilebiliyor, ve sezgisel politika rastgeleyi sıfırı dışlayan bir güven
+aralığıyla yeniyor.
 
 ---
 

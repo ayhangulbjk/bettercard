@@ -119,7 +119,7 @@ kurallı-rastgele temel çizgidir. Bkz. `docs/AI_BENCHMARKS.md`.
 | `docs/RULE_PROFILES.md` | Kural varyantları, hazır setler ve açık kural soruları |
 | `docs/AI_STRATEGY.md` | Hile yapamama garantisi, çıkarım, zorluk tasarımı |
 | `docs/AI_BENCHMARKS.md` | Ölçüm protokolü ve "kanıtsız iddia yok" kuralı |
-| `docs/DECISIONS.md` | Karar günlüğü (D-1 … D-14) |
+| `docs/DECISIONS.md` | Karar günlüğü (D-1 … D-15) |
 
 ---
 

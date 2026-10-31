@@ -21,7 +21,8 @@ void main() {
     });
 
     test('awards one point per trick and nothing else', () {
-      final state = TestPositions.playToCompletion(TestPositions.dealt(seed: 11));
+      final state =
+          TestPositions.playToCompletion(TestPositions.dealt(seed: 11));
       final HandScore score =
           SpadesBatakScorer.scoreHand(state, kozMaca.scoringRules);
 
@@ -35,7 +36,8 @@ void main() {
     });
 
     test('scales with pointsPerTrickForOthers', () {
-      final state = TestPositions.playToCompletion(TestPositions.dealt(seed: 11));
+      final state =
+          TestPositions.playToCompletion(TestPositions.dealt(seed: 11));
       final HandScore score = SpadesBatakScorer.scoreHand(
         state,
         const BatakScoringRules(pointsPerTrickForOthers: 3),
@@ -47,7 +49,8 @@ void main() {
     });
 
     test('pays nobody when tricks are worth zero', () {
-      final state = TestPositions.playToCompletion(TestPositions.dealt(seed: 11));
+      final state =
+          TestPositions.playToCompletion(TestPositions.dealt(seed: 11));
       final HandScore score = SpadesBatakScorer.scoreHand(
         state,
         const BatakScoringRules(pointsPerTrickForOthers: 0),
@@ -57,7 +60,8 @@ void main() {
     });
 
     test('score lists are unmodifiable', () {
-      final state = TestPositions.playToCompletion(TestPositions.dealt(seed: 11));
+      final state =
+          TestPositions.playToCompletion(TestPositions.dealt(seed: 11));
       final HandScore score =
           SpadesBatakScorer.scoreHand(state, kozMaca.scoringRules);
       expect(() => score.points.add(1), throwsUnsupportedError);
@@ -91,7 +95,7 @@ void main() {
     test('rejects a profile with no fixed trump', () {
       expect(
         () => SpadesBatakEngine.start(
-          profile: kozMaca.copyWith(fixedTrump: null),
+          profile: kozMaca.copyWith(clearFixedTrump: true),
           seed: 1,
         ),
         throwsArgumentError,

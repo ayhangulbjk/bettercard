@@ -84,6 +84,16 @@ class RuleProfile {
   /// Cards dealt to each seat in the initial deal.
   int get handSize => tricksPerHand;
 
+  /// Returns a copy with the given fields replaced.
+  ///
+  /// [clearFixedTrump] and [clearKingRules] exist because a plain
+  /// `field ?? this.field` cannot distinguish "leave it alone" from "set it
+  /// to null", so passing `fixedTrump: null` would silently keep the old
+  /// trump. Both fields are legitimately nullable -- a mode may have no fixed
+  /// trump, and only King carries contract rules -- and the validator has
+  /// branches for exactly those states, so clearing them has to be
+  /// expressible. Found by a test that could not construct the condition it
+  /// claimed to check.
   RuleProfile copyWith({
     String? id,
     String? turkishName,
@@ -93,6 +103,8 @@ class RuleProfile {
     BuryRules? buryRules,
     KingRules? kingRules,
     Suit? fixedTrump,
+    bool clearFixedTrump = false,
+    bool clearKingRules = false,
     Set<int>? deckExclusions,
   }) =>
       RuleProfile(
@@ -103,8 +115,8 @@ class RuleProfile {
         biddingRules: biddingRules ?? this.biddingRules,
         scoringRules: scoringRules ?? this.scoringRules,
         buryRules: buryRules ?? this.buryRules,
-        kingRules: kingRules ?? this.kingRules,
-        fixedTrump: fixedTrump ?? this.fixedTrump,
+        kingRules: clearKingRules ? null : (kingRules ?? this.kingRules),
+        fixedTrump: clearFixedTrump ? null : (fixedTrump ?? this.fixedTrump),
         deckExclusions: deckExclusions ?? this.deckExclusions,
         schemaVersion: schemaVersion,
       );
