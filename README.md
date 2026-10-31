@@ -115,10 +115,11 @@ kurallı-rastgele temel çizgidir. Bkz. `docs/AI_BENCHMARKS.md`.
 | `CLAUDE.md` | Kalıcı proje talimatları ve mimari kurallar |
 | `docs/ARCHITECTURE.md` | Katmanlar, determinizm, komut modeli, YZ sınırı (diyagramlı) |
 | `docs/ROADMAP.md` | Kilometre taşları, görev listesi, nerede kaldığımız |
+| `docs/MAC_KURULUM.md` | Mac'te kurulum ve ilk görsel test adımları |
 | `docs/RULE_PROFILES.md` | Kural varyantları, hazır setler ve açık kural soruları |
 | `docs/AI_STRATEGY.md` | Hile yapamama garantisi, çıkarım, zorluk tasarımı |
 | `docs/AI_BENCHMARKS.md` | Ölçüm protokolü ve "kanıtsız iddia yok" kuralı |
-| `docs/DECISIONS.md` | Karar günlüğü (D-1 … D-13) |
+| `docs/DECISIONS.md` | Karar günlüğü (D-1 … D-14) |
 
 ---
 

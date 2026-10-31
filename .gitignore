@@ -26,3 +26,6 @@ Thumbs.db
 
 # Benchmark output
 /tool/benchmarks/out/
+
+# Browser automation artifacts (Mermaid diagram validation)
+.playwright-mcp/
