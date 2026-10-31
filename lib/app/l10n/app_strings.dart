@@ -1,0 +1,100 @@
+/// The application's user-visible text, as an interface.
+///
+/// Turkish ships first. Rather than hard-coding Turkish into widgets and
+/// retrofitting localisation later, every string goes through this interface
+/// from day one, so adding English means adding one implementation and a
+/// locale switch -- not auditing every widget.
+///
+/// Deliberately not `intl` / ARB yet: code generation adds a build step and a
+/// dependency, and with one locale it would buy nothing. The seam below is
+/// what makes that swap cheap when a second locale actually arrives. See
+/// docs/DECISIONS.md, D-6.
+abstract interface class AppStrings {
+  String get localeCode;
+
+  // App level.
+  String get appTitle;
+  String get appTagline;
+
+  // Home.
+  String get homePlayTitle;
+  String get homeContinueMatch;
+  String get homeSettings;
+  String get homeStatistics;
+  String get homeRules;
+  String get homeAiLab;
+  String get homeOfflineBadge;
+
+  // Mode availability.
+  String get modeNotPlayableBadge;
+  String get modeNotPlayableExplanation;
+  String get previewTableTitle;
+
+  // Game setup.
+  String get setupTitle;
+  String get setupRuleProfile;
+  String get setupDifficulty;
+  String get setupStart;
+  String get setupRuleIssuesTitle;
+  String get setupNoIssues;
+  String get setupPlayerCount;
+  String get setupTricksPerHand;
+
+  // Gameplay.
+  String get gameplayTrickLabel;
+  String get gameplayYourTurn;
+  String get gameplayWaiting;
+  String get gameplayTrumpLabel;
+  String get gameplayNoTrump;
+  String get gameplayScoreLabel;
+  String get gameplayLeaveMatch;
+
+  // Settings.
+  String get settingsTitle;
+  String get settingsGeneral;
+  String get settingsPresentation;
+  String get settingsAnimationSpeed;
+  String get settingsSound;
+  String get settingsHaptics;
+  String get settingsPlayerName;
+  String get settingsLanguage;
+  String get settingsAiDifficulty;
+  String get settingsQuickPlay;
+
+  // Animation speeds.
+  String get speedSlow;
+  String get speedNormal;
+  String get speedFast;
+  String get speedInstant;
+
+  // Statistics.
+  String get statisticsTitle;
+  String get statisticsEmpty;
+
+  // Rules screen.
+  String get rulesTitle;
+  String get rulesOpenQuestionsTitle;
+
+  // AI lab.
+  String get aiLabTitle;
+  String get aiLabRunBaseline;
+  String get aiLabRunning;
+  String get aiLabHandCount;
+  String get aiLabNoStrengthClaim;
+
+  // Generic.
+  String get commonBack;
+  String get commonCancel;
+  String get commonClose;
+  String get commonOn;
+  String get commonOff;
+
+  /// A seat label such as `Oyuncu 2`.
+  String seatName(int seat);
+
+  /// `El 3 / 13`.
+  String trickProgress(int current, int total);
+
+  /// `5 el tuttu` style contract summary.
+  String contractSummary(int tricks);
+}

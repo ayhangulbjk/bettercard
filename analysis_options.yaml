@@ -1,0 +1,28 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    # flutter create tarafindan eklendi: uretilmis platform kodu analiz edilmez
+    - build/**
+    - android/**
+    - ios/**
+
+linter:
+  rules:
+    always_declare_return_types: true
+    avoid_print: true
+    prefer_final_locals: true
+    prefer_final_in_for_each: true
+    prefer_single_quotes: true
+    unnecessary_parenthesis: true
+    unawaited_futures: true
+    use_super_parameters: true
+    sort_constructors_first: true
+    directives_ordering: true
+    # The domain engine must stay UI-free; enforced by review + import tests,
+    # not by a lint (no first-party lint expresses layer boundaries).

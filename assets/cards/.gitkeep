@@ -1,0 +1,6 @@
+Placeholder so this directory survives a clone.
+
+No bitmap assets ship in milestone 1: cards are drawn procedurally
+(see lib/features/gameplay/widgets/playing_card_view.dart). The assets block
+in pubspec.yaml is commented out because Flutter fails the build on a
+declared-but-empty asset directory; uncomment it when real art lands here.
