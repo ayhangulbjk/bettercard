@@ -61,13 +61,19 @@ abstract final class AppTheme {
       // to CardThemeData across Flutter releases, and panels in this app are
       // styled directly (see AppPanel) rather than through Material Card.
       textTheme: text,
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         foregroundColor: AppColors.textPrimary,
-        titleTextStyle: text.titleLarge,
+        // `titleTextStyle` is deliberately not set. Material 3 already defaults
+        // it to `textTheme.titleLarge`, but to the *merged* one: ThemeData
+        // merges the typography defaults under the styles below, which is where
+        // the font family comes from. Passing the raw `text.titleLarge` here
+        // skipped that merge, so app bar titles fell back to the platform font
+        // while every other string used the themed one -- invisible on Android,
+        // a San Francisco title over Roboto body text on iOS.
       ),
       dividerTheme: const DividerThemeData(
         color: AppColors.goldDim,
