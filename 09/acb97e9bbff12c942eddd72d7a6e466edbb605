@@ -1,0 +1,28 @@
+lib/app/theme/app_theme.dart
+  s_2d62d2fd117845::t_c9e7e815e3a7db 64
+  s_2d62d2fd117845::t_6a1b7e357cbf0f 70-76
+docs/MAC_KURULUM.md
+  s_2d62d2fd117845::t_0df0fa91a7569f 268-288
+  s_2d62d2fd117845::t_553bb9241b944e 7-15,19-30,32-34,36-38,46-48,50,52-53,56,58,61,63-66,68-83,86-90,93-100,102,105-106,109-113,116-119,122-123,125,127-132,135,138-144,147,155,159-164,170,173-174,178-179,181-184,190-191,193,195-196,200,204-205,207,212-221,227-228,239-244,258,266-267
+  s_2d62d2fd117845::t_c1302e12a3ebb1 245-257,259-260
+tool/screenshots/capture_test.dart
+  s_2d62d2fd117845::t_4c03df5eb03090 169,171-176,186-189,193-208,213,217
+  s_2d62d2fd117845::t_ea0cfb7d16c380 87
+  s_2d62d2fd117845::t_bf4c90bbf626cd 1-86,88-168,170,177-185,190-192,209-212,214-216,218-237
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "09acb97e9bbff12c942eddd72d7a6e466edbb605",
+  "prompts": {},
+  "sessions": {
+    "s_2d62d2fd117845": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7336c599-dc2c-45f2-aa11-171fb1977577",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ayhan Gul <ayhangulbjk@gmail.com>"
+    }
+  }
+}
