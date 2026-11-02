@@ -1,0 +1,105 @@
+lib/features/game_selection/widgets/difficulty_selector.dart
+  s_6f6d3ee742d98c::t_d12005a9080c8d 12-16,30,33-38,40,43-45,48-50
+lib/features/gameplay/widgets/hand_summary_sheet.dart
+  s_6f6d3ee742d98c::t_3d5a570229ad02 1-173
+lib/features/gameplay/widgets/hand_fan.dart
+  s_6f6d3ee742d98c::t_a8852ed7795f22 28-29,44-53,138-139,141,143,165,167,173-174,176-179,181,189,191,196-197,205-220
+  s_2d62d2fd117845::t_b61851af028f97 7,9-22,30,56-66,73,78-107,109-111,114-137,140,142,144-147,150-152
+  s_6f6d3ee742d98c::t_d64dacd0e78615 221
+lib/app/routes.dart
+  s_6f6d3ee742d98c::t_e4dad2a1932c3c 6,23,45-48
+lib/features/gameplay/widgets/match_table.dart
+  s_6f6d3ee742d98c::t_e55925fa78ddef 1-101
+lib/features/gameplay/widgets/score_strip.dart
+  s_6f6d3ee742d98c::t_e6562d0ab6a21c 1-75
+lib/app/l10n/app_strings.dart
+  s_6f6d3ee742d98c::t_f8ea661e75ca20 1-2,54-58,60-66,118-128
+  s_6f6d3ee742d98c::t_e4dad2a1932c3c 29
+  s_6f6d3ee742d98c::t_923ca0060bde80 59
+  s_6f6d3ee742d98c::t_70eef02c482634 79-82
+  s_6f6d3ee742d98c::t_d3fc775638ee6e 129
+lib/features/gameplay/match_pacing.dart
+  s_6f6d3ee742d98c::t_f63a741023f967 1-96
+lib/features/home/home_screen.dart
+  s_6f6d3ee742d98c::t_e4dad2a1932c3c 76-84
+lib/core/ai/policies/heuristic_policy.dart
+  s_6f6d3ee742d98c::t_457070a183b0e5 1-303
+lib/features/game_selection/game_setup_screen.dart
+  s_6f6d3ee742d98c::t_d12005a9080c8d 8,12,59-65,90-97,109-132
+lib/app/l10n/strings_tr.dart
+  s_6f6d3ee742d98c::t_f8ea661e75ca20 1,45,106-121,125-146,177,257-287
+  s_6f6d3ee742d98c::t_e4dad2a1932c3c 46-49
+  s_6f6d3ee742d98c::t_70eef02c482634 178-190
+  s_6f6d3ee742d98c::t_923ca0060bde80 122-124
+lib/app/theme/app_theme.dart
+  s_6f6d3ee742d98c::t_20f59fb3e97443 1,53-62
+lib/features/gameplay/match_session.dart
+  s_6f6d3ee742d98c::t_19f528ca2a3fcc 1-7,9-49,51-72,80-114,145-162,165-173,175-180
+  s_6f6d3ee742d98c::t_ac77bb4c9e7a29 8,50,73-79,163-164,174
+  s_6f6d3ee742d98c::t_6f4109997b4182 115-144
+tool/screenshots/capture_test.dart
+  s_6f6d3ee742d98c::t_d37e7c7a63c152 27-28,30-33,56,71-78,99-113,116-131,135-137,148-175,178-182,184-185,187-195,197-198,200-202,208-210,212-214,254-260
+  s_6f6d3ee742d98c::t_3c81f2a555c597 132-134,138-147
+  s_6f6d3ee742d98c::t_2bcfb6b165494d 176-177,183,186,196,199,203-207,211
+  s_6f6d3ee742d98c::t_24aadee0090233 261
+lib/features/gameplay/match_screen.dart
+  s_6f6d3ee742d98c::t_181d4ac3d264c2 169
+  s_6f6d3ee742d98c::t_1e63b4d5857b67 2,11,48,110-124,126-130,141-142,144,178-190
+  s_6f6d3ee742d98c::t_d965beb5448c96 1,3-10,12-20,22,24-47,49-109,131-132,134-140,143,145-168,170-177,191-205,207-262
+  s_6f6d3ee742d98c::t_e55925fa78ddef 21,23,125,133
+  s_6f6d3ee742d98c::t_98831582d2134a 206
+tool/benchmarks/run_matchup.dart
+  s_6f6d3ee742d98c::t_c1ce8839f5fe44 1-96,98,100-160
+  s_6f6d3ee742d98c::t_f09875c25a23e7 97
+  s_6f6d3ee742d98c::t_40910e26f14811 99
+lib/features/gameplay/widgets/playing_card_view.dart
+  s_6f6d3ee742d98c::t_a640b7df7642c7 6,128,136-139
+lib/features/settings/settings_screen.dart
+  s_6f6d3ee742d98c::t_70eef02c482634 72-75,77,88-91,109-114,116-117
+docs/DECISIONS.md
+  s_6f6d3ee742d98c::t_8b27a9d98aab07 286-331
+test/integration/app_navigation_test.dart
+  s_6f6d3ee742d98c::t_83ebd760a008d0 73,80-85,93-96
+lib/features/gameplay/widgets/turn_status_line.dart
+  s_6f6d3ee742d98c::t_e55925fa78ddef 1-39
+lib/features/gameplay/match_controller.dart
+  s_6f6d3ee742d98c::t_248f4235fa9ef3 1-19,21-41,44-77,84-135,137-159,161-174,176-251,253-282,285-298
+  s_6f6d3ee742d98c::t_2e4cad42ae88f3 20,42-43,78-83,136,160,175,252,283-284
+lib/features/gameplay/widgets/seat_panel.dart
+  s_6f6d3ee742d98c::t_923ca0060bde80 18-22,30,46-48,52-54,109-162
+lib/core/rules/game_mode.dart
+  s_6f6d3ee742d98c::t_e4dad2a1932c3c 95-99
+lib/features/gameplay/widgets/match_over_panel.dart
+  s_6f6d3ee742d98c::t_44eb1fed9c0902 1-114
+docs/ROADMAP.md
+  s_6f6d3ee742d98c::t_d43fa478644a60 3,9-16,125-140,143-145,208
+  s_6f6d3ee742d98c::t_2bca607ce648d4 20-22,26,90-91,93-95
+lib/features/gameplay/widgets/suit_pip.dart
+  s_6f6d3ee742d98c::t_89a4f9f0c8bf62 1-119
+lib/core/ai/ai_difficulty.dart
+  s_2d62d2fd117845::t_937a1b77f56435 21-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4fe4efec3707e9175f55c020d2c4df9922f097ef",
+  "prompts": {},
+  "sessions": {
+    "s_2d62d2fd117845": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7336c599-dc2c-45f2-aa11-171fb1977577",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ayhan Gul <ayhangulbjk@gmail.com>"
+    },
+    "s_6f6d3ee742d98c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5defd92d-b59b-41a1-980a-ccf7ad0deb2a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ayhan Gul <ayhangulbjk@gmail.com>"
+    }
+  }
+}
