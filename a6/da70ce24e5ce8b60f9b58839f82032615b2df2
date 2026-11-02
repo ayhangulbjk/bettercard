@@ -1,0 +1,85 @@
+lib/core/persistence/saved_match.dart
+  s_6f6d3ee742d98c::t_2ff630d9619aea 5,8-20,23,25,28,33-35,37-39,41-44,59-71,74,83-85,98-102,109-111,117-125,130-164
+lib/core/statistics/match_statistics.dart
+  s_6f6d3ee742d98c::t_3bfbb46cb3dc79 1-41,43-66,70,72-161
+  s_6f6d3ee742d98c::t_6f976a1d2b6f8e 42,67-69,71
+lib/features/gameplay/match_controller.dart
+  s_6f6d3ee742d98c::t_4d876ba9fe7c45 12,16,18,20,42-47,88,90-91,93,97-129,131-133,135,156,209,232,235-237,241,243,247-249,253-257,259-260,300,304-306
+  s_6f6d3ee742d98c::t_3ec380a4926df8 130,242,244-246
+lib/core/statistics/match_record.dart
+  s_6f6d3ee742d98c::t_ed7f912e3e6fea 1-54,57-58,60-149
+  s_6f6d3ee742d98c::t_6f976a1d2b6f8e 55-56,59
+lib/platform/file_repositories.dart
+  s_6f6d3ee742d98c::t_1c3da9739c019f 1-122
+lib/main.dart
+  s_6f6d3ee742d98c::t_fc54c0c9267fed 1-2,6,9-10,29-56
+lib/app/l10n/app_strings.dart
+  s_6f6d3ee742d98c::t_e10c95eab74568 96-110,150-152
+  s_6f6d3ee742d98c::t_02a717adc89b80 41-43
+lib/features/statistics/statistics_screen.dart
+  s_6f6d3ee742d98c::t_2aa03f81a9fc0c 8-10,12,14,16-18,25-26,31-41,43-102,104-110,113-125,127-133,135-154,157-168
+  s_6f6d3ee742d98c::t_5f685f75e36e40 126
+lib/features/statistics/widgets/statistics_panel.dart
+  s_6f6d3ee742d98c::t_ba417bb08b00bd 1-114
+lib/features/game_selection/game_setup_screen.dart
+  s_6f6d3ee742d98c::t_02a717adc89b80 1-2,9,95,119,121,127-137,143-166
+docs/MAC_KURULUM.md
+  s_6f6d3ee742d98c::t_c6c5c59898ac8d 98-106
+lib/features/home/widgets/resume_card.dart
+  s_6f6d3ee742d98c::t_e9a9fb5b43a33d 1-99
+lib/app/l10n/strings_tr.dart
+  s_6f6d3ee742d98c::t_fc54c0c9267fed 152-153
+  s_6f6d3ee742d98c::t_02a717adc89b80 74-83
+  s_6f6d3ee742d98c::t_e10c95eab74568 73,222-267,315-317
+  s_6f6d3ee742d98c::t_a24ce0fa5fbe40 318
+lib/features/gameplay/match_persistence.dart
+  s_6f6d3ee742d98c::t_02853a3eb5b2ca 1-122
+lib/games/spades_batak/spades_batak_restore.dart
+  s_6f6d3ee742d98c::t_77beadfe2e9662 78-81
+  s_6f6d3ee742d98c::t_c65ea5fa8a52bd 1-77,82-87
+tool/checks/save_roundtrip.dart
+  s_6f6d3ee742d98c::t_4d8d31e4a395f7 1-57,64-151,153-186,189-190
+  s_6f6d3ee742d98c::t_929f382373ecbd 58-63,152,187-188
+tool/screenshots/capture_test.dart
+  s_6f6d3ee742d98c::t_0f8a26a004cc7a 57,73-76,119-132,281-292
+  s_6f6d3ee742d98c::t_1b41457e7a7817 293-294
+lib/features/gameplay/match_turn.dart
+  s_6f6d3ee742d98c::t_297e3cb3726cf5 1-122
+lib/platform/json_file_store.dart
+  s_6f6d3ee742d98c::t_77beadfe2e9662 82-83
+  s_6f6d3ee742d98c::t_428165460e1235 1-81,84
+lib/features/home/widgets/game_mode_card.dart
+  s_6f6d3ee742d98c::t_8fe032f51c654b 5,7,60,104-108,122,154,159,165,170,175,180,185
+docs/DECISIONS.md
+  s_6f6d3ee742d98c::t_4e79532800f60d 332-387
+lib/features/gameplay/match_session.dart
+  s_6f6d3ee742d98c::t_44477f2a06ed7a 44-45,55-61,163-171,185-186
+lib/app/providers.dart
+  s_6f6d3ee742d98c::t_f81c67ca47834c 12-13
+  s_6f6d3ee742d98c::t_c4c2a85158aa7b 7,14-15,19,21-28,30-74
+docs/ROADMAP.md
+  s_6f6d3ee742d98c::t_4e79532800f60d 22,140-155,159
+lib/features/home/home_screen.dart
+  s_6f6d3ee742d98c::t_e8c0823d3c8708 12,45-47
+  s_6f6d3ee742d98c::t_baadb5b9c3f808 48
+.flutter-plugins-dependencies
+  s_6f6d3ee742d98c::t_8227b4d396808a 1
+pubspec.yaml
+  s_6f6d3ee742d98c::t_0cbe78e86f6bec 20-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a6da70ce24e5ce8b60f9b58839f82032615b2df2",
+  "prompts": {},
+  "sessions": {
+    "s_6f6d3ee742d98c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5defd92d-b59b-41a1-980a-ccf7ad0deb2a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ayhan Gul <ayhangulbjk@gmail.com>"
+    }
+  }
+}
