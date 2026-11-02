@@ -5,9 +5,11 @@ import '../../app/l10n/app_strings.dart';
 import '../../app/providers.dart';
 import '../../app/routes.dart';
 import '../../app/theme/app_theme.dart';
+import '../../core/ai/ai_difficulty.dart';
 import '../../core/rules/game_mode.dart';
 import '../../core/rules/rule_profile.dart';
 import '../../core/rules/rule_validation.dart';
+import '../gameplay/match_controller.dart';
 import '../gameplay/widgets/felt_background.dart';
 import '../gameplay/widgets/placeholder_banner.dart';
 import 'widgets/difficulty_selector.dart';
@@ -54,11 +56,13 @@ class _GameSetupScreenState extends ConsumerState<GameSetupScreen> {
               AppSpacing.thumbZoneReserve,
             ),
             children: <Widget>[
-              PlaceholderBanner(
-                title: strings.modeNotPlayableBadge,
-                message: strings.modeNotPlayableExplanation,
-              ),
-              const SizedBox(height: AppSpacing.xl),
+              if (!widget.mode.isPlayable) ...<Widget>[
+                PlaceholderBanner(
+                  title: strings.modeNotPlayableBadge,
+                  message: strings.modeNotPlayableExplanation,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+              ],
               Text(strings.setupRuleProfile, style: text.labelSmall),
               const SizedBox(height: AppSpacing.sm),
               ...presets.map(
@@ -83,13 +87,14 @@ class _GameSetupScreenState extends ConsumerState<GameSetupScreen> {
               ),
               const SizedBox(height: AppSpacing.xxl),
               FilledButton(
-                onPressed: consistent
-                    ? () => Navigator.of(context).pushNamed(
-                          AppRoutes.tablePreview,
-                          arguments: widget.mode,
-                        )
-                    : null,
-                child: Text(strings.previewTableTitle),
+                // A playable mode opens a real table; the rest can only be
+                // previewed, and the button says which one you are getting.
+                onPressed: consistent ? () => _open(profile) : null,
+                child: Text(
+                  widget.mode.isPlayable
+                      ? strings.setupStart
+                      : strings.previewTableTitle,
+                ),
               ),
             ],
           ),
@@ -101,6 +106,30 @@ class _GameSetupScreenState extends ConsumerState<GameSetupScreen> {
 
 /// Derived facts about the selected profile, so the player can see what the
 /// rule set actually implies before starting.
+extension on _GameSetupScreenState {
+  /// Starts the match, or opens the preview for a mode that has no lifecycle
+  /// yet.
+  ///
+  /// The match is started before navigating so the table screen needs no
+  /// arguments and so the rule profile it freezes is exactly the one audited
+  /// on this screen.
+  void _open(RuleProfile profile) {
+    if (!widget.mode.isPlayable) {
+      Navigator.of(context).pushNamed(
+        AppRoutes.tablePreview,
+        arguments: widget.mode,
+      );
+      return;
+    }
+    final AiDifficulty difficulty = ref.read(settingsProvider).aiDifficulty;
+    ref.read(matchProvider.notifier).start(
+          profile: profile,
+          difficulty: difficulty,
+        );
+    Navigator.of(context).pushNamed(AppRoutes.match);
+  }
+}
+
 class _ProfileFacts extends StatelessWidget {
   const _ProfileFacts({required this.profile, required this.strings});
 

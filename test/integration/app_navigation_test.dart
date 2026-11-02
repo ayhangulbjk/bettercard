@@ -70,15 +70,19 @@ void main() {
     }
   });
 
-  testWidgets('no mode is presented as playable yet', (
+  testWidgets('each mode is badged according to its own lifecycle', (
     WidgetTester tester,
   ) async {
     await pumpPortraitApp(tester);
 
     // Checked card by card rather than by counting badges: scrolling to the
     // last mode disposes the first ones, so all five are never in the tree at
-    // once on a phone-sized viewport. If a lifecycle ever ships,
-    // GameMode.isPlayable changes and this must be updated deliberately.
+    // once on a phone-sized viewport.
+    //
+    // This assertion follows GameMode.isPlayable rather than hard-coding the
+    // list, but the point of the test is unchanged: a mode without a finished
+    // lifecycle must say so on the card. Koz Maca lost its badge when its
+    // lifecycle shipped; the other four keep theirs until theirs do.
     for (final GameMode mode in GameMode.values) {
       await reveal(tester, find.text(mode.turkishName));
       expect(
@@ -86,8 +90,10 @@ void main() {
           of: find.widgetWithText(GameModeCard, mode.turkishName),
           matching: find.text('Hazır değil'),
         ),
-        findsOneWidget,
-        reason: '${mode.id} must be badged as not ready',
+        mode.isPlayable ? findsNothing : findsOneWidget,
+        reason: mode.isPlayable
+            ? '${mode.id} is playable and must not be badged'
+            : '${mode.id} must be badged as not ready',
       );
     }
   });

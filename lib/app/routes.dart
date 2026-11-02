@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/rules/game_mode.dart';
 import '../features/ai_lab/ai_lab_screen.dart';
 import '../features/game_selection/game_setup_screen.dart';
+import '../features/gameplay/match_screen.dart';
 import '../features/gameplay/table_preview_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/rules/rules_screen.dart';
@@ -19,6 +20,7 @@ abstract final class AppRoutes {
   static const String home = '/';
   static const String gameSetup = '/setup';
   static const String tablePreview = '/table-preview';
+  static const String match = '/match';
   static const String settings = '/settings';
   static const String statistics = '/statistics';
   static const String rules = '/rules';
@@ -40,6 +42,10 @@ abstract final class AppRoutes {
           TablePreviewScreen(mode: args! as GameMode),
           route,
         ),
+      // The match screen takes no arguments: whoever opens it has already
+      // started the match on the controller, so a resumed match and a fresh
+      // one arrive the same way.
+      AppRoutes.match => _page(const MatchScreen(), route),
       AppRoutes.settings => _page(const SettingsScreen(), route),
       AppRoutes.statistics => _page(const StatisticsScreen(), route),
       AppRoutes.rules => _page(const RulesScreen(), route),

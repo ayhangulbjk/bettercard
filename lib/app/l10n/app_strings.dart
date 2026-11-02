@@ -1,3 +1,5 @@
+import '../../core/rules/rule_violation.dart';
+
 /// The application's user-visible text, as an interface.
 ///
 /// Turkish ships first. Rather than hard-coding Turkish into widgets and
@@ -24,6 +26,7 @@ abstract interface class AppStrings {
   String get homeRules;
   String get homeAiLab;
   String get homeOfflineBadge;
+  String get homeSomeModesNotReady;
 
   // Mode availability.
   String get modeNotPlayableBadge;
@@ -48,6 +51,19 @@ abstract interface class AppStrings {
   String get gameplayNoTrump;
   String get gameplayScoreLabel;
   String get gameplayLeaveMatch;
+  String get gameplayHandSummaryTitle;
+  String get gameplayNextHand;
+  String get gameplayMatchOverTitle;
+  String get gameplayYouWon;
+  String get gameplayYouLost;
+  String get gameplayDraw;
+  String get gameplayRematch;
+  String get gameplayTricksColumn;
+  String get gameplayPointsColumn;
+  String get gameplayTotalColumn;
+  String get gameplayLeaveConfirmTitle;
+  String get gameplayLeaveConfirmMessage;
+  String get gameplayLeaveConfirmAction;
 
   // Settings.
   String get settingsTitle;
@@ -60,6 +76,10 @@ abstract interface class AppStrings {
   String get settingsLanguage;
   String get settingsAiDifficulty;
   String get settingsQuickPlay;
+  String get settingsLegalHints;
+  String get settingsLegalHintsDetail;
+  String get settingsDragToPlay;
+  String get settingsSoundUnavailable;
 
   // Animation speeds.
   String get speedSlow;
@@ -94,6 +114,18 @@ abstract interface class AppStrings {
 
   /// `El 3 / 13`.
   String trickProgress(int current, int total);
+
+  /// `Dagitim 3`, or `Dagitim 3 / 8` when the match has a fixed length.
+  String handProgress(int current, int? total);
+
+  /// `Hedef 101 puan`, for a match that ends on a score rather than a count.
+  String targetScore(int points);
+
+  /// `Oyuncu 2 kazandi`.
+  String winnerLine(String name);
+
+  /// Why the engine refused a move. One sentence, aimed at the player.
+  String moveRejected(RuleViolationCode code);
 
   /// `5 el tuttu` style contract summary.
   String contractSummary(int tricks);

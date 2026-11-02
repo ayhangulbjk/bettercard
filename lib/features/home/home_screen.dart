@@ -73,10 +73,15 @@ final class HomeScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
-                      Text(
-                        strings.modeNotPlayableExplanation,
-                        style: text.bodySmall,
-                      ),
+                      // Shown only while something still carries the badge,
+                      // so the footer stops claiming the whole app is
+                      // unfinished once a mode is playable.
+                      if (GameMode.values
+                          .any((GameMode mode) => !mode.isPlayable))
+                        Text(
+                          strings.homeSomeModesNotReady,
+                          style: text.bodySmall,
+                        ),
                       const SizedBox(height: AppSpacing.lg),
                       _SecondaryActions(strings: strings),
                     ],

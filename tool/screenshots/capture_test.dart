@@ -24,7 +24,13 @@ import 'dart:ui' as ui;
 
 import 'package:batak_king/app/app.dart';
 import 'package:batak_king/app/routes.dart';
+import 'package:batak_king/core/ai/ai_difficulty.dart';
+import 'package:batak_king/core/cards/playing_card.dart';
 import 'package:batak_king/core/rules/game_mode.dart';
+import 'package:batak_king/core/rules/rule_presets.dart';
+import 'package:batak_king/features/gameplay/match_controller.dart';
+import 'package:batak_king/features/gameplay/match_session.dart';
+import 'package:batak_king/games/spades_batak/spades_batak_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -47,6 +53,7 @@ final class _Shot {
     this.arguments,
     this.textScale = 1,
     this.scrollBy = 0,
+    this.drive,
   });
 
   final String name;
@@ -61,6 +68,14 @@ final class _Shot {
 
   /// Logical pixels to drag the first scrollable by, negative to scroll down.
   final double scrollBy;
+
+  /// Runs after the route is pushed, to put the screen into a given state.
+  ///
+  /// This is what makes the live table capturable: it starts a match on the
+  /// real controller and plays it forward, so the capture shows the table as
+  /// the engine and the opponents actually leave it rather than a mock-up.
+  final Future<void> Function(WidgetTester tester, ProviderContainer container)?
+      drive;
 }
 
 const List<_Shot> _shots = <_Shot>[
@@ -81,7 +96,121 @@ const List<_Shot> _shots = <_Shot>[
   _Shot('07-statistics', route: AppRoutes.statistics),
   _Shot('08-rules', route: AppRoutes.rules),
   _Shot('09-ai-lab', route: AppRoutes.aiLab),
+  _Shot(
+    '10-match-mid-trick',
+    route: AppRoutes.match,
+    drive: _driveToPlayerTurn,
+  ),
+  _Shot(
+    '11-match-hand-summary',
+    route: AppRoutes.match,
+    drive: _driveToHandSummary,
+  ),
+  _Shot(
+    '12-match-over',
+    route: AppRoutes.match,
+    drive: _driveToMatchOver,
+  ),
 ];
+
+/// Starts a Koz Maca match on the real controller.
+///
+/// A fixed seed, so the captures are comparable between runs: a table that
+/// dealt a different hand every time would make a layout regression invisible.
+Future<void> _startMatch(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  container.read(matchProvider.notifier).start(
+        profile: RulePresets.defaultFor(GameMode.spadesBatak),
+        difficulty: AiDifficulty.normal,
+        seed: 20260202,
+      );
+  await tester.pumpAndSettle();
+}
+
+/// A trick in progress with the player to move: cards already on the table,
+/// the legal ones in hand highlighted. The state the table spends most of its
+/// time in, and the one worth checking the layout against.
+Future<void> _driveToPlayerTurn(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) =>
+        session.phase == MatchPhase.awaitingHuman &&
+        !(session.hand?.currentTrick.isEmpty ?? true),
+  );
+}
+
+Future<void> _driveToHandSummary(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) => session.phase == MatchPhase.handSummary,
+  );
+}
+
+Future<void> _driveToMatchOver(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) => session.isOver,
+  );
+}
+
+/// Plays the table forward until [done], answering for the human seat.
+///
+/// It plays the first legal card rather than a chosen one: the point is to
+/// reach a state worth photographing, and any legal card gets there. The step
+/// cap is a guard, not a budget -- if the loop ever hits it, the table is
+/// stuck and the capture should fail loudly.
+Future<void> _advance(
+  WidgetTester tester,
+  ProviderContainer container,
+  bool Function(MatchSession session) done, {
+  int maxSteps = 1200,
+}) async {
+  const SpadesBatakEngine engine = SpadesBatakEngine();
+  for (int step = 0; step < maxSteps; step++) {
+    final MatchSession? session = container.read(matchProvider);
+    if (session == null || done(session)) {
+      return;
+    }
+    switch (session.phase) {
+      case MatchPhase.awaitingHuman:
+        final List<PlayingCard> legal =
+            engine.legalCards(session.match, session.humanSeat);
+        container.read(matchProvider.notifier).playCard(legal.first);
+        await tester.pumpAndSettle();
+      case MatchPhase.handSummary:
+        container.read(matchProvider.notifier).continueAfterHand();
+        await tester.pumpAndSettle();
+      case MatchPhase.opponentThinking:
+      case MatchPhase.trickPause:
+      case MatchPhase.matchOver:
+        // The table is on a timer: an opponent thinking or a finished trick
+        // being shown. One long pump elapses it, where pumpAndSettle would
+        // crawl forward in its default 100ms steps and spend the step budget
+        // on a single hand.
+        await tester.pump(const Duration(seconds: 1));
+    }
+  }
+  throw StateError(
+    'the table never reached the requested state in $maxSteps steps',
+  );
+}
 
 void main() {
   setUpAll(_loadFonts);
@@ -120,6 +249,14 @@ Future<void> _capture(WidgetTester tester, _Shot shot) async {
     );
     unawaitedPush(navigator, shot.route!, shot.arguments);
     await tester.pumpAndSettle();
+  }
+
+  if (shot.drive != null) {
+    final ProviderContainer container = ProviderScope.containerOf(
+      tester.element(find.byType(BatakKingApp)),
+      listen: false,
+    );
+    await shot.drive!(tester, container);
   }
 
   if (shot.scrollBy != 0) {

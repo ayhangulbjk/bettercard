@@ -1,24 +1,29 @@
 # Yol Haritası ve Görev Listesi
 
-Son güncelleme: **2026-10-31**
+Son güncelleme: **2026-11-02**
 
 ---
 
 ## Şu an neredeyiz
 
-**1. kilometre taşı tamamlandı ve doğrulandı.** Araç zinciri kurulu, kod
-derleniyor, 138 test geçiyor, APK üretiliyor. **Hiçbir oyun modu henüz
-oynanabilir değil** — bu kasıtlı ve üründe etiketli.
+**Koz Maça oynanabilir.** Dağıt, oyna, puanla, sonraki dağıtım, parti sonu —
+hepsi gerçek motor üzerinden, karttan anlayan rakiplerle. Diğer dört mod hâlâ
+ihale/gömme/sözleşme yaşam döngüsünden yoksun ve üründe öyle etiketli.
+
+Sezgisel oyuncunun gücü ölçüldü: rastgele temel çizgiye karşı
+**+1,27 ± 0,03 el/dağıtım** (1500 dağıtım, dört koltuğa döndürülmüş,
+eşleştirilmiş). Başlangıç seviyesi +0,84 ± 0,03. Kontrol koşusu
+(rastgele vs rastgele) sıfırı içeriyor, yani ölçüm düzeneği doğru.
 
 | Ölçüm | Değer |
 |---|---|
-| `lib/` | 65 Dart dosyası, 7.338 satır |
-| `test/` | 14 dosya, 2.034 satır, **138 test** |
-| `tool/` | 1 benchmark CLI |
+| `lib/` | 76 Dart dosyası, 9.827 satır |
+| `test/` | 16 dosya, 2.390 satır, **160 test** |
+| `tool/` | 2 benchmark CLI + başsız ekran görüntüsü aracı |
 | Araç zinciri | Flutter 3.47.9 · Dart 3.13.7 · Android SDK 36 · NDK 28.2 · JDK 21 |
 | Paket adı | `com.batakking.batak_king` |
 | `flutter analyze` | 0 sorun |
-| En büyük dosya | 302 satır (`docs/` hariç 296) |
+| En büyük dosya | 374 satır (`tool/screenshots/capture_test.dart`); `lib/` içinde 303 |
 
 ---
 
@@ -82,11 +87,12 @@ Gönderildi:
 
 Gönderilmedi ve üründe öyle etiketli:
 
-- Hiçbir mod oynanabilir değil — `GameMode.isPlayable` her yerde `false`
+- Hiçbir mod oynanabilir değildi — `GameMode.isPlayable` her yerde `false`
+  (2. kilometre taşında Koz Maça için açıldı)
 - İhale, sözleşme seçimi, gömme veya puanlama yaşam döngüsü yok
-- Kurallı-rastgele temel çizginin üstünde YZ yok
-- Diske kayıt yok (yalnızca bellek içi depo)
-- Ses, titreşim veya kart animasyonu yok
+- Kurallı-rastgele temel çizginin üstünde YZ yok (2. kilometre taşında geldi)
+- Diske kayıt yok (yalnızca bellek içi depo) — **hâlâ böyle**
+- Ses, titreşim veya kart animasyonu yok (titreşim 2. kilometre taşında geldi)
 
 ---
 
@@ -116,19 +122,27 @@ yaşam döngüsü olmadan tüm dikey dilimi sınar.
 El açma sırası her elde döner (`handIndex % playerCount`); puanlama kuralı
 değil usul olduğu için `RuleProfile` seçeneği yapılmadı.
 
-### Kalan işler — mod HÂLÂ oynanabilir değil
+### Oynanabilirlik ✅ (2026-11-02)
 
-- [ ] Riverpod maç denetleyicisi (`NotifierProvider`), komutları motora iletir
-- [ ] Masayı canlı duruma bağlamak — şu an statik önizleme gösteriyor
-- [ ] İnsan oyuncu için dokunarak ve sürükleyerek kart oynama
-- [ ] Yapılandırılan hızda el animasyonları
-- [ ] `HeuristicPolicy` (Normal), Başlangıç için zayıflatılmış varyantı
+- [x] Riverpod maç denetleyicisi (`MatchController`), komutları motora iletir
+- [x] Canlı masa (`MatchScreen`): skor şeridi, dikey rakip panelleri, el sonu
+      puan kâğıdı, parti sonu paneli
+- [x] İnsan oyuncu için dokunarak **ve sürükleyerek** kart oynama
+- [x] `HeuristicPolicy` (Normal) ve Başlangıç için zayıflatılmış varyantı
+- [x] İlk gerçek benchmark girdisi: `tool/benchmarks/run_matchup.dart`,
+      eşleştirilmiş dağıtımlar ve döndürülmüş koltuklar
+- [x] `GameMode.isPlayable` yalnızca Koz Maça için `true`; rozet testi
+      bilinçli güncellendi (artık moda göre iddia ediyor)
+- [x] Uygulanmamış zorluk seviyeleri (Zor, Uzman, Efsane) arayüzde kapalı
+- [x] Boşta duran ayarlar bağlandı: hızlı oyun, kart vurgusu, sürükleme,
+      titreşim. Ses bu sürümde yok, bu yüzden anahtarı kapalı ve öyle yazıyor.
+
+### Kalan işler
+
 - [ ] Diske kayıt: `SettingsRepository` arkasına gerçek depo, otomatik
-      kayıt ve hızlı devam
-- [ ] İlk gerçek benchmark girdisi: sezgisel vs rastgele, eşleştirilmiş
-      dağıtımlar ve döndürülmüş koltuklar
-- [ ] **En son:** `GameMode.isPlayable`'ı yalnızca Koz Maça için `true` yap
-      ve `app_navigation_test.dart` rozet testini bilinçli güncelle
+      kayıt ve hızlı devam — **ana ekrandaki "Devam Et" hâlâ bağlanmadı**
+- [ ] Kart hareketi animasyonu (şu an tempo var, hareket yok)
+- [ ] İstatistik birikimi: tamamlanan partilerin kaydı
 
 **Bitti sayılma koşulu:** tam bir Koz Maça partisi oynanıp devam
 ettirilebiliyor, ve sezgisel politika rastgeleyi sıfırı dışlayan bir güven
@@ -191,7 +205,7 @@ aralığıyla yeniyor.
 
 | # | Konu | Durum |
 |---|---|---|
-| T-1 | **Koltuk paneli düzeni.** Telefon genişliğinde üç rakip paneline ~80px kalıyor; isim `Bat…` diye kesiliyor. Dikey düzen (avatar üstte, isim altta) ya da istatistikleri ortak bir skor şeridine taşımak. | **Dikey düzen onaylandı**, uygulama ilk kez görüldükten sonra yapılacak |
+| T-1 | **Koltuk paneli düzeni.** Telefon genişliğinde üç rakip paneline ~80px kalıyor; isim `Bat…` diye kesiliyor. | **Çözüldü** (2026-11-02): `SeatPanel(vertical: true)` — avatar üstte, isim altta. Ayrıca toplamlar ortak skor şeridine taşındı. Ekran görüntüsünde isimler tam sığıyor. |
 | T-2 | Türkçe diakritikler | Yapılacak — yukarıdaki "sıradaki adım" |
 | T-3 | `adb` çakışması: `C:\Users\TCAYGUL\platform-tools` ile SDK'nın kopyası | Zararsız uyarı; cihaz algılama sorunu çıkarsa eskisi PATH'ten çıkarılır |
 

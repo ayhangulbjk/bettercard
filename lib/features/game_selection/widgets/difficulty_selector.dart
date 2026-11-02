@@ -9,10 +9,11 @@ import '../../../core/persistence/app_settings.dart';
 
 /// Difficulty chips.
 ///
-/// The levels are selectable and persisted, but milestone 1 ships only the
-/// legal-random baseline policy, so the choice does not yet change how
-/// opponents play. The AI lab screen states that plainly rather than letting
-/// the selector imply strength that does not exist.
+/// Only the levels a policy actually implements can be picked. Baslangic and
+/// Normal are the heuristic policy, with and without a documented blunder
+/// rate; Zor, Uzman and Efsane need search and have no benchmark entry, so
+/// they are shown disabled rather than quietly mapped onto a weaker opponent.
+/// See [AiDifficulty.isImplemented] and docs/ROADMAP.md milestone 4.
 final class DifficultySelector extends ConsumerWidget {
   const DifficultySelector({super.key});
 
@@ -26,19 +27,27 @@ final class DifficultySelector extends ConsumerWidget {
       runSpacing: AppSpacing.sm,
       children: AiDifficulty.values.map((AiDifficulty level) {
         final bool selected = level == current;
+        final bool available = level.isImplemented;
         return ChoiceChip(
           label: Text(level.turkishName),
-          selected: selected,
-          onSelected: (bool _) => ref.read(settingsProvider.notifier).update(
-                (AppSettings s) => s.copyWith(aiDifficulty: level),
-              ),
+          selected: selected && available,
+          onSelected: available
+              ? (bool _) => ref.read(settingsProvider.notifier).update(
+                    (AppSettings s) => s.copyWith(aiDifficulty: level),
+                  )
+              : null,
           backgroundColor: AppColors.surfaceElevated,
+          disabledColor: AppColors.surfaceSunken,
           selectedColor: AppColors.goldDim,
           side: BorderSide(
-            color: selected ? AppColors.goldBright : AppColors.textMuted,
+            color: !available
+                ? AppColors.textMuted.withValues(alpha: 0.4)
+                : (selected ? AppColors.goldBright : AppColors.textMuted),
             width: 0.6,
           ),
-          labelStyle: Theme.of(context).textTheme.bodyMedium,
+          labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: available ? null : AppColors.textMuted,
+              ),
         );
       }).toList(growable: false),
     );

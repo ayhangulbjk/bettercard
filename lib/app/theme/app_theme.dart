@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
@@ -49,7 +50,16 @@ abstract final class AppTheme {
       onError: AppColors.textPrimary,
     );
 
-    final TextTheme text = _textTheme();
+    // The same merge ThemeData performs on `textTheme`, done up front so the
+    // button themes below can use merged styles. A button's `textStyle`
+    // REPLACES its label's style instead of merging into it, so handing it a
+    // style with no font family drops the typography default and the label
+    // falls back to the platform font -- the identical defect the app bar hit
+    // (see the note on appBarTheme), and the reason button labels rasterised
+    // as empty boxes in the headless screenshot harness.
+    final TextTheme text = Typography.material2021(
+      platform: defaultTargetPlatform,
+    ).white.merge(_textTheme());
 
     return ThemeData(
       useMaterial3: true,

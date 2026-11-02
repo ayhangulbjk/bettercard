@@ -1,3 +1,4 @@
+import '../../core/rules/rule_violation.dart';
 import 'app_strings.dart';
 
 /// Turkish copy.
@@ -40,6 +41,11 @@ final class TurkishStrings implements AppStrings {
 
   @override
   String get homeOfflineBadge => 'İnternet gerekmez';
+
+  @override
+  String get homeSomeModesNotReady =>
+      'Rozetli modların kuralları ve yapay zekası henüz tamamlanmadı. '
+      'Şimdilik yalnızca masa düzenini önizleyebilirsiniz.';
 
   @override
   String get modeNotPlayableBadge => 'Hazır değil';
@@ -98,6 +104,47 @@ final class TurkishStrings implements AppStrings {
   String get gameplayLeaveMatch => 'Masadan ayrıl';
 
   @override
+  String get gameplayHandSummaryTitle => 'Dağıtım bitti';
+
+  @override
+  String get gameplayNextHand => 'Sonraki dağıtım';
+
+  @override
+  String get gameplayMatchOverTitle => 'Parti bitti';
+
+  @override
+  String get gameplayYouWon => 'Kazandınız!';
+
+  @override
+  String get gameplayYouLost => 'Bu partiyi kaybettiniz';
+
+  @override
+  String get gameplayDraw => 'Berabere';
+
+  @override
+  String get gameplayRematch => 'Yeniden oyna';
+
+  @override
+  String get gameplayTricksColumn => 'El';
+
+  @override
+  String get gameplayPointsColumn => 'Puan';
+
+  @override
+  String get gameplayTotalColumn => 'Toplam';
+
+  @override
+  String get gameplayLeaveConfirmTitle => 'Masadan ayrılınsın mı?';
+
+  @override
+  String get gameplayLeaveConfirmMessage =>
+      'Parti henüz kaydedilmiyor. Şimdi ayrılırsanız bu partinin puanları '
+      'silinir.';
+
+  @override
+  String get gameplayLeaveConfirmAction => 'Ayrıl';
+
+  @override
   String get settingsTitle => 'Ayarlar';
 
   @override
@@ -126,6 +173,20 @@ final class TurkishStrings implements AppStrings {
 
   @override
   String get settingsQuickPlay => 'Hızlı oyun';
+
+  @override
+  String get settingsLegalHints => 'Oynanabilir kart vurgusu';
+
+  @override
+  String get settingsLegalHintsDetail =>
+      'Yalnızca kuralların size zaten izin verdiği kartları gösterir; '
+      'rakip eli asla açığa çıkarmaz.';
+
+  @override
+  String get settingsDragToPlay => 'Sürükleyerek oyna';
+
+  @override
+  String get settingsSoundUnavailable => 'Bu sürümde ses yok.';
 
   @override
   String get speedSlow => 'Yavaş';
@@ -193,4 +254,35 @@ final class TurkishStrings implements AppStrings {
 
   @override
   String contractSummary(int tricks) => '$tricks el ihale';
+
+  @override
+  String handProgress(int current, int? total) =>
+      total == null ? 'Dağıtım $current' : 'Dağıtım $current / $total';
+
+  @override
+  String targetScore(int points) => 'Hedef $points puan';
+
+  @override
+  String winnerLine(String name) => '$name kazandı';
+
+  @override
+  String moveRejected(RuleViolationCode code) => switch (code) {
+        RuleViolationCode.notYourTurn => 'Sıra sizde değil.',
+        RuleViolationCode.cardNotInHand => 'Bu kart elinizde değil.',
+        RuleViolationCode.mustFollowSuit =>
+          'Yerden gelen renge uymanız gerekiyor.',
+        RuleViolationCode.mustPlayTrump =>
+          'Bu renk elinizde yok, koz oynamanız gerekiyor.',
+        RuleViolationCode.mustOvertrump =>
+          'Yerdeki kozdan büyük bir koz oynamanız gerekiyor.',
+        RuleViolationCode.mustBeatLeadSuit =>
+          'Yerdeki karttan büyük oynamanız gerekiyor.',
+        RuleViolationCode.trumpNotBroken =>
+          'Koz henüz kırılmadı, koz çıkamazsınız.',
+        RuleViolationCode.wrongPhase => 'Bu hamle şu anda yapılamaz.',
+        RuleViolationCode.invalidBid ||
+        RuleViolationCode.contractUnavailable ||
+        RuleViolationCode.invalidBury =>
+          'Bu hamle kurallara uygun değil.',
+      };
 }

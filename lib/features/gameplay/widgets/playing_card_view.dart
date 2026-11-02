@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/cards/playing_card.dart';
+import 'suit_pip.dart';
 
 /// A single card face or back, drawn with widgets rather than from a bitmap.
 ///
@@ -124,14 +125,7 @@ class _Face extends StatelessWidget {
                       color: ink,
                     ),
                   ),
-                  Text(
-                    card.suit.symbol,
-                    style: TextStyle(
-                      fontSize: pipSize,
-                      height: 1,
-                      color: ink,
-                    ),
-                  ),
+                  SuitPip(suit: card.suit, size: pipSize, color: ink),
                 ],
               ),
             ),
@@ -139,13 +133,10 @@ class _Face extends StatelessWidget {
               alignment: Alignment.bottomRight,
               child: Opacity(
                 opacity: 0.22,
-                child: Text(
-                  card.suit.symbol,
-                  style: TextStyle(
-                    fontSize: centreSize,
-                    height: 1,
-                    color: ink,
-                  ),
+                child: SuitPip(
+                  suit: card.suit,
+                  size: centreSize,
+                  color: ink,
                 ),
               ),
             ),

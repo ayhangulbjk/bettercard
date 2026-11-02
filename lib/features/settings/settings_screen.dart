@@ -69,11 +69,12 @@ final class SettingsScreen extends ConsumerWidget {
                     ),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
-                      title: Text('Oynanabilir kart vurgusu',
-                          style: text.bodyLarge),
+                      title: Text(
+                        strings.settingsLegalHints,
+                        style: text.bodyLarge,
+                      ),
                       subtitle: Text(
-                        'Yalnızca kuralların size zaten izin verdigi kartlari '
-                        'gosterir; rakip eli asla aciga cikarmaz.',
+                        strings.settingsLegalHintsDetail,
                         style: text.bodySmall,
                       ),
                       value: settings.showLegalMoveHints,
@@ -84,7 +85,10 @@ final class SettingsScreen extends ConsumerWidget {
                     ),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
-                      title: Text('Sürükleyerek oyna', style: text.bodyLarge),
+                      title: Text(
+                        strings.settingsDragToPlay,
+                        style: text.bodyLarge,
+                      ),
                       value: settings.allowDragToPlay,
                       onChanged: (bool value) => controller.update(
                         (AppSettings s) => s.copyWith(allowDragToPlay: value),
@@ -102,10 +106,15 @@ final class SettingsScreen extends ConsumerWidget {
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       title: Text(strings.settingsSound, style: text.bodyLarge),
-                      value: settings.soundEnabled,
-                      onChanged: (bool value) => controller.update(
-                        (AppSettings s) => s.copyWith(soundEnabled: value),
+                      // Disabled rather than hidden: the preference exists and
+                      // is stored, but no audio ships in this build, so a
+                      // working switch would promise a sound that never plays.
+                      subtitle: Text(
+                        strings.settingsSoundUnavailable,
+                        style: text.bodySmall,
                       ),
+                      value: false,
+                      onChanged: null,
                     ),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,

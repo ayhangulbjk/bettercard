@@ -283,3 +283,49 @@ unverified.
 `copyWith(clearFixedTrump: true)` must clear it. That second test exists so
 nobody later "fixes" `copyWith` to treat `null` as clearing and silently
 changes the meaning of every existing call.
+
+## D-16: Suit pips are painted, not typed
+
+**Decision.** `SuitPip` draws the four suits as paths. `Suit.symbol` keeps its
+Unicode character for logs, diagnostics and `PlayingCard.label`, but nothing a
+player looks at renders a pip as text.
+
+**Why.** U+2660..U+2667 are not in Roboto. A device shows them only if the
+system fallback chain happens to supply them, and that chain is not something
+this project controls or can test on every device it ships to. A card game
+whose suits might not render is not a risk worth carrying for four shapes.
+
+**How it was found.** The headless screenshot harness rasterises with the
+fonts it is given and no system fallback, so every pip came out as an empty
+box, on the cards and in the trick area alike. That is the harness's limitation
+rather than proof the app is broken on a phone, but it demonstrates exactly
+what a device without the glyphs would do.
+
+**Consequence.** Pips scale crisply to the corner index and the watermark from
+one set of control points, and they take a colour, so a four-colour deck is a
+parameter rather than a new font.
+
+## D-17: A button's `textStyle` replaces the label style, so it must be merged first
+
+**Decision.** `AppTheme.dark` merges the custom `TextTheme` onto
+`Typography.material2021(platform: defaultTargetPlatform).white` before the
+button themes read it, rather than handing the button themes the raw styles.
+
+**Why.** `ThemeData` merges typography under whatever `textTheme` it is given,
+which is where the font family comes from. A `ButtonStyle.textStyle` is applied
+to the label directly and *replaces* its style, so a style assembled without a
+family -- as every style in `_textTheme()` is -- drops the family that the
+merge would have supplied and the label falls back to the platform font.
+
+**How it was found.** Twice. First on app bar titles, where `titleTextStyle`
+was being set from the raw style; the fix there was to delete the override and
+let Material 3 default to the merged one. Then on every button in the app: the
+screenshot harness, which has no system font to fall back to, rasterised
+`Basla`, `Sonraki dagitim` and the rest as rows of empty boxes while all other
+text rendered correctly. The same defect on iOS is quieter and still wrong: San
+Francisco button labels under Roboto body text.
+
+**Consequence.** Styles handed to a `ButtonStyle`, a `SnackBarThemeData` or
+anything else that replaces rather than merges must come from the merged theme.
+The screenshot harness is what makes this class of defect visible at all, since
+on Android the fallback happens to be Roboto and the bug is invisible.

@@ -92,11 +92,11 @@ enum GameMode {
 
   /// Whether this mode's full lifecycle is implemented and playable.
   ///
-  /// Milestone 1 ships the shared trick core only; no mode has its auction,
-  /// contract or scoring lifecycle yet, so this is false everywhere. The home
-  /// screen reads this flag to label modes honestly rather than opening a
-  /// table that cannot be played.
-  bool get isPlayable => false;
+  /// Koz Maca is: deal, play, score, next hand, end of match, with opponents
+  /// that reason about their cards. The other four still lack their auction,
+  /// contract or burying lifecycle, so they stay false and the home screen
+  /// labels them rather than opening a table that cannot be played.
+  bool get isPlayable => this == GameMode.spadesBatak;
 
   /// Looks up a mode by its persisted [id].
   static GameMode fromId(String id) => values.firstWhere(

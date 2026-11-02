@@ -18,6 +18,15 @@ enum AiDifficulty {
 
   /// Turkish display name.
   final String turkishName;
+
+  /// Whether a policy actually implements this level today.
+  ///
+  /// Beginner and Normal are the heuristic policy, with and without a
+  /// documented blunder rate. Hard, Uzman and Efsane need search (milestone 4
+  /// in docs/ROADMAP.md) and have no benchmark entry, so they stay
+  /// unselectable rather than quietly reusing a weaker policy and implying a
+  /// strength that has not been measured.
+  bool get isImplemented => this == beginner || this == normal;
 }
 
 /// A hard ceiling on what a decision may spend.
