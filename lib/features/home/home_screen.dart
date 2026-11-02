@@ -11,89 +11,57 @@ import '../gameplay/widgets/felt_background.dart';
 import 'widgets/game_mode_card.dart';
 import 'widgets/resume_card.dart';
 
-/// The main menu.
+/// The main menu: the title, the match in progress, the five games, and the
+/// four secondary destinations.
 ///
-/// Five large mode selections dominate the screen; everything else is a small
-/// row of secondary destinations at the bottom, inside thumb reach. The whole
-/// screen scrolls so that a large system font or a short device cannot clip
-/// the fifth mode.
+/// Deliberately not scrollable. The menu is a choice between five things, and
+/// a menu that scrolls hides part of that choice -- so the five rows share
+/// whatever height the device has instead, each one line tall. That costs the
+/// rows their taglines, which is the point: nothing on this screen is here to
+/// be read, only to be tapped.
 final class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppStrings strings = ref.watch(stringsProvider);
-    final TextTheme text = Theme.of(context).textTheme;
 
     return FeltBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: CustomScrollView(
-            slivers: <Widget>[
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.xl,
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                ),
-                sliver: SliverToBoxAdapter(
-                  child: _Masthead(strings: strings),
-                ),
-              ),
-              const SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                sliver: SliverToBoxAdapter(child: ResumeCard()),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                ),
-                sliver: SliverList.separated(
-                  itemCount: GameMode.values.length,
-                  separatorBuilder: (BuildContext context, int index) =>
-                      const SizedBox(height: AppSpacing.md),
-                  itemBuilder: (BuildContext context, int index) {
-                    final GameMode mode = GameMode.values[index];
-                    return GameModeCard(
-                      mode: mode,
-                      notPlayableLabel: strings.modeNotPlayableBadge,
-                      onTap: () => Navigator.of(context).pushNamed(
-                        AppRoutes.gameSetup,
-                        arguments: mode,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.xl,
-                  AppSpacing.lg,
-                  AppSpacing.thumbZoneReserve,
-                ),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      // Shown only while something still carries the badge,
-                      // so the footer stops claiming the whole app is
-                      // unfinished once a mode is playable.
-                      if (GameMode.values
-                          .any((GameMode mode) => !mode.isPlayable))
-                        Text(
-                          strings.homeSomeModesNotReady,
-                          style: text.bodySmall,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.lg,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const _Masthead(),
+                const ResumeCard(),
+                // Expanded per row, so the list fits any height without a
+                // scrollbar and without an overflow stripe.
+                for (final GameMode mode in GameMode.values)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: GameModeCard(
+                        mode: mode,
+                        notPlayableLabel: strings.modeNotPlayableBadge,
+                        onTap: () => Navigator.of(context).pushNamed(
+                          AppRoutes.gameSetup,
+                          arguments: mode,
                         ),
-                      const SizedBox(height: AppSpacing.lg),
-                      _SecondaryActions(strings: strings),
-                    ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.sm),
+                _SecondaryActions(strings: strings),
+              ],
+            ),
           ),
         ),
       ),
@@ -101,28 +69,18 @@ final class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _Masthead extends StatelessWidget {
-  const _Masthead({required this.strings});
-
-  final AppStrings strings;
+class _Masthead extends ConsumerWidget {
+  const _Masthead();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppStrings strings = ref.watch(stringsProvider);
     final TextTheme text = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(strings.appTitle, style: text.displaySmall),
-            ),
-            const _OfflinePill(),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(strings.appTagline, style: text.bodyMedium),
-        const SizedBox(height: AppSpacing.lg),
+        Text(strings.appTitle, style: text.displaySmall),
+        const SizedBox(height: AppSpacing.md),
         Container(
           height: 1,
           decoration: const BoxDecoration(
@@ -135,47 +93,9 @@ class _Masthead extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        Text(strings.homePlayTitle, style: text.labelSmall),
-        const SizedBox(height: AppSpacing.sm),
       ],
     );
   }
-}
-
-class _OfflinePill extends StatelessWidget {
-  const _OfflinePill();
-
-  @override
-  Widget build(BuildContext context) => Consumer(
-        builder: (BuildContext context, WidgetRef ref, Widget? _) {
-          final AppStrings strings = ref.watch(stringsProvider);
-          return Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-              border: Border.all(color: AppColors.goldDim, width: 0.6),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                const Icon(
-                  Icons.wifi_off_rounded,
-                  size: 12,
-                  color: AppColors.goldDim,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  strings.homeOfflineBadge,
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-              ],
-            ),
-          );
-        },
-      );
 }
 
 class _SecondaryActions extends StatelessWidget {
@@ -187,6 +107,7 @@ class _SecondaryActions extends StatelessWidget {
   Widget build(BuildContext context) => Wrap(
         spacing: AppSpacing.sm,
         runSpacing: AppSpacing.sm,
+        alignment: WrapAlignment.center,
         children: <Widget>[
           _Chip(
             icon: Icons.settings_rounded,
@@ -230,7 +151,7 @@ class _Chip extends StatelessWidget {
         label: Text(label),
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(0, AppSpacing.minTapTarget),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         ),
       );
 }

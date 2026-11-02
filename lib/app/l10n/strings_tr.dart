@@ -19,12 +19,6 @@ final class TurkishStrings implements AppStrings {
   String get appTitle => 'Batak & King';
 
   @override
-  String get appTagline => 'Tamamen çevrimdışı Türk kağıt oyunları';
-
-  @override
-  String get homePlayTitle => 'Oyun Seç';
-
-  @override
   String get homeContinueMatch => 'Devam Et';
 
   @override
@@ -38,14 +32,6 @@ final class TurkishStrings implements AppStrings {
 
   @override
   String get homeAiLab => 'Yapay Zeka Laboratuvarı';
-
-  @override
-  String get homeOfflineBadge => 'İnternet gerekmez';
-
-  @override
-  String get homeSomeModesNotReady =>
-      'Rozetli modların kuralları ve yapay zekası henüz tamamlanmadı. '
-      'Şimdilik yalnızca masa düzenini önizleyebilirsiniz.';
 
   @override
   String get modeNotPlayableBadge => 'Hazır değil';
@@ -304,7 +290,7 @@ final class TurkishStrings implements AppStrings {
   String get commonOff => 'Kapalı';
 
   @override
-  String seatName(int seat) => seat == 0 ? 'Siz' : 'Oyuncu ${seat + 1}';
+  String get seatSelf => 'Siz';
 
   @override
   String trickProgress(int current, int total) => 'El $current / $total';

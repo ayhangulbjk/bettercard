@@ -6,11 +6,21 @@ import '../../../core/cards/suit.dart';
 import '../../../core/rules/game_mode.dart';
 import '../../gameplay/widgets/suit_pip.dart';
 
-/// One of the five large mode buttons on the home screen.
+/// One of the five mode buttons on the home screen.
 ///
-/// Each carries its own suit motif and accent so the five read as distinct at
-/// a glance, which is what makes the menu usable one-handed without reading
-/// every label.
+/// One line, one name. The menu's job is to get out of the way: a player who
+/// opens the app knows which game they want, so a tagline and a player count
+/// on every row would be text to skip past rather than information. What the
+/// row keeps is the suit motif and accent, which is what makes the five read
+/// as distinct without reading any of them.
+///
+/// The name is the mode's short name, the one a player says out loud. The
+/// formal name ("Herkes Tek Ihaleli Batak") does not fit a phone's width
+/// beside a badge, and a name cut off mid-word is worse than a shorter one;
+/// the setup screen that opens from here carries the full name.
+///
+/// The "not ready" badge stays, and is not detail: a mode whose lifecycle is
+/// unfinished has to say so on the row the player is about to tap.
 final class GameModeCard extends StatelessWidget {
   const GameModeCard({
     required this.mode,
@@ -41,10 +51,12 @@ final class GameModeCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppRadius.panel),
           child: Container(
-            constraints: const BoxConstraints(minHeight: 84),
+            constraints: const BoxConstraints(
+              minHeight: AppSpacing.minTapTarget,
+            ),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
+              vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.panel),
@@ -58,35 +70,19 @@ final class GameModeCard extends StatelessWidget {
             child: Row(
               children: <Widget>[
                 _Motif(suit: style.suit, color: style.accent),
-                const SizedBox(width: AppSpacing.lg),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Text(
-                              mode.turkishName,
-                              style: text.titleLarge,
-                            ),
-                          ),
-                          if (!mode.isPlayable) _Badge(label: notPlayableLabel),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(mode.turkishTagline, style: text.bodySmall),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        '${mode.playerCount} oyuncu'
-                        '${mode.hasPartnerships ? '  -  esli' : ''}'
-                        '${mode.hasAuction ? '  -  ihaleli' : ''}',
-                        style: text.labelSmall,
-                      ),
-                    ],
+                  child: Text(
+                    mode.turkishShortName,
+                    style: text.titleLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (!mode.isPlayable) ...<Widget>[
+                  _Badge(label: notPlayableLabel),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
                 const Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.goldDim,
@@ -111,15 +107,15 @@ class _Motif extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: 46,
-        height: 46,
+        width: 34,
+        height: 34,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: AppColors.surfaceSunken,
           border: Border.all(color: color, width: 1),
         ),
-        child: SuitPip(suit: suit, size: 22, color: color),
+        child: SuitPip(suit: suit, size: 17, color: color),
       );
 }
 

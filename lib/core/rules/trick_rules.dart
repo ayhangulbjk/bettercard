@@ -34,9 +34,17 @@ class TrickRules {
   );
 
   /// Koz Maca: spades are permanent trump and may not be led until broken.
+  ///
+  /// Trumping is compulsory, which is where Turkish Koz Maca parts company
+  /// with international Spades. At a Turkish table a seat void in the lead
+  /// suit must cut with trump if it holds one, and must overcut a trump
+  /// already in the trick if it can ("cakmak zorunlu"). Discarding freely
+  /// while holding a spade is treated as a misdeal, not as a choice. See open
+  /// question B-3 in docs/RULE_PROFILES.md for the tables that disagree; the
+  /// flags stay adjustable so that reading is a setting, not a rewrite.
   static const TrickRules kozMaca = TrickRules(
-    mustPlayTrumpWhenVoid: false,
-    mustOvertrumpWhenPossible: false,
+    mustPlayTrumpWhenVoid: true,
+    mustOvertrumpWhenPossible: true,
     trumpLeadRule: TrumpLeadRule.onlyAfterBroken,
   );
 

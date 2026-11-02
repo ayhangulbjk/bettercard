@@ -18,7 +18,7 @@ eşleştirilmiş). Başlangıç seviyesi +0,84 ± 0,03. Kontrol koşusu
 | Ölçüm | Değer |
 |---|---|
 | `lib/` | 76 Dart dosyası, 9.827 satır |
-| `test/` | 16 dosya, 2.390 satır, **160 test** |
+| `test/` | 16 dosya, 2.390 satır, **161 test** |
 | `tool/` | 2 benchmark CLI + kayıt doğrulama + ekran görüntüsü aracı |
 | Araç zinciri | Flutter 3.47.9 · Dart 3.13.7 · Android SDK 36 · NDK 28.2 · JDK 21 |
 | Paket adı | `com.batakking.batak_king` |
@@ -63,7 +63,7 @@ token'u var ama VS yükleyicisi 16389 ile reddediliyor), ve web hedefi
 
 Bunlar admin gerektirmiyor, hepsi doğrulandı:
 
-- [x] `dart format .` · `flutter analyze` · `flutter test` (160 test)
+- [x] `dart format .` · `flutter analyze` · `flutter test` (161 test)
 - [x] `flutter test tool/screenshots/capture_test.dart` — 14 ekran PNG olarak
       (`build/screenshots/`), canlı maçı gerçekten sürerek
 - [x] `dart run tool/checks/save_roundtrip.dart 150` — kayıt/geri yükleme
@@ -74,28 +74,40 @@ Yani kod yazmak, test etmek ve benchmark almak için Mac'e ihtiyaç yok.
 
 ### Mac'te yapılacak ilk görsel test
 
-Mac kuruldu (Xcode + Claude), test **devam ediyor**. Depoyu klonladıktan
+Mac kuruldu (Xcode + Claude), ilk tur **yapıldı**. Depoyu klonladıktan
 sonra:
 
 ```bash
 flutter create . --platforms=android,ios --project-name batak_king --org com.batakking
 rm -f test/widget_test.dart   # flutter create her seferinde geri ekler
 flutter pub get
-flutter test                  # 160 test burada da geçmeli
+flutter test                  # 161 test burada da geçmeli
 open -a Simulator             # ya da iPhone'u USB ile bağla
 flutter run                   # ilk pod install birkaç dakika surebilir
 ```
 
 Cihazda doğrulanacaklar:
 
-- [ ] Kart sembolleri ve Türkçe diakritikler doğru render ediliyor
-      (ikisi de Windows harness'ında doğrulandı, cihazda teyit lazım)
-- [ ] Koz Maça uçtan uca oynanıyor: dokunarak **ve sürükleyerek** kart oynama
-- [ ] **Koltuk paneli (T-1)** gerçek telefonda taşmıyor
-- [ ] Uygulamayı tamamen kapatıp açınca **"Devam Et"** aynı yerden sürdürüyor
-      — en kritik test, kayıt zinciri yalnızca gerçek diskte tam doğrulandı
+- [x] Kart sembolleri ve Türkçe diakritikler doğru render ediliyor
+- [x] Koz Maça uçtan uca oynanıyor: dokunarak **ve sürükleyerek** kart oynama
+- [x] Yalnızca oynanabilir kartlar vurgulanıyor
+- [x] Uygulamayı tamamen kapatıp açınca **"Devam Et"** aynı yerden sürdürüyor
 - [ ] Biten parti İstatistikler ekranında görünüyor
 - [ ] YZ laboratuvarı: 50/250/1000 el benchmark gerçekten koşuyor
+
+İlk cihaz testinden çıkanlar (2026-11-03, hepsi giderildi):
+
+- **Koz kesme zorunlu değildi.** Elinde kozu olan ve renkten yoksul bir
+  oyuncuya çöp atma hakkı veriliyordu, yerdeki kozun üstüne çıkma da zorunlu
+  değildi. `TrickRules.kozMaca` iki bayrağı da kapalı taşıyordu; ikisi de
+  açıldı, B-3 buna göre güncellendi.
+- **Koltuk paneli (T-1)** çözüldü: üç rakip tepede tek sıra yerine masanın
+  sol, karşı ve sağ kenarına oturuyor, oyuncu altta.
+- Ana sayfa sadeleşti: kaydırma yok, oyun başına tek satır.
+- Rakipler artık rastgele Türk isimleriyle oturuyor (maç tohumundan
+  türetiliyor, yani kayıttan dönünce aynı masa).
+- Ortaya atılan kartlar üst üste yığılıyor, el sinek/karo/maça/kupa sırasına
+  göre diziliyor.
 
 > `ios/` ve `android/` klasörleri kasıtlı olarak depoda değil, commit edilmez.
 > `.flutter-plugins-dependencies` de üretilen bir dosya; `.gitignore`'da.

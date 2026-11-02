@@ -61,9 +61,11 @@ void main() {
     await pumpPortraitApp(tester);
 
     for (final GameMode mode in GameMode.values) {
-      await reveal(tester, find.text(mode.turkishName));
+      // The rows carry the short name; the setup screen behind them carries
+      // the formal one.
+      await reveal(tester, find.text(mode.turkishShortName));
       expect(
-        find.text(mode.turkishName),
+        find.text(mode.turkishShortName),
         findsOneWidget,
         reason: '${mode.id} is missing from the home screen',
       );
@@ -84,10 +86,10 @@ void main() {
     // lifecycle must say so on the card. Koz Maca lost its badge when its
     // lifecycle shipped; the other four keep theirs until theirs do.
     for (final GameMode mode in GameMode.values) {
-      await reveal(tester, find.text(mode.turkishName));
+      await reveal(tester, find.text(mode.turkishShortName));
       expect(
         find.descendant(
-          of: find.widgetWithText(GameModeCard, mode.turkishName),
+          of: find.widgetWithText(GameModeCard, mode.turkishShortName),
           matching: find.text('Hazır değil'),
         ),
         mode.isPlayable ? findsNothing : findsOneWidget,
@@ -103,7 +105,10 @@ void main() {
   ) async {
     await pumpPortraitApp(tester);
 
-    await revealAndTap(tester, find.text(GameMode.auctionBatak.turkishName));
+    await revealAndTap(
+      tester,
+      find.text(GameMode.auctionBatak.turkishShortName),
+    );
 
     await reveal(tester, find.text('Kural Denetimi'));
     expect(find.text('Kural Denetimi'), findsOneWidget);
@@ -118,7 +123,10 @@ void main() {
   ) async {
     await pumpPortraitApp(tester);
 
-    await revealAndTap(tester, find.text(GameMode.auctionBatak.turkishName));
+    await revealAndTap(
+      tester,
+      find.text(GameMode.auctionBatak.turkishShortName),
+    );
     await revealAndTap(
       tester,
       find.widgetWithText(FilledButton, 'Masa Önizlemesi'),

@@ -65,7 +65,15 @@ Preset `partnership_batak_standard`.
 ### 3. Koz Maca (`spades_batak`)
 
 Four players, spades permanently trump, no auction. Trump may not be led until
-broken, and `mustPlayTrumpWhenVoid` is off, so a void seat may discard.
+broken.
+
+Cutting is compulsory: a seat void in the lead suit must play a spade if it
+holds one, and must overcut a spade already in the trick if it can
+(`mustPlayTrumpWhenVoid` and `mustOvertrumpWhenPossible` are both on). This is
+where Turkish Koz Maca parts company with international Spades, where a void
+seat may discard freely. See open question B-3; both flags stay adjustable, so
+a table that plays the permissive reading changes a setting rather than the
+code.
 
 Preset `spades_batak_standard`.
 
@@ -119,7 +127,7 @@ them to players.
 |---|---|---|---|
 | B-1 | Does a declarer who takes more than its bid score the overtricks? | Yes, tricks taken | `declarerSuccess` |
 | B-2 | Is a failed contract minus the bid, or double? | Minus the bid | `declarerFailure` |
-| B-3 | Is trumping when void compulsory at every table? | Yes for Batak, no for Koz Maca | `mustPlayTrumpWhenVoid` |
+| B-3 | Is trumping when void compulsory at every table? | Yes, in every mode including Koz Maca | `mustPlayTrumpWhenVoid` |
 | B-4 | In three-player buried Batak, how many cards are buried, and do they score for the declarer? | One buried, credited to the declarer | `BuryRules` |
 | B-5 | Must a seat following suit beat the best card so far? | No | `mustBeatLeadSuitWhenPossible` |
 | B-6 | When everyone passes, is it a redeal or must the dealer bid? | Dealer must bid | `passOutRule` |

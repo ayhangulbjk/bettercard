@@ -160,6 +160,10 @@ void main() {
     });
 
     test('without compulsory trump a void seat may discard freely', () {
+      // The flag off, not a shipped preset: every preset now has trumping
+      // compulsory, Koz Maca included. The flag still has to work, because
+      // the tables that play it the other way are a setting away.
+      const TrickRules optional = TrickRules(mustPlayTrumpWhenVoid: false);
       final List<PlayingCard> hand = <PlayingCard>[
         card(Suit.spades, Rank.four),
         card(Suit.clubs, Rank.ace),
@@ -169,10 +173,28 @@ void main() {
           hand: hand,
           trick: leadWith(Suit.hearts, Rank.five),
           trump: Suit.spades,
-          rules: TrickRules.kozMaca,
+          rules: optional,
           trumpBroken: true,
         ),
         unorderedEquals(hand),
+      );
+    });
+
+    test('Koz Maca makes cutting compulsory', () {
+      // The bug this covers: a seat void in the lead suit was offered a
+      // discard while holding a spade.
+      expect(
+        TrickLegalMoves.forHand(
+          hand: <PlayingCard>[
+            card(Suit.spades, Rank.four),
+            card(Suit.clubs, Rank.ace),
+          ],
+          trick: leadWith(Suit.hearts, Rank.five),
+          trump: Suit.spades,
+          rules: TrickRules.kozMaca,
+          trumpBroken: true,
+        ),
+        <PlayingCard>[card(Suit.spades, Rank.four)],
       );
     });
 

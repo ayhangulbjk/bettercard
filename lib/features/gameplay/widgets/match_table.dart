@@ -7,9 +7,11 @@ import '../../../core/game_engine/trick/trick.dart';
 import '../../../core/game_engine/trick/trick_play_state.dart';
 import '../match_session.dart';
 import 'seat_panel.dart';
+import 'table_layout.dart';
 import 'trick_area.dart';
+import 'trick_status_pill.dart';
 
-/// Opponent seats, the trick in the middle, and the trump badge.
+/// The table: a seat on each of the four edges, the trick in the middle.
 final class MatchTable extends StatelessWidget {
   const MatchTable({
     required this.session,
@@ -36,31 +38,21 @@ final class MatchTable extends StatelessWidget {
     final int? winner = session.highlightedWinner;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       child: Column(
         children: <Widget>[
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              for (int seat = 1; seat < session.seatCount; seat++)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xxs,
-                    ),
-                    child: SeatPanel(
-                      vertical: true,
-                      name: seatNames[seat],
-                      tricksWon: tricks[seat],
-                      cardsRemaining: handSizes[seat],
-                      isActive: seat == active || seat == winner,
-                    ),
-                  ),
-                ),
-            ],
+          const SizedBox(height: AppSpacing.sm),
+          TrickStatusPill(
+            trumpTitle: strings.gameplayTrumpLabel,
+            trumpLabel:
+                (hand?.trump ?? session.profile.fixedTrump)?.turkishName ??
+                    strings.gameplayNoTrump,
+            progressLabel: strings.trickProgress(
+              session.displayTrickNumber,
+              session.profile.tricksPerHand,
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Expanded(
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 120),
@@ -72,27 +64,25 @@ final class MatchTable extends StatelessWidget {
                       : Colors.transparent,
                 ),
               ),
-              child: TrickArea(
-                trick: session.tableTrick ??
-                    Trick.empty(leadSeat: 0, expectedPlays: session.seatCount),
-                trumpTitle: strings.gameplayTrumpLabel,
-                trumpLabel:
-                    (hand?.trump ?? session.profile.fixedTrump)?.turkishName ??
-                        strings.gameplayNoTrump,
-                progressLabel: strings.trickProgress(
-                  session.displayTrickNumber,
-                  session.profile.tricksPerHand,
+              child: TableLayout(
+                seatCount: session.seatCount,
+                center: TrickArea(
+                  trick: session.tableTrick ??
+                      Trick.empty(
+                        leadSeat: 0,
+                        expectedPlays: session.seatCount,
+                      ),
+                ),
+                seatBuilder: (int seat) => SeatPanel(
+                  // Only the player's own seat has the width for a row.
+                  vertical: seat != session.humanSeat,
+                  name: seat < seatNames.length ? seatNames[seat] : '',
+                  tricksWon: tricks[seat],
+                  cardsRemaining: handSizes[seat],
+                  isActive: seat == active || seat == winner,
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          SeatPanel(
-            name: seatNames[session.humanSeat],
-            tricksWon: tricks[session.humanSeat],
-            cardsRemaining: handSizes[session.humanSeat],
-            isActive: session.isHumanTurn ||
-                session.humanSeat == session.highlightedWinner,
           ),
         ],
       ),

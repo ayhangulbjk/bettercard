@@ -11,12 +11,15 @@ import '../../core/game_engine/trick/trick_play_state.dart';
 import '../../core/rules/game_mode.dart';
 import '../../core/rules/rule_presets.dart';
 import '../../core/rules/rule_profile.dart';
+import '../../core/table/seat_names.dart';
 import 'preview_state.dart';
 import 'widgets/felt_background.dart';
 import 'widgets/hand_fan.dart';
 import 'widgets/placeholder_banner.dart';
 import 'widgets/seat_panel.dart';
+import 'widgets/table_layout.dart';
 import 'widgets/trick_area.dart';
+import 'widgets/trick_status_pill.dart';
 
 /// A static preview of the gameplay table.
 ///
@@ -39,9 +42,8 @@ final class TablePreviewScreen extends ConsumerWidget {
     final TrickPlayState state = GameplayPreview.build(profile);
     const TrickPlayEngine engine = TrickPlayEngine();
 
-    final List<PlayingCard> hand = CardSorting.forHandFan(
+    final List<PlayingCard> hand = CardSorting.bySuitStrongestFirst(
       state.handOf(0),
-      trump: state.trump,
     );
     final bool humanToPlay = state.turnSeat == 0;
     final Set<PlayingCard> legal = humanToPlay
@@ -100,47 +102,38 @@ class _TableBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<int> tricks = state.tricksWon;
     final int players = state.seating.playerCount;
+    final List<String> seatNames = SeatNames.forMatch(
+      seed: GameplayPreview.defaultSeed,
+      seatCount: players,
+      humanSeat: 0,
+      humanName: strings.seatSelf,
+    );
 
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       child: Column(
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              for (int seat = 1; seat < players; seat++)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xxs,
-                    ),
-                    child: SeatPanel(
-                      name: strings.seatName(seat),
-                      tricksWon: tricks[seat],
-                      cardsRemaining: state.handSizes[seat],
-                      isActive: state.turnSeat == seat,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Expanded(
-            child: TrickArea(
-              trick: state.currentTrick,
-              trumpLabel: state.trump?.turkishName ?? strings.gameplayNoTrump,
-              trumpTitle: strings.gameplayTrumpLabel,
-              progressLabel: strings.trickProgress(
-                state.trickNumber + 1,
-                profile.tricksPerHand,
-              ),
+          TrickStatusPill(
+            trumpTitle: strings.gameplayTrumpLabel,
+            trumpLabel: state.trump?.turkishName ?? strings.gameplayNoTrump,
+            progressLabel: strings.trickProgress(
+              state.trickNumber + 1,
+              profile.tricksPerHand,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          SeatPanel(
-            name: strings.seatName(0),
-            tricksWon: tricks[0],
-            cardsRemaining: state.handSizes[0],
-            isActive: state.turnSeat == 0,
+          Expanded(
+            child: TableLayout(
+              seatCount: players,
+              center: TrickArea(trick: state.currentTrick),
+              seatBuilder: (int seat) => SeatPanel(
+                vertical: seat != 0,
+                name: seatNames[seat],
+                tricksWon: tricks[seat],
+                cardsRemaining: state.handSizes[seat],
+                isActive: state.turnSeat == seat,
+              ),
+            ),
           ),
         ],
       ),

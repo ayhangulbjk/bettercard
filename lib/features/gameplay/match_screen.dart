@@ -11,6 +11,7 @@ import '../../core/cards/playing_card.dart';
 import '../../core/persistence/app_settings.dart';
 import '../../core/rules/rule_profile.dart';
 import '../../core/rules/scoring_rules.dart';
+import '../../core/table/seat_names.dart';
 import '../../games/spades_batak/spades_batak_engine.dart';
 import 'match_controller.dart';
 import 'match_session.dart';
@@ -64,10 +65,13 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     }
 
     final RuleProfile profile = session.profile;
-    final List<String> seatNames = <String>[
-      for (int seat = 0; seat < session.seatCount; seat++)
-        strings.seatName(seat),
-    ];
+    // Named from the match seed, so a resumed match seats the same people.
+    final List<String> seatNames = SeatNames.forMatch(
+      seed: session.dealSeed,
+      seatCount: session.seatCount,
+      humanSeat: session.humanSeat,
+      humanName: strings.seatSelf,
+    );
 
     return PopScope<void>(
       // The opponents keep playing while this screen is alive, so a back
@@ -133,9 +137,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     TurnStatusLine(session: session, strings: strings),
                     const SizedBox(height: AppSpacing.sm),
                     HandFan(
-                      cards: CardSorting.forHandFan(
+                      cards: CardSorting.bySuitStrongestFirst(
                         session.humanHand,
-                        trump: session.hand?.trump ?? profile.fixedTrump,
                       ),
                       legalCards: _legalCards(session),
                       showHints: settings.showLegalMoveHints,

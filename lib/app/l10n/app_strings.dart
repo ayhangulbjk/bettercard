@@ -16,17 +16,13 @@ abstract interface class AppStrings {
 
   // App level.
   String get appTitle;
-  String get appTagline;
 
   // Home.
-  String get homePlayTitle;
   String get homeContinueMatch;
   String get homeSettings;
   String get homeStatistics;
   String get homeRules;
   String get homeAiLab;
-  String get homeOfflineBadge;
-  String get homeSomeModesNotReady;
 
   // Mode availability.
   String get modeNotPlayableBadge;
@@ -127,8 +123,9 @@ abstract interface class AppStrings {
   String get commonOn;
   String get commonOff;
 
-  /// A seat label such as `Oyuncu 2`.
-  String seatName(int seat);
+  /// The player's own seat label, `Siz`. The opponents are named from the
+  /// match seed instead; see `SeatNames`.
+  String get seatSelf;
 
   /// `El 3 / 13`.
   String trickProgress(int current, int total);

@@ -90,11 +90,7 @@ final class SeatPanel extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  <String>[
-                    '$tricksWon el',
-                    if (cardsRemaining != null) '$cardsRemaining kart',
-                    if (contract != null) contract!,
-                  ].join('  -  '),
+                  _statParts.join('  -  '),
                   style: text.bodySmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -126,13 +122,17 @@ final class SeatPanel extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
-            Text(
-              _stats,
-              style: text.bodySmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
+            // One stat per line. A side seat is about 80 pixels wide, which
+            // is not enough for "0 el - 11 kart" on one line; joined, it
+            // ellipsised away the card count.
+            for (final String stat in _statParts)
+              Text(
+                stat,
+                style: text.bodySmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
           ],
         ),
       );
@@ -155,9 +155,9 @@ final class SeatPanel extends StatelessWidget {
         ),
       );
 
-  String get _stats => <String>[
+  List<String> get _statParts => <String>[
         '$tricksWon el',
         if (cardsRemaining != null) '$cardsRemaining kart',
         if (contract != null) contract!,
-      ].join('  -  ');
+      ];
 }

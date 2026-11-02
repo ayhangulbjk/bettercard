@@ -52,7 +52,6 @@ final class _Shot {
     this.route,
     this.arguments,
     this.textScale = 1,
-    this.scrollBy = 0,
     this.drive,
     this.thenRoute,
   });
@@ -66,9 +65,6 @@ final class _Shot {
   /// Requested system text scale. The app clamps it to 1.35, so a value above
   /// that exercises the ceiling rather than the raw preference.
   final double textScale;
-
-  /// Logical pixels to drag the first scrollable by, negative to scroll down.
-  final double scrollBy;
 
   /// Pushed after [drive] has run, so a capture can show what a finished
   /// match leaves behind on another screen.
@@ -85,7 +81,15 @@ final class _Shot {
 
 const List<_Shot> _shots = <_Shot>[
   _Shot('01-home'),
-  _Shot('02-home-scrolled', scrollBy: -500),
+  // The home screen no longer scrolls, so there is nothing to drag. What is
+  // worth a second look is the table at a larger system font, where four
+  // seats and a card pile compete for the same felt.
+  _Shot(
+    '02-match-large-text',
+    route: AppRoutes.match,
+    drive: _driveToPlayerTurn,
+    textScale: 1.4,
+  ),
   _Shot('03-home-large-text', textScale: 2),
   _Shot(
     '04-game-setup-koz-maca',
@@ -290,14 +294,6 @@ Future<void> _capture(WidgetTester tester, _Shot shot) async {
       unawaitedPush(navigator, shot.thenRoute!, null);
     }
     await tester.pumpAndSettle();
-  }
-
-  if (shot.scrollBy != 0) {
-    final Finder scrollables = find.byType(Scrollable);
-    if (scrollables.evaluate().isNotEmpty) {
-      await tester.drag(scrollables.first, Offset(0, shot.scrollBy));
-      await tester.pumpAndSettle();
-    }
   }
 
   final RenderRepaintBoundary boundary =
