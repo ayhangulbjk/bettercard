@@ -25,6 +25,31 @@ eşleştirilmiş). Başlangıç seviyesi +0,84 ± 0,03. Kontrol koşusu
 | `flutter analyze` | 0 sorun |
 | En büyük dosya | 374 satır (`tool/screenshots/capture_test.dart`); `lib/` içinde 303 |
 
+### Bir sonraki oturum buradan başlasın
+
+**Durum:** 1. ve 2. kilometre taşı bitti, `main`'e gönderildi. Koz Maça
+oynanabilir, kaydediliyor, istatistikler birikiyor.
+
+**Paralel yürüyen iş:** Mac'te cihaz testi (yukarıdaki liste). Cihazdan bir
+sorun gelirse **o önceliklidir** — iki makinede aynı dosyaya paralel
+dokunmamak için, Mac'teki oturum kod değiştirecekse önce burada konuşulur.
+
+**Sıradaki geliştirme:** 3. kilometre taşı, ihale yaşam döngüsü. Ortak bir
+ihale motoru (artırma/pas/koz ilanı) yazılıp önce `auction_batak`, sonra
+`partnership_batak` üzerine kurulacak. Koz Maça'nın dikey dilimi şablon:
+`SpadesBatakEngine` + `MatchController` + `MatchTurn` + `MatchPersistence`
+aynı şekilde tekrarlanır, yalnızca ihale fazı eklenir.
+
+**İhale gelince dikkat edilecek iki şey:**
+
+1. `HeuristicPolicy` **yalnızca el sayısını** büyütmeye çalışır. İhaleli
+   modlarda savunmacı, ihaleyi batırmaya oynar; bu farklı bir değerlendirme
+   fonksiyonudur ve politikanın belgelerinde de öyle yazıyor. Koz Maça
+   politikasını ihaleli moda bağlamak "kanıtsız güç iddiası" olur.
+2. `SavedMatch` hamle günlüğü tutuyor (D-19). İhale de bir komut olduğu için
+   günlüğe **ihale komutları da** girmeli, yoksa yarım kalmış bir ihale geri
+   yüklenemez.
+
 ---
 
 ## Sıradaki adım: uygulamayı ilk kez çalıştırmak
@@ -38,7 +63,10 @@ token'u var ama VS yükleyicisi 16389 ile reddediliyor), ve web hedefi
 
 Bunlar admin gerektirmiyor, hepsi doğrulandı:
 
-- [x] `dart format .` · `flutter analyze` · `flutter test` (138 test)
+- [x] `dart format .` · `flutter analyze` · `flutter test` (160 test)
+- [x] `flutter test tool/screenshots/capture_test.dart` — 14 ekran PNG olarak
+      (`build/screenshots/`), canlı maçı gerçekten sürerek
+- [x] `dart run tool/checks/save_roundtrip.dart 150` — kayıt/geri yükleme
 - [x] `dart run tool/benchmarks/run_baseline.dart --hands 2000`
 - [x] `flutter build apk --debug` (APK üretiliyor, cihaz gerekmiyor)
 
@@ -46,23 +74,31 @@ Yani kod yazmak, test etmek ve benchmark almak için Mac'e ihtiyaç yok.
 
 ### Mac'te yapılacak ilk görsel test
 
-Depoyu Mac'e klonladıktan sonra:
+Mac kuruldu (Xcode + Claude), test **devam ediyor**. Depoyu klonladıktan
+sonra:
 
 ```bash
-flutter create . --platforms=ios --project-name batak_king --org com.batakking
+flutter create . --platforms=android,ios --project-name batak_king --org com.batakking
+rm -f test/widget_test.dart   # flutter create her seferinde geri ekler
 flutter pub get
-flutter test                 # 138 test burada da geçmeli
-open -a Simulator            # ya da iPhone'u USB ile bağla
-flutter run
+flutter test                  # 160 test burada da geçmeli
+open -a Simulator             # ya da iPhone'u USB ile bağla
+flutter run                   # ilk pod install birkaç dakika surebilir
 ```
 
-- [ ] Beş modlu ana ekran, hepsi "Hazır değil" rozetli
-- [ ] Kural denetimi: "Kural seti tutarlı." görünmeli
-- [ ] Masa önizlemesi (etkileşimsiz, etiketli)
+Cihazda doğrulanacaklar:
+
+- [ ] Kart sembolleri ve Türkçe diakritikler doğru render ediliyor
+      (ikisi de Windows harness'ında doğrulandı, cihazda teyit lazım)
+- [ ] Koz Maça uçtan uca oynanıyor: dokunarak **ve sürükleyerek** kart oynama
+- [ ] **Koltuk paneli (T-1)** gerçek telefonda taşmıyor
+- [ ] Uygulamayı tamamen kapatıp açınca **"Devam Et"** aynı yerden sürdürüyor
+      — en kritik test, kayıt zinciri yalnızca gerçek diskte tam doğrulandı
+- [ ] Biten parti İstatistikler ekranında görünüyor
 - [ ] YZ laboratuvarı: 50/250/1000 el benchmark gerçekten koşuyor
-- [ ] **Koltuk paneli (T-1) değerlendirmesi** — gerçek telefonda isimler
-      `Bat…` diye kesiliyor mu, dikey düzene geçmek gerekiyor mu
-- [ ] Diakritiklerin cihazda doğru render edildiği
+
+> `ios/` ve `android/` klasörleri kasıtlı olarak depoda değil, commit edilmez.
+> `.flutter-plugins-dependencies` de üretilen bir dosya; `.gitignore`'da.
 
 ---
 
