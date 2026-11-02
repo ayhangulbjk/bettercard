@@ -9,6 +9,7 @@ import '../../app/theme/app_theme.dart';
 import '../../core/rules/game_mode.dart';
 import '../gameplay/widgets/felt_background.dart';
 import 'widgets/game_mode_card.dart';
+import 'widgets/resume_card.dart';
 
 /// The main menu.
 ///
@@ -40,6 +41,10 @@ final class HomeScreen extends ConsumerWidget {
                 sliver: SliverToBoxAdapter(
                   child: _Masthead(strings: strings),
                 ),
+              ),
+              const SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                sliver: SliverToBoxAdapter(child: ResumeCard()),
               ),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(

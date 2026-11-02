@@ -19,7 +19,7 @@ eşleştirilmiş). Başlangıç seviyesi +0,84 ± 0,03. Kontrol koşusu
 |---|---|
 | `lib/` | 76 Dart dosyası, 9.827 satır |
 | `test/` | 16 dosya, 2.390 satır, **160 test** |
-| `tool/` | 2 benchmark CLI + başsız ekran görüntüsü aracı |
+| `tool/` | 2 benchmark CLI + kayıt doğrulama + ekran görüntüsü aracı |
 | Araç zinciri | Flutter 3.47.9 · Dart 3.13.7 · Android SDK 36 · NDK 28.2 · JDK 21 |
 | Paket adı | `com.batakking.batak_king` |
 | `flutter analyze` | 0 sorun |
@@ -137,12 +137,26 @@ değil usul olduğu için `RuleProfile` seçeneği yapılmadı.
 - [x] Boşta duran ayarlar bağlandı: hızlı oyun, kart vurgusu, sürükleme,
       titreşim. Ses bu sürümde yok, bu yüzden anahtarı kapalı ve öyle yazıyor.
 
+### Kalıcılık ve istatistik ✅ (2026-11-02)
+
+- [x] Diske kayıt: tek eklenti (`path_provider`), `lib/platform/` altında
+      JSON dosyaları, atomik yazma (D-18)
+- [x] Her karttan sonra otomatik kayıt; ana ekranda **"Devam Et"** kartı
+- [x] Maç kaydı hamle günlüğü olarak tutuluyor, geri yükleme motor üzerinden
+      tekrar oynatılarak yapılıyor (D-19) — bozuk veya elle düzenlenmiş kayıt
+      reddediliyor
+- [x] Tamamlanan partiler kaydediliyor; istatistik ekranı gerçek verilerle:
+      oynanan/kazanılan/berabere/kaybedilen, kazanma oranı, ortalama puan,
+      dağıtım başına ortalama el, en yüksek puan, en iyi fark, seriler,
+      mod bazında kırılım, sıfırlama
+- [x] Yeni parti kayıtlı partinin üzerine yazacaksa önce soruluyor
+- [x] `tool/checks/save_roundtrip.dart`: gerçek diskte kaydet → oku →
+      tekrar oynat, konum birebir aynı; iki sahte kayıt reddediliyor
+
 ### Kalan işler
 
-- [ ] Diske kayıt: `SettingsRepository` arkasına gerçek depo, otomatik
-      kayıt ve hızlı devam — **ana ekrandaki "Devam Et" hâlâ bağlanmadı**
 - [ ] Kart hareketi animasyonu (şu an tempo var, hareket yok)
-- [ ] İstatistik birikimi: tamamlanan partilerin kaydı
+- [ ] Cihazda ilk çalıştırma (Mac + Xcode hazır)
 
 **Bitti sayılma koşulu:** tam bir Koz Maça partisi oynanıp devam
 ettirilebiliyor, ve sezgisel politika rastgeleyi sıfırı dışlayan bir güven

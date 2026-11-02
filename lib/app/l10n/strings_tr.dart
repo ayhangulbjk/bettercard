@@ -71,6 +71,17 @@ final class TurkishStrings implements AppStrings {
   String get setupStart => 'Başla';
 
   @override
+  String get setupOverwriteTitle => 'Kayıtlı parti var';
+
+  @override
+  String get setupOverwriteMessage =>
+      'Yarım kalmış bir partiniz var. Yeni parti başlatırsanız o parti '
+      'silinir.';
+
+  @override
+  String get setupOverwriteAction => 'Yeni parti başlat';
+
+  @override
   String get setupRuleIssuesTitle => 'Kural Denetimi';
 
   @override
@@ -138,8 +149,8 @@ final class TurkishStrings implements AppStrings {
 
   @override
   String get gameplayLeaveConfirmMessage =>
-      'Parti henüz kaydedilmiyor. Şimdi ayrılırsanız bu partinin puanları '
-      'silinir.';
+      'Parti kaydedilir. Ana ekrandaki "Devam Et" ile kaldığınız yerden '
+      'sürdürebilirsiniz.';
 
   @override
   String get gameplayLeaveConfirmAction => 'Ayrıl';
@@ -209,6 +220,52 @@ final class TurkishStrings implements AppStrings {
       'istatistikleriniz burada birikecek.';
 
   @override
+  String get statisticsOverall => 'Genel';
+
+  @override
+  String get statisticsByMode => 'Modlara göre';
+
+  @override
+  String get statisticsPlayed => 'Oynanan parti';
+
+  @override
+  String get statisticsWon => 'Kazanılan';
+
+  @override
+  String get statisticsDrawn => 'Berabere';
+
+  @override
+  String get statisticsLost => 'Kaybedilen';
+
+  @override
+  String get statisticsWinRate => 'Kazanma oranı';
+
+  @override
+  String get statisticsAveragePoints => 'Parti başına ortalama puan';
+
+  @override
+  String get statisticsAverageTricks => 'Dağıtım başına ortalama el';
+
+  @override
+  String get statisticsBestScore => 'En yüksek puan';
+
+  @override
+  String get statisticsBestMargin => 'En iyi fark';
+
+  @override
+  String get statisticsCurrentStreak => 'Güncel galibiyet serisi';
+
+  @override
+  String get statisticsLongestStreak => 'En uzun seri';
+
+  @override
+  String get statisticsReset => 'İstatistikleri sıfırla';
+
+  @override
+  String get statisticsResetConfirm =>
+      'Tüm parti geçmişi silinecek. Bu geri alınamaz.';
+
+  @override
   String get rulesTitle => 'Kurallar';
 
   @override
@@ -254,6 +311,10 @@ final class TurkishStrings implements AppStrings {
 
   @override
   String contractSummary(int tricks) => '$tricks el ihale';
+
+  @override
+  String resumeSummary(String mode, int hand, int score) =>
+      '$mode  ·  Dağıtım $hand  ·  $gameplayScoreLabel $score';
 
   @override
   String handProgress(int current, int? total) =>

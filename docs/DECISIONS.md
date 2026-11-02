@@ -329,3 +329,59 @@ Francisco button labels under Roboto body text.
 anything else that replaces rather than merges must come from the merged theme.
 The screenshot harness is what makes this class of defect visible at all, since
 on Android the fallback happens to be Roboto and the bug is invisible.
+
+## D-18: One plugin, one storage mechanism: JSON files under `path_provider`
+
+**Decision.** `path_provider` is the app's only platform plugin. Everything
+stored -- preferences, the match in progress, the match history -- is a JSON
+file this app writes and reads itself, through `JsonFileStore` in
+`lib/platform/`. No key-value plugin, no database.
+
+**Why.** The plugin answers one question, "where may this app write?", and
+nothing else: it opens no socket and requests no permission, so the offline
+requirement is untouched. A key-value plugin would answer a question the app
+also has, but it would not remove the need for files -- the match history is a
+list, and the save is a document -- so it would add a second mechanism rather
+than replace one.
+
+**Why files rather than a database.** The whole store is three documents, read
+whole and written whole. A database would add a schema, a migration story and
+a query language for data that is never queried.
+
+**Consequences.**
+
+* `lib/core` still imports no `dart:io`. The file system lives in
+  `lib/platform/`, behind the repository interfaces the domain declares, which
+  is what keeps every test and the screenshot harness running on memory-backed
+  implementations that touch no disk.
+* Writes are atomic by rename. A game that autosaves after every card will be
+  killed mid-write eventually; without the rename that would leave a truncated
+  file where the save used to be, and the player would lose the match rather
+  than one move of it.
+* Storage failures never reach the table. A match that cannot be saved is
+  still a match that can be played.
+
+## D-19: A match is saved as a move log, not as a position
+
+**Decision.** `SavedMatch` stores the rule profile, the deal seed and every
+card played in order. Resuming replays the log through the engine
+(`SpadesBatakRestore`). Schema 1, which held a position summary and no log,
+is refused rather than migrated; nothing ever wrote one, because no mode was
+playable.
+
+**Why.** A log cannot describe a position the rules would not allow: every
+move goes back through the engine's own validation on the way in. A snapshot
+can, and nothing would notice -- a hand-edited file would load as a plausible
+but illegal game. The log is also smaller, and it stays valid as the state
+types grow, where a serialised snapshot would need a migration per change.
+
+**What makes it work.** The domain is deterministic and hand `i` is dealt from
+`baseSeed + i`, so the same seed and the same moves reconstruct the same
+position exactly -- including the cards in the hands nobody has seen.
+
+**Consequence.** The save carries the hand count and the score as well, purely
+so the home screen can draw its resume card without replaying. The replay is
+what decides the real values, and a disagreement means the file was edited or
+truncated, so the save is dropped. `tool/checks/save_roundtrip.dart` exercises
+all three paths: an intact save restores identically, a truncated log is
+refused, and an edited score is refused.

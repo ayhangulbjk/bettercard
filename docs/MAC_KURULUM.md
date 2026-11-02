@@ -95,9 +95,15 @@ gh auth login     # GitHub.com -> HTTPS -> tarayıcıda oturum aç
 > olarak `~/.local/bin`'e), ama Xcode'un kendisi de yönetici istediği için o
 > durumda iOS yolu tamamen kapanır.
 >
-> **CocoaPods bu projede gerekmeyebilir:** üç bağımlılığın hepsi saf Dart
-> (riverpod, meta, flutter_lints), yerel eklenti yok. `flutter doctor` yine de
-> arayacağı için kuruluyor, ama `pod install` adımı atlanabilir.
+> **CocoaPods artık gerekli.** 2026-11-02'de `path_provider` eklendi (uygulama
+> kendi dosyalarını nereye yazacağını sormak için; ağ açmaz, izin istemez —
+> bkz. `docs/DECISIONS.md` D-18). Yerel eklenti geldiği için `flutter create`
+> sonrası `ios/` altında `pod install` çalışır. `flutter run` bunu kendisi
+> tetikler; elle çalıştırmak gerekirse `cd ios && pod install`.
+>
+> İlk `pod install` CocoaPods'un spec deposunu indirir ve birkaç dakika
+> sürebilir; bu **kurulum** anında internet ister, uygulamanın kendisi hâlâ
+> tamamen çevrimdışıdır.
 
 ## 4. Depoyu al
 

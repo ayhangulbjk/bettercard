@@ -54,6 +54,7 @@ final class _Shot {
     this.textScale = 1,
     this.scrollBy = 0,
     this.drive,
+    this.thenRoute,
   });
 
   final String name;
@@ -68,6 +69,10 @@ final class _Shot {
 
   /// Logical pixels to drag the first scrollable by, negative to scroll down.
   final double scrollBy;
+
+  /// Pushed after [drive] has run, so a capture can show what a finished
+  /// match leaves behind on another screen.
+  final String? thenRoute;
 
   /// Runs after the route is pushed, to put the screen into a given state.
   ///
@@ -110,6 +115,20 @@ const List<_Shot> _shots = <_Shot>[
     '12-match-over',
     route: AppRoutes.match,
     drive: _driveToMatchOver,
+  ),
+  // The two screens that only have anything on them once a match has been
+  // played: the statistics report, and the home screen's resume card.
+  _Shot(
+    '13-statistics',
+    route: AppRoutes.match,
+    drive: _driveToMatchOver,
+    thenRoute: AppRoutes.statistics,
+  ),
+  _Shot(
+    '14-home-resume',
+    route: AppRoutes.match,
+    drive: _driveToPlayerTurn,
+    thenRoute: AppRoutes.home,
   ),
 ];
 
@@ -257,6 +276,20 @@ Future<void> _capture(WidgetTester tester, _Shot shot) async {
       listen: false,
     );
     await shot.drive!(tester, container);
+  }
+
+  if (shot.thenRoute != null) {
+    final NavigatorState navigator = tester.state<NavigatorState>(
+      find.byType(Navigator).first,
+    );
+    if (shot.thenRoute == AppRoutes.home) {
+      // Back to the screen underneath rather than a second copy of it, so the
+      // capture shows the home screen the player would actually return to.
+      navigator.pop();
+    } else {
+      unawaitedPush(navigator, shot.thenRoute!, null);
+    }
+    await tester.pumpAndSettle();
   }
 
   if (shot.scrollBy != 0) {

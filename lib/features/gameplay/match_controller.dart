@@ -8,17 +8,16 @@ import '../../core/ai/ai_difficulty.dart';
 import '../../core/ai/ai_policy.dart';
 import '../../core/ai/seat_observation.dart';
 import '../../core/cards/playing_card.dart';
-import '../../core/game_engine/game_command.dart';
-import '../../core/game_engine/game_engine.dart';
-import '../../core/game_engine/trick/trick.dart';
 import '../../core/game_engine/trick/trick_play_state.dart';
-import '../../core/game_engine/trick/trick_resolver.dart';
+import '../../core/persistence/saved_match.dart';
 import '../../core/rules/rule_profile.dart';
-import '../../core/rules/rule_violation.dart';
 import '../../games/spades_batak/spades_batak_engine.dart';
 import '../../games/spades_batak/spades_batak_match_state.dart';
+import '../../games/spades_batak/spades_batak_restore.dart';
 import 'match_pacing.dart';
+import 'match_persistence.dart';
 import 'match_session.dart';
+import 'match_turn.dart';
 
 /// The live match, or null when no table is open.
 final NotifierProvider<MatchController, MatchSession?> matchProvider =
@@ -37,10 +36,14 @@ final NotifierProvider<MatchController, MatchSession?> matchProvider =
 /// microseconds, but they are still awaited through [AiDecisionService], so
 /// the search-based levels drop in behind the same seam.
 final class MatchController extends Notifier<MatchSession?> {
-  static const SpadesBatakEngine _engine = SpadesBatakEngine();
-
   /// The opponents at this table. Empty when no match is open.
   OpponentRoster _opponents = OpponentRoster.empty;
+
+  /// Every card played this match, in order. This is what gets saved: the
+  /// position is whatever replaying it through the engine produces.
+  final List<int> _moves = <int>[];
+
+  late final MatchPersistence _persistence = MatchPersistence(ref);
 
   /// Bumped whenever the table is replaced or closed, so an async step that
   /// was already in flight can tell that its match is gone and stop.
@@ -82,13 +85,54 @@ final class MatchController extends Notifier<MatchSession?> {
       humanSeat: humanSeat,
     );
 
+    _moves.clear();
     state = MatchSession(
+      matchId: _matchIdFor(matchSeed),
+      dealSeed: matchSeed,
       match: match,
-      phase: _phaseFor(match, humanSeat),
+      phase: MatchTurn.phaseFor(match, humanSeat),
       humanSeat: humanSeat,
       difficulty: difficulty,
     );
+    // Saved before the first card, so a match that is opened and abandoned at
+    // once still offers to resume rather than vanishing.
+    _save();
     unawaited(_drive(_generation));
+  }
+
+  /// Reopens the stored match, or returns false when it cannot be replayed.
+  ///
+  /// A save that fails to replay is dropped here rather than left on disk to
+  /// fail again on the next launch.
+  bool resume(SavedMatch save) {
+    final SpadesBatakMatchState? restored = SpadesBatakRestore.replay(save);
+    if (restored == null) {
+      unawaited(_persistence.clear());
+      return false;
+    }
+
+    _cancelPending();
+    _generation++;
+    _opponents = OpponentRoster.forMatch(
+      difficulty: save.difficulty,
+      matchSeed: save.dealSeed,
+      seatCount: restored.seatCount,
+      humanSeat: save.humanSeat,
+    );
+    _moves
+      ..clear()
+      ..addAll(save.moves);
+
+    state = MatchSession(
+      matchId: save.matchId,
+      dealSeed: save.dealSeed,
+      match: restored,
+      phase: MatchTurn.phaseFor(restored, save.humanSeat),
+      humanSeat: save.humanSeat,
+      difficulty: save.difficulty,
+    );
+    unawaited(_drive(_generation));
+    return true;
   }
 
   /// Plays [card] from the player's hand. Ignored unless it is their turn.
@@ -109,7 +153,7 @@ final class MatchController extends Notifier<MatchSession?> {
       return;
     }
     state = session.copyWith(
-      phase: _phaseFor(session.match, session.humanSeat),
+      phase: MatchTurn.phaseFor(session.match, session.humanSeat),
       clearLastHandScore: true,
       clearLastTrick: true,
     );
@@ -162,7 +206,7 @@ final class MatchController extends Notifier<MatchSession?> {
             return;
           }
           state = state!.copyWith(
-            phase: _phaseFor(state!.match, state!.humanSeat),
+            phase: MatchTurn.phaseFor(state!.match, state!.humanSeat),
             clearLastTrick: true,
           );
 
@@ -185,65 +229,35 @@ final class MatchController extends Notifier<MatchSession?> {
     }
   }
 
-  /// Hands one card play to the engine and folds the result into the session.
+  /// Hands one card play to the engine and folds the result into the table.
   void _submit(int seat, PlayingCard card) {
     final MatchSession session = state!;
-    final SpadesBatakMatchState before = session.match;
-    final TrickPlayState? hand = before.hand;
-    if (hand == null) {
+    final MatchTurnResult result = MatchTurn.apply(session, seat, card);
+    state = result.session;
+    if (!result.accepted) {
       return;
     }
 
-    // Captured before the command, because a hand that ends here is replaced
-    // by the next deal and its last trick would otherwise be unrecoverable.
-    final CompletedTrick? finished = _trickAfter(hand, seat, card);
-
-    final CommandOutcome<SpadesBatakMatchState> outcome = _engine.apply(
-      before,
-      PlayCardCommand(seat: seat, card: card),
-    );
-
-    switch (outcome) {
-      case CommandRejected<SpadesBatakMatchState>(
-          violation: final RuleViolation violation
-        ):
-        state = session.copyWith(rejection: violation.code);
-
-      case CommandAccepted<SpadesBatakMatchState>(
-          state: final SpadesBatakMatchState after
-        ):
-        final bool handEnded = after.handsPlayed > before.handsPlayed;
-        state = session.copyWith(
-          match: after,
-          lastTrick: finished,
-          clearLastTrick: finished == null,
-          lastHandScore: handEnded ? after.history.last : null,
-          clearLastHandScore: !handEnded,
-          phase: handEnded
-              ? MatchPhase.handSummary
-              : (finished != null
-                  ? MatchPhase.trickPause
-                  : _phaseFor(after, session.humanSeat)),
-          clearRejection: true,
-        );
+    _moves.add(card.id);
+    if (result.session.match.isOver) {
+      unawaited(
+        _persistence.recordFinished(
+          MatchPersistence.recordOf(result.session, nowMillis: _nowMillis()),
+        ),
+      );
+    } else {
+      _save();
     }
   }
 
-  /// The trick [card] would complete, or null when the trick stays open.
-  ///
-  /// The winner comes from [TrickResolver], the same authority the engine
-  /// uses, so the table can never disagree with the score about who took a
-  /// trick.
-  CompletedTrick? _trickAfter(TrickPlayState hand, int seat, PlayingCard card) {
-    final Trick candidate = hand.currentTrick.withPlay(
-      PlayedCard(seat: seat, card: card),
-    );
-    if (!candidate.isComplete) {
-      return null;
+  /// Writes the match in progress.
+  void _save() {
+    final MatchSession? session = state;
+    if (session == null || session.match.isOver) {
+      return;
     }
-    return CompletedTrick(
-      trick: candidate,
-      winnerSeat: TrickResolver.winnerSeat(candidate, trump: hand.trump),
+    _persistence.scheduleSave(
+      MatchPersistence.saveOf(session, _moves, nowMillis: _nowMillis()),
     );
   }
 
@@ -283,16 +297,11 @@ final class MatchController extends Notifier<MatchSession?> {
 
   MatchPacing get _pacing => MatchPacing(ref.read(settingsProvider));
 
-  /// Whose move it is, as a phase.
-  static MatchPhase _phaseFor(SpadesBatakMatchState match, int humanSeat) {
-    if (match.isOver) {
-      return MatchPhase.matchOver;
-    }
-    return match.hand!.turnSeat == humanSeat
-        ? MatchPhase.awaitingHuman
-        : MatchPhase.opponentThinking;
-  }
+  static int _nowMillis() => DateTime.now().millisecondsSinceEpoch;
 
   static int _seedFromClock() =>
       DateTime.now().microsecondsSinceEpoch & 0x3FFFFFFF;
+
+  static String _matchIdFor(int seed) =>
+      'spades-$seed-${DateTime.now().millisecondsSinceEpoch}';
 }

@@ -17,6 +17,12 @@ dependencies:
   # Pure-Dart annotations (@immutable) for the Flutter-free domain layer.
   # Declared explicitly so the domain never reaches into package:flutter.
   meta: ^1.15.0
+  # The one platform plugin: it answers "where may this app write files?".
+  # Everything stored is a JSON file this app writes and reads itself, so a
+  # key-value plugin would add a second storage mechanism without removing
+  # this one. It opens no socket and asks for no permission; the offline
+  # requirement is untouched. See docs/DECISIONS.md D-18.
+  path_provider: ^2.1.4
 
 dev_dependencies:
   flutter_test:

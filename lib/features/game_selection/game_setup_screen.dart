@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/l10n/app_strings.dart';
 import '../../app/providers.dart';
 import '../../app/routes.dart';
+import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/ai/ai_difficulty.dart';
 import '../../core/rules/game_mode.dart';
@@ -89,7 +92,7 @@ class _GameSetupScreenState extends ConsumerState<GameSetupScreen> {
               FilledButton(
                 // A playable mode opens a real table; the rest can only be
                 // previewed, and the button says which one you are getting.
-                onPressed: consistent ? () => _open(profile) : null,
+                onPressed: consistent ? () => unawaited(_open(profile)) : null,
                 child: Text(
                   widget.mode.isPlayable
                       ? strings.setupStart
@@ -113,20 +116,54 @@ extension on _GameSetupScreenState {
   /// The match is started before navigating so the table screen needs no
   /// arguments and so the rule profile it freezes is exactly the one audited
   /// on this screen.
-  void _open(RuleProfile profile) {
+  Future<void> _open(RuleProfile profile) async {
     if (!widget.mode.isPlayable) {
-      Navigator.of(context).pushNamed(
+      await Navigator.of(context).pushNamed(
         AppRoutes.tablePreview,
         arguments: widget.mode,
       );
       return;
     }
+
+    // Starting a match overwrites the autosave, and the half-finished match it
+    // replaces is the player's, not ours to discard quietly.
+    if (ref.read(savedMatchProvider).valueOrNull != null &&
+        !await _confirmOverwrite()) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
     final AiDifficulty difficulty = ref.read(settingsProvider).aiDifficulty;
     ref.read(matchProvider.notifier).start(
           profile: profile,
           difficulty: difficulty,
         );
-    Navigator.of(context).pushNamed(AppRoutes.match);
+    await Navigator.of(context).pushNamed(AppRoutes.match);
+  }
+
+  Future<bool> _confirmOverwrite() async {
+    final AppStrings strings = ref.read(stringsProvider);
+    final bool? overwrite = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        backgroundColor: AppColors.surfaceElevated,
+        title: Text(strings.setupOverwriteTitle),
+        content: Text(strings.setupOverwriteMessage),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(strings.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(strings.setupOverwriteAction),
+          ),
+        ],
+      ),
+    );
+    return overwrite ?? false;
   }
 }
 

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../core/cards/suit.dart';
 import '../../../core/rules/game_mode.dart';
+import '../../gameplay/widgets/suit_pip.dart';
 
 /// One of the five large mode buttons on the home screen.
 ///
@@ -55,7 +57,7 @@ final class GameModeCard extends StatelessWidget {
             ),
             child: Row(
               children: <Widget>[
-                _Motif(symbol: style.symbol, color: style.accent),
+                _Motif(suit: style.suit, color: style.accent),
                 const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   child: Column(
@@ -99,9 +101,12 @@ final class GameModeCard extends StatelessWidget {
 }
 
 class _Motif extends StatelessWidget {
-  const _Motif({required this.symbol, required this.color});
+  const _Motif({required this.suit, required this.color});
 
-  final String symbol;
+  /// The mode's emblem. Painted rather than typed, for the reason in
+  /// docs/DECISIONS.md D-16: the Unicode pips are not in every font.
+  final Suit suit;
+
   final Color color;
 
   @override
@@ -114,10 +119,7 @@ class _Motif extends StatelessWidget {
           color: AppColors.surfaceSunken,
           border: Border.all(color: color, width: 1),
         ),
-        child: Text(
-          symbol,
-          style: TextStyle(fontSize: 22, color: color, height: 1),
-        ),
+        child: SuitPip(suit: suit, size: 22, color: color),
       );
 }
 
@@ -149,38 +151,38 @@ class _Badge extends StatelessWidget {
 /// Per-mode visual identity.
 class _ModeStyle {
   const _ModeStyle({
-    required this.symbol,
+    required this.suit,
     required this.accent,
     required this.tint,
   });
 
-  final String symbol;
+  final Suit suit;
   final Color accent;
   final Color tint;
 
   static _ModeStyle of(GameMode mode) => switch (mode) {
         GameMode.auctionBatak => const _ModeStyle(
-            symbol: '♠',
+            suit: Suit.spades,
             accent: AppColors.goldBright,
             tint: Color(0xFF1C4436),
           ),
         GameMode.partnershipBatak => const _ModeStyle(
-            symbol: '♣',
+            suit: Suit.clubs,
             accent: AppColors.success,
             tint: Color(0xFF17463A),
           ),
         GameMode.spadesBatak => const _ModeStyle(
-            symbol: '♠',
+            suit: Suit.spades,
             accent: AppColors.info,
             tint: Color(0xFF17364A),
           ),
         GameMode.buriedBatak => const _ModeStyle(
-            symbol: '♦',
+            suit: Suit.diamonds,
             accent: AppColors.warning,
             tint: Color(0xFF3D3320),
           ),
         GameMode.king => const _ModeStyle(
-            symbol: '♥',
+            suit: Suit.hearts,
             accent: AppColors.danger,
             tint: Color(0xFF42222A),
           ),

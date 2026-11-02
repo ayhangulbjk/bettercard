@@ -41,6 +41,8 @@ enum MatchPhase {
 @immutable
 final class MatchSession {
   const MatchSession({
+    required this.matchId,
+    required this.dealSeed,
     required this.match,
     required this.phase,
     required this.humanSeat,
@@ -49,6 +51,13 @@ final class MatchSession {
     this.lastHandScore,
     this.rejection,
   });
+
+  /// Identifies this match in the save file and in the history.
+  final String matchId;
+
+  /// The seed the match was dealt from. Kept here so a save can be written
+  /// without asking the engine to hand back what it started with.
+  final int dealSeed;
 
   /// Authoritative match state.
   final SpadesBatakMatchState match;
@@ -151,6 +160,15 @@ final class MatchSession {
   /// Seats tied for the lead at the end of the match.
   List<int> get winners => match.leadingSeats;
 
+  /// Tricks the player has taken across every scored hand of the match.
+  int get humanTricksTotal {
+    int total = 0;
+    for (final HandScore score in match.history) {
+      total += score.tricksOf(humanSeat);
+    }
+    return total;
+  }
+
   bool get humanWon => winners.contains(humanSeat);
 
   MatchSession copyWith({
@@ -164,6 +182,8 @@ final class MatchSession {
     bool clearRejection = false,
   }) =>
       MatchSession(
+        matchId: matchId,
+        dealSeed: dealSeed,
         match: match ?? this.match,
         phase: phase ?? this.phase,
         humanSeat: humanSeat,

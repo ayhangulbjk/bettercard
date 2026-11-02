@@ -38,6 +38,9 @@ abstract interface class AppStrings {
   String get setupRuleProfile;
   String get setupDifficulty;
   String get setupStart;
+  String get setupOverwriteTitle;
+  String get setupOverwriteMessage;
+  String get setupOverwriteAction;
   String get setupRuleIssuesTitle;
   String get setupNoIssues;
   String get setupPlayerCount;
@@ -90,6 +93,21 @@ abstract interface class AppStrings {
   // Statistics.
   String get statisticsTitle;
   String get statisticsEmpty;
+  String get statisticsOverall;
+  String get statisticsByMode;
+  String get statisticsPlayed;
+  String get statisticsWon;
+  String get statisticsDrawn;
+  String get statisticsLost;
+  String get statisticsWinRate;
+  String get statisticsAveragePoints;
+  String get statisticsAverageTricks;
+  String get statisticsBestScore;
+  String get statisticsBestMargin;
+  String get statisticsCurrentStreak;
+  String get statisticsLongestStreak;
+  String get statisticsReset;
+  String get statisticsResetConfirm;
 
   // Rules screen.
   String get rulesTitle;
@@ -129,4 +147,7 @@ abstract interface class AppStrings {
 
   /// `5 el tuttu` style contract summary.
   String contractSummary(int tricks);
+
+  /// Sub-line of the resume card: `Koz Maca - Dagitim 3 - Puan 12`.
+  String resumeSummary(String mode, int hand, int score);
 }
