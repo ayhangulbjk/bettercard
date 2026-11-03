@@ -157,6 +157,28 @@ Dördüncü cihaz turundan çıkanlar (2026-11-03, hepsi giderildi):
   `flutter_launcher_icons` ile üretiliyor; `flutter create`'ten sonra
   `dart run flutter_launcher_icons` çalıştırmak gerekiyor (D-25).
 
+Yapay zeka turu (2026-11-03) — `docs/AI_STRATEGY.md`, ölçümler
+`docs/AI_BENCHMARKS.md`:
+
+- **Önce ölçüm kuruldu.** Simülatör artık söz turunu oynuyor ve eli
+  `DeclarationRules.scoreFor` ile puanlıyor; `run_matchup.dart` löve değil
+  **puan** raporluyor, söz tutma oranını ve iki ayrı batma türünü ayrı
+  sayıyor. Eski ölçüt (löve/el) yanlış yöne çekiyordu.
+- **Gözlem genişledi** (`MatchContext`): açıklanmış sözler, puan tablosu ve
+  geçerli ödeme kuralı — hepsi masada açık bilgi. Huni hâlâ tek
+  (`SeatObservation.fromState`).
+- **Kart sayma derinleşti.** Yükseltme zorunluluğu yeni bir kesin çıkarım
+  açıyor: renge uyup altına atan oyuncunun o renkte daha büyüğü yoktur.
+  Çıkarımların hiçbirinin yanlış olmadığı gerçek gizli ellere karşı test
+  ediliyor.
+- **Söz verme beklenen puanı maksimize ediyor**, yuvarlama değil; yan eşiği
+  değişince söz kendiliğinden değişiyor.
+- **Oyun artık puana oynuyor:** sözünü tutup sınıra yaklaşan bot löve almaktan
+  kaçıyor; "el almaz" diyen bot bozulana kadar kaçıyor.
+- **Zor seviyesi açıldı** (Monte Carlo, örneklenmiş dünyalar). Normal'e karşı
+  +4.03 ± 0.80 puan/el. **Uzman ve Efsane kapalı kaldı:** oyun sonu çözücü
+  yazıldı ama ölçülebilir kazanç vermedi (−0.49 ± 2.06).
+
 > `ios/` ve `android/` klasörleri kasıtlı olarak depoda değil, commit edilmez.
 > `.flutter-plugins-dependencies` de üretilen bir dosya; `.gitignore`'da.
 

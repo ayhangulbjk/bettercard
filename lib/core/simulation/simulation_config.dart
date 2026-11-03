@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 
 import '../cards/suit.dart';
+import '../rules/declaration_rules.dart';
 import '../rules/trick_rules.dart';
 
 /// Parameters for a headless batch of trick-play hands.
@@ -16,6 +17,7 @@ class SimulationConfig {
     this.baseSeed = 1,
     this.trump = Suit.spades,
     this.rules = TrickRules.batakStandard,
+    this.declarationRules = DeclarationRules.none,
     this.handSize,
     this.rotateSeats = true,
     this.checkInvariants = true,
@@ -36,6 +38,27 @@ class SimulationConfig {
   final Suit? trump;
 
   final TrickRules rules;
+
+  /// The payoff for a declaration round, or [DeclarationRules.none] for a
+  /// run that measures trick taking alone.
+  ///
+  /// This is what turns the simulator from a trick harness into a scoring
+  /// one. It matters because under a declaring profile the two are not the
+  /// same measurement and can point in opposite directions: an extra trick
+  /// is worth +1 to a seat with room and -50 to a seat at its bust line, so
+  /// an agent tuned on tricks per hand is tuned on the wrong number.
+  final DeclarationRules declarationRules;
+
+  /// The declarations a seat may legally choose from.
+  ///
+  /// The same range the engine offers, derived from the same rule record, so
+  /// a benchmarked agent is answering the question the real game asks.
+  List<int> get legalDeclarations => <int>[
+        for (int value = declarationRules.minimumDeclaration;
+            value <= effectiveHandSize;
+            value++)
+          value,
+      ];
 
   /// Cards per seat. Defaults to an even split of the 52-card deck.
   final int? handSize;

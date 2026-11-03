@@ -1,5 +1,4 @@
 import '../cards/playing_card.dart';
-import '../cards/suit.dart';
 import '../util/seeded_random.dart';
 import 'card_tracker.dart';
 import 'seat_observation.dart';
@@ -37,7 +36,11 @@ final class SampledDeal {
 /// * the observer's own hand is unchanged,
 /// * no sampled hand contains a card already played,
 /// * each seat receives exactly as many cards as it publicly holds,
-/// * no seat receives a suit it has proved it is void in.
+/// * no seat receives a suit it has proved it is void in,
+/// * no seat receives a card above a ceiling it has proved.
+///
+/// All four are asked through `CardTracker.couldHold`, so a new inference is
+/// honoured here the moment the tracker can draw it.
 ///
 /// Sampling is seeded, so a rollout batch is reproducible and a benchmark run
 /// is comparable across machines.
@@ -141,16 +144,15 @@ final class HiddenHandSampler {
     // flexible cards and the assignment dead-ends.
     final List<PlayingCard> order = tracker.unseenCards.toList()
       ..sort((PlayingCard a, PlayingCard b) {
-        final int byFreedom = _eligibleSeatCount(a.suit, tracker, capacity)
-            .compareTo(_eligibleSeatCount(b.suit, tracker, capacity));
+        final int byFreedom = _eligibleSeatCount(a, tracker, capacity)
+            .compareTo(_eligibleSeatCount(b, tracker, capacity));
         return byFreedom != 0 ? byFreedom : a.id.compareTo(b.id);
       });
 
     for (final PlayingCard card in order) {
       final List<int> options = <int>[
         for (int seat = 0; seat < remaining.length; seat++)
-          if (remaining[seat] > 0 && !tracker.isKnownVoid(seat, card.suit))
-            seat,
+          if (remaining[seat] > 0 && tracker.couldHold(seat, card)) seat,
       ];
       final int optionCount = options.length + (buriedRemaining > 0 ? 1 : 0);
       if (optionCount == 0) {
@@ -172,13 +174,13 @@ final class HiddenHandSampler {
   }
 
   static int _eligibleSeatCount(
-    Suit suit,
+    PlayingCard card,
     CardTracker tracker,
     List<int> capacity,
   ) {
     int count = 0;
     for (int seat = 0; seat < capacity.length; seat++) {
-      if (capacity[seat] > 0 && !tracker.isKnownVoid(seat, suit)) {
+      if (capacity[seat] > 0 && tracker.couldHold(seat, card)) {
         count++;
       }
     }

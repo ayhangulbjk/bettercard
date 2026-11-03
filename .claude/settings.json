@@ -1,5 +1,6 @@
 {
   "enabledPlugins": {
     "caveman@anthropic-plugin-directory": true
-  }
+  },
+  "showThinkingSummaries":true
 }

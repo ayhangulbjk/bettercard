@@ -259,12 +259,13 @@ final class MatchController extends Notifier<MatchSession?> {
           if (hand == null) {
             return;
           }
+          final SpadesBatakMatchState playing = session.match;
           final int seat = hand.turnSeat;
           await MatchPacing.wait(_pacing.thinkDelay);
           if (generation != _generation || state == null) {
             return;
           }
-          final PlayingCard? card = await _decide(seat, hand);
+          final PlayingCard? card = await _decide(seat, playing, hand);
           if (card == null || generation != _generation || state == null) {
             return;
           }
@@ -321,7 +322,11 @@ final class MatchController extends Notifier<MatchSession?> {
   }
 
   /// Asks [seat]'s policy for a card, through the decision service.
-  Future<PlayingCard?> _decide(int seat, TrickPlayState hand) async {
+  Future<PlayingCard?> _decide(
+    int seat,
+    SpadesBatakMatchState match,
+    TrickPlayState hand,
+  ) async {
     final AiPolicy? policy = _opponents.policyFor(seat);
     if (policy == null) {
       return null;
@@ -331,10 +336,15 @@ final class MatchController extends Notifier<MatchSession?> {
     try {
       return await ref.read(aiDecisionServiceProvider).decide(
             policy: policy,
-            observation: SeatObservation.fromState(hand, seat),
-            // The heuristic levels search nothing, so there is no budget to
-            // spend. The search levels pass a real one; see milestone 4.
-            budget: AiComputeBudget.none,
+            observation: SeatObservation.fromState(
+              hand,
+              seat,
+              match: match.aiContext,
+            ),
+            // Per level, from the difficulty itself: the heuristic levels
+            // spend nothing, the search levels get a bound they must return
+            // their best answer within.
+            budget: _opponents.difficulty.budget,
             requestId: requestId,
           );
     } on AiDecisionCancelled {
@@ -361,11 +371,15 @@ final class MatchController extends Notifier<MatchSession?> {
     try {
       return await ref.read(aiDecisionServiceProvider).decideDeclaration(
             policy: policy,
-            observation: SeatObservation.fromState(hand, seat),
+            observation: SeatObservation.fromState(
+              hand,
+              seat,
+              match: match.aiContext,
+            ),
             // From the engine, never from the policy: what may be declared is
             // a rule, and rules have one authority.
             options: _engine.legalDeclarations(match),
-            budget: AiComputeBudget.none,
+            budget: _opponents.difficulty.budget,
             requestId: requestId,
           );
     } on AiDecisionCancelled {

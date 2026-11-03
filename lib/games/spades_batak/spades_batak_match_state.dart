@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 
+import '../../core/ai/match_context.dart';
 import '../../core/game_engine/trick/trick_play_state.dart';
 import '../../core/rules/rule_profile.dart';
 import '../../core/rules/scoring_rules.dart';
@@ -54,6 +55,19 @@ final class SpadesBatakMatchState {
   final List<int?> declarations;
 
   int get seatCount => totals.length;
+
+  /// What a seat may legally know beyond the cards: the declarations spoken
+  /// so far, the scoreboard, and the payoff in force.
+  ///
+  /// Built here because this is the object that holds all three. It adds
+  /// nothing private: every field is already on the table in front of the
+  /// players. [SeatObservation.fromState] remains the only place a policy's
+  /// view is assembled.
+  MatchContext get aiContext => MatchContext(
+        declarationRules: profile.declarationRules,
+        declarations: declarations,
+        totalScores: totals,
+      );
 
   /// Whether the hand is still waiting for declarations.
   bool get isDeclaring =>

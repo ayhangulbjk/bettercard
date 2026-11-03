@@ -1,6 +1,7 @@
 import '../../core/ai/ai_difficulty.dart';
 import '../../core/ai/ai_policy.dart';
 import '../../core/ai/policies/heuristic_policy.dart';
+import '../../core/ai/policies/monte_carlo_policy.dart';
 import '../../core/persistence/app_settings.dart';
 
 /// How long the table waits, and for what.
@@ -65,7 +66,7 @@ final class MatchPacing {
 /// would change the game underneath the player, and a policy carries its own
 /// generator, so rebuilding one mid-match would also break replay.
 final class OpponentRoster {
-  const OpponentRoster(this._bySeat);
+  const OpponentRoster(this._bySeat, this.difficulty);
 
   /// Builds opponents for every seat except [humanSeat].
   ///
@@ -78,33 +79,46 @@ final class OpponentRoster {
     required int seatCount,
     required int humanSeat,
   }) =>
-      OpponentRoster(<int, AiPolicy>{
-        for (int seat = 0; seat < seatCount; seat++)
-          if (seat != humanSeat)
-            seat: _policyFor(difficulty, matchSeed ^ (0x9E3779B1 * (seat + 1))),
-      });
+      OpponentRoster(
+        <int, AiPolicy>{
+          for (int seat = 0; seat < seatCount; seat++)
+            if (seat != humanSeat)
+              seat: _policyFor(
+                difficulty,
+                matchSeed ^ (0x9E3779B1 * (seat + 1)),
+              ),
+        },
+        difficulty,
+      );
 
-  static const OpponentRoster empty = OpponentRoster(<int, AiPolicy>{});
+  static const OpponentRoster empty =
+      OpponentRoster(<int, AiPolicy>{}, AiDifficulty.normal);
 
   final Map<int, AiPolicy> _bySeat;
+
+  /// The level these opponents were built for, which is also what decides
+  /// what a decision may spend. Frozen with the roster for the same reason
+  /// the policies are: changing it mid-match would change the game underneath
+  /// the player.
+  final AiDifficulty difficulty;
 
   /// The policy for [seat], or null when that seat is the player's.
   AiPolicy? policyFor(int seat) => _bySeat[seat];
 
   /// The policy for one difficulty level.
   ///
-  /// Zor, Uzman and Efsane have no policy of their own yet and are not
-  /// selectable (see [AiDifficulty.isImplemented]). Mapping them onto the
-  /// heuristic would make the selector a lie, so this only has to handle a
-  /// stale stored setting, and it does so with the strongest policy that
-  /// actually exists rather than by crashing.
+  /// Uzman and Efsane are not selectable (see [AiDifficulty.isImplemented]):
+  /// no measured step up over Zor has been recorded for them, and offering a
+  /// level that is not stronger would make the selector a lie. They are
+  /// mapped to the strongest policy that does exist, so a stale stored
+  /// setting plays rather than crashes.
   static AiPolicy _policyFor(AiDifficulty difficulty, int seed) =>
       switch (difficulty) {
         AiDifficulty.beginner => HeuristicPolicy.beginner(seed: seed),
-        AiDifficulty.normal ||
+        AiDifficulty.normal => HeuristicPolicy(seed: seed),
         AiDifficulty.hard ||
         AiDifficulty.expert ||
         AiDifficulty.legendary =>
-          HeuristicPolicy(seed: seed),
+          MonteCarloPolicy(seed: seed),
       };
 }

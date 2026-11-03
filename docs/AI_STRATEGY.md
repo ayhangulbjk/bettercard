@@ -16,17 +16,21 @@ asserted).
 | `AiPolicy` interface, `AiComputeBudget` | Implemented |
 | `RandomLegalPolicy` (baseline) | Implemented, tested |
 | `AiDecisionService` (same-isolate) | Implemented |
-| `HeuristicPolicy` | Not started |
-| `MonteCarloPolicy` | Not started |
-| `BidEvaluator`, `ContractSelector` | Not started |
+| `MatchContext` (declarations, scores, payoff) | Implemented, tested |
+| `HeuristicPolicy`, score-aware | Implemented, measured |
+| `MonteCarloPolicy` | Implemented, measured |
+| `EndgameSolver` | Implemented, **no measured gain yet** |
+| `BidEvaluator`, `ContractSelector` | Not started (auction modes) |
 | `OpponentModel` | Not started |
 | `PartnershipStrategy` | Not started |
-| `EndgameSolver` | Not started |
 | Isolate-backed `AiDecisionService` | Not started |
 
-**There is no strong AI yet.** Milestone 1 ships the information plumbing and
-a baseline. No claim of expert play is made anywhere in the product or the
-code, and the difficulty selector is labelled accordingly.
+Three levels are offered and each one is measured against the level below it:
+Baslangic (heuristic plus a 40% blunder rate), Normal (score-aware heuristic)
+and Zor (sampling search). Uzman and Efsane are **not** offered. The search
+that would back them exists, but the measurement came back inconclusive, and
+a level nobody can show is stronger is not a level. See
+docs/AI_BENCHMARKS.md.
 
 ## The no-cheating guarantee
 
@@ -39,6 +43,12 @@ A policy sees a `SeatObservation` and nothing else:
 - public hand counts and trick counts,
 - its pre-computed legal moves.
 
+It also sees what is public beyond the cards, through `MatchContext`: the
+declarations spoken so far (nulls for the seats that have not spoken, which
+is honest -- speaking first really is a worse position), the scoreboard, and
+the payoff in force including the bust threshold. Without those a policy
+cannot tell a trick that pays from a trick that costs fifty.
+
 It cannot reach another seat's cards, buried cards, undealt cards, or the
 seeded generator's state. `SeatObservation.fromState` is the only sanctioned
 way to build one, so there is exactly one place to audit.
@@ -46,9 +56,19 @@ way to build one, so there is exactly one place to audit.
 Monte Carlo policies are allowed to **invent** hidden hands consistent with
 that information. They are never allowed to read the real ones. The test
 harness may inspect true hidden state to score an outcome, but must never feed
-it back into a policy. `test/unit/ai_information_filter_test.dart` asserts the
-boundary directly: across many plies and every seat, the set of cards
-reachable through an observation never intersects another seat's real hand.
+it back into a policy. Two tests assert the boundary, from opposite directions:
+
+- `test/unit/ai_information_filter_test.dart` checks the plumbing: across
+  many plies and every seat, the set of cards reachable through an
+  observation never intersects another seat's real hand.
+- `test/simulation/policy_fairness_test.dart` checks the consequence, which
+  is the claim a player cares about. It replaces the other seats' real cards
+  with a world sampled from the public record, leaving the trick, the
+  history, the counts and the turn untouched, and asserts that every field of
+  the observation and the resulting decision are unchanged. A leak anywhere
+  between the state and the decision shows up here as a different card,
+  whatever route it took. It was checked against a deliberately planted leak
+  and caught it.
 
 ## Inference, which is not cheating
 

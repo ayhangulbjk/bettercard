@@ -529,3 +529,47 @@ into the app and opens no socket.
 The Android adaptive icon insets the same art by 18% over black. The artwork
 is a full-bleed rounded square; without the inset the launcher's circular mask
 would cut the gold frame off at the corners.
+
+## D-26: The AI plays for points, and the benchmark had to say so first
+
+Koz Maca's declaration scoring makes tricks and points different objectives,
+and sometimes opposite ones: a seat that has made its word gains one point
+from the next trick and loses its whole stake a couple of tricks later. Every
+AI change in this round follows from taking that seriously.
+
+**The measurement came first, and it was the real blocker.** The matchup
+benchmark reported tricks per hand. Under a bust threshold that is not a weak
+proxy for the goal, it is a number that moves the wrong way, and the headless
+simulator had no declaration round and no scorer, so there was no way to
+measure what the game actually pays. Nothing downstream was verifiable until
+that was fixed, so it was fixed first: the simulator runs the declaration
+round, scores hands through `DeclarationRules.scoreFor` -- the same authority
+that pays a real hand -- and the benchmark reports points, declaration
+success, and the two ways to fail it, counted apart.
+
+That paid for itself immediately. The first score-aware declaration evaluator
+measured **worse** than the policy it replaced: it promised about a trick
+lower, which made the overshoot rate jump from 18% to 30%, because the
+tricks a seat takes are not independent of the word it gave -- promise low
+and you start ducking early, and ducking leaks. Without the harness that
+change would have shipped as an improvement.
+
+Three further things that measurement decided rather than argument:
+
+- **`capacityBias` must be calibrated in self-play.** Tuned against the
+  random baseline it landed at 1.8, which then undershot 48% of its words
+  against a competent table. A hand's capacity depends on who else is at the
+  table, and the app seats three copies of one policy.
+- **Dumping the highest card when a trick cannot be avoided** is worth about
+  +1.3 points a hand over paying with the cheapest one. It is one line, and
+  it moved the agent from "no difference detected" to a clear margin.
+- **The endgame solver stays dark.** It is built, it is correct, and it
+  measured -0.49 +/- 2.06 points a hand against the sampler without it. So
+  Uzman is not offered. A level nobody can show is stronger is not a level.
+
+The no-cheating boundary was widened, not weakened: `MatchContext` adds the
+declarations spoken, the scoreboard and the payoff, all of which are on the
+table in front of the players. `SeatObservation.fromState` is still the only
+funnel, and `test/simulation/policy_fairness_test.dart` now asserts the
+consequence rather than the plumbing -- same public record, same decision,
+whatever the hidden cards are.
