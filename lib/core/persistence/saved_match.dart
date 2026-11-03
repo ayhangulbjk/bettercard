@@ -39,9 +39,26 @@ class SavedMatch {
         scores = List<int>.unmodifiable(scores);
 
   /// Version 1 stored a position summary with no move log, so it could not be
-  /// resumed. Nothing ever wrote one -- no mode was playable -- so version 2
-  /// rejects it rather than carrying a migration for a file that cannot exist.
-  static const int currentSchemaVersion = 2;
+  /// resumed. Nothing ever wrote one -- no mode was playable -- so it is
+  /// rejected rather than migrated.
+  ///
+  /// Version 3 lets the log carry declarations as well as cards. A version 2
+  /// file still reads: its log is all cards, and the profile it carries has no
+  /// declaration round, so replaying it reproduces the match it recorded.
+  static const int currentSchemaVersion = 3;
+
+  /// Oldest log format this build can replay.
+  static const int oldestReadableSchemaVersion = 2;
+
+  /// How a declaration of [tricks] is written into [moves].
+  ///
+  /// Card ids are dense and non-negative, so the negatives are free. Keeping
+  /// the two directions next to each other is what stops a writer and a
+  /// reader drifting apart over a format with no field names.
+  static int encodeDeclaration(int tricks) => -(tricks + 1);
+
+  /// The declaration [move] encodes, or null when it is a card id.
+  static int? decodeDeclaration(int move) => move < 0 ? -move - 1 : null;
 
   /// Unique id for this match.
   final String matchId;
@@ -95,7 +112,7 @@ class SavedMatch {
         '($currentSchemaVersion)',
       );
     }
-    if (version < currentSchemaVersion) {
+    if (version < oldestReadableSchemaVersion) {
       throw const FormatException(
         'Saved match schema 1 holds no move log and cannot be resumed',
       );

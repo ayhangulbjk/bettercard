@@ -30,6 +30,20 @@ abstract interface class AiPolicy {
     SeatObservation observation,
     AiComputeBudget budget,
   );
+
+  /// Chooses how many tricks this seat promises to take.
+  ///
+  /// [options] is the legal range, handed in by the engine for the same
+  /// reason `observation.legalMoves` is: the policy must not decide for itself
+  /// what the rules allow. The answer must be one of them.
+  ///
+  /// Called once per hand, before any card is played, in modes whose profile
+  /// has a declaration round. In every other mode it is never called.
+  Future<int> chooseDeclaration(
+    SeatObservation observation,
+    List<int> options,
+    AiComputeBudget budget,
+  );
 }
 
 /// Thrown when a policy is asked to move from a position with no legal play.

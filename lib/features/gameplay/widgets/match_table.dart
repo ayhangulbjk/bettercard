@@ -32,9 +32,11 @@ final class MatchTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final TrickPlayState? hand = session.hand;
     final List<int> tricks = session.tricksThisHand;
-    final List<int> handSizes = session.cardsRemaining;
+    final List<int?> declarations = session.declarations;
     // Nobody is to move while a scored hand is on screen, so no seat is lit.
-    final int? active = session.isShowingFinishedHand ? null : hand?.turnSeat;
+    final int? active = session.isShowingFinishedHand
+        ? null
+        : (session.match.declaringSeat ?? hand?.turnSeat);
     final int? winner = session.highlightedWinner;
 
     return Padding(
@@ -72,13 +74,18 @@ final class MatchTable extends StatelessWidget {
                         leadSeat: 0,
                         expectedPlays: session.seatCount,
                       ),
+                  winnerSeat: winner,
                 ),
                 seatBuilder: (int seat) => SeatPanel(
                   // Only the player's own seat has the width for a row.
                   vertical: seat != session.humanSeat,
                   name: seat < seatNames.length ? seatNames[seat] : '',
                   tricksWon: tricks[seat],
-                  cardsRemaining: handSizes[seat],
+                  declaration:
+                      seat < declarations.length ? declarations[seat] : null,
+                  awaitingDeclaration: session.isDeclaring &&
+                      seat < declarations.length &&
+                      declarations[seat] == null,
                   isActive: seat == active || seat == winner,
                 ),
               ),

@@ -385,3 +385,48 @@ what decides the real values, and a disagreement means the file was edited or
 truncated, so the save is dropped. `tool/checks/save_roundtrip.dart` exercises
 all three paths: an intact save restores identically, a truncated log is
 refused, and an edited score is refused.
+
+## D-20: Declarations are a separate rule record from the auction
+
+Koz Maca opens each hand with every seat saying how many tricks it will take.
+That looks like a bid, and the project already had `BiddingRules`, so the
+obvious move was to reuse it.
+
+It would have been wrong. `BiddingRules` describes a **contest**: a minimum to
+enter, a standing bid to raise over, a pass-out resolution, a winner who names
+trump, and a single declarer whose contract the scoring is built around. None
+of that exists here. Four seats make four independent promises, nobody can
+outbid anybody, and all four are scored against their own number. Forcing the
+two into one record would have meant a `minimumBid` that is not a minimum, a
+`declarerNamesTrump` that is permanently false, and a `hasAuction` getter that
+has to mean two different things depending on the mode.
+
+So `DeclarationRules` is its own record, and `RuleProfile` carries both. The
+test is whether the fields mean the same thing, not whether the UI steps look
+alike. `SpadesBatakEngine.start` still refuses a profile with an auction, and
+now opens a declaration round when one is configured.
+
+The phase is derived, not stored: `isDeclaring` is true while any seat's entry
+in `declarations` is still null. There is no phase enum in the match state to
+fall out of step with the data, and `checkInvariants` can therefore verify the
+declarations directly.
+
+## D-21: The move log carries declarations as negative numbers
+
+A saved match is a list of `PlayingCard.id`s (D-19). Declarations have to be in
+it too, or a resumed hand would have nobody promising anything and would score
+differently from the one that was saved.
+
+Card ids are dense and non-negative (0 to 51), so the negative numbers were
+free: a declaration of `n` is stored as `-(n + 1)`. No second list to keep in
+order with the first, no field names, and a replay reads each entry as one or
+the other by its sign.
+
+`SavedMatch.encodeDeclaration` and `decodeDeclaration` sit next to each other
+for the reason the encoding is cheap in the first place: a format with no field
+names has nothing to catch a writer and a reader drifting apart, so the two
+directions are defined in one place and used everywhere.
+
+Schema 3. A schema 2 file still replays: its log is all cards, and the rule
+profile it carries has no declaration round, so it reproduces exactly the match
+it recorded -- which is the point of storing the profile in full.

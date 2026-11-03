@@ -22,6 +22,16 @@ abstract interface class AiDecisionService {
     required Object requestId,
   });
 
+  /// Asks [policy] for a trick declaration, under the same cancellation and
+  /// budget contract as [decide].
+  Future<int> decideDeclaration({
+    required AiPolicy policy,
+    required SeatObservation observation,
+    required List<int> options,
+    required AiComputeBudget budget,
+    required Object requestId,
+  });
+
   /// Cancels a pending request. Safe to call for an unknown or finished id.
   void cancel(Object requestId);
 
@@ -53,6 +63,23 @@ final class DirectAiDecisionService implements AiDecisionService {
       throw AiDecisionCancelled(requestId);
     }
     return card;
+  }
+
+  @override
+  Future<int> decideDeclaration({
+    required AiPolicy policy,
+    required SeatObservation observation,
+    required List<int> options,
+    required AiComputeBudget budget,
+    required Object requestId,
+  }) async {
+    _cancelled.remove(requestId);
+    final int declaration =
+        await policy.chooseDeclaration(observation, options, budget);
+    if (_cancelled.remove(requestId)) {
+      throw AiDecisionCancelled(requestId);
+    }
+    return declaration;
   }
 
   @override

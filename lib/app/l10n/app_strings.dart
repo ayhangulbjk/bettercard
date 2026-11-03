@@ -46,6 +46,23 @@ abstract interface class AppStrings {
   String get gameplayTrickLabel;
   String get gameplayYourTurn;
   String get gameplayWaiting;
+
+  // Declarations.
+  String get gameplayDeclarePrompt;
+  String get gameplayDeclareHint;
+  String get gameplayNilLabel;
+  String get gameplayDeclaring;
+  String get gameplayScoreboardTitle;
+  String get gameplayScoreboardTooltip;
+
+  /// The word for a trick, e.g. `el`.
+  String get gameplayTrickWord;
+
+  /// `2 / 5 el`: tricks taken against the number declared.
+  String declarationProgress(int taken, int declared);
+
+  /// `Soz: 5`, or the nil label.
+  String declarationLabel(int declared);
   String get gameplayTrumpLabel;
   String get gameplayNoTrump;
   String get gameplayScoreLabel;
@@ -57,6 +74,7 @@ abstract interface class AppStrings {
   String get gameplayYouLost;
   String get gameplayDraw;
   String get gameplayRematch;
+  String get gameplayDeclarationColumn;
   String get gameplayTricksColumn;
   String get gameplayPointsColumn;
   String get gameplayTotalColumn;

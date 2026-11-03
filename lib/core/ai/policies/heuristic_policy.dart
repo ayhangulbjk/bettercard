@@ -1,4 +1,5 @@
 import '../../cards/playing_card.dart';
+import '../../cards/rank.dart';
 import '../../cards/suit.dart';
 import '../../game_engine/trick/trick.dart';
 import '../../game_engine/trick/trick_resolver.dart';
@@ -69,6 +70,92 @@ final class HeuristicPolicy implements AiPolicy {
     AiComputeBudget budget,
   ) async =>
       chooseCardSync(observation);
+
+  @override
+  Future<int> chooseDeclaration(
+    SeatObservation observation,
+    List<int> options,
+    AiComputeBudget budget,
+  ) async =>
+      chooseDeclarationSync(observation, options);
+
+  /// Counts the tricks the hand looks likely to win, then promises that many.
+  ///
+  /// A deliberately plain count, because a promise made from a static hand is
+  /// a static-hand problem: top trumps, trump length beyond what the others
+  /// can draw, and side-suit winners that are likely to survive. It does not
+  /// model the other three seats' promises, and it never promises nil -- with
+  /// cutting compulsory a nil hand can be forced to take a trick by a suit it
+  /// is void in, so an "el almaz" worth -50 is a bet this policy has no way to
+  /// evaluate. Declaring 1 instead is the honest floor.
+  ///
+  /// No strength claim attaches to this; see docs/AI_BENCHMARKS.md.
+  int chooseDeclarationSync(SeatObservation observation, List<int> options) {
+    if (options.isEmpty) {
+      throw NoLegalMoveError(observation.seat);
+    }
+    if (blunderRate > 0 && _random.nextBool(blunderRate)) {
+      return options[_random.nextInt(options.length)];
+    }
+
+    final double estimate = _expectedTricks(observation);
+    int promise = estimate.round();
+
+    // Never nil, and never more than the hand can hold.
+    final int floor = options.firstWhere(
+      (int value) => value >= 1,
+      orElse: () => options.last,
+    );
+    if (promise < floor) {
+      promise = floor;
+    }
+    if (promise > options.last) {
+      promise = options.last;
+    }
+    return promise;
+  }
+
+  /// Expected trick count for a hand that has not been played yet.
+  double _expectedTricks(SeatObservation observation) {
+    final Suit? trump = observation.trump;
+    final Map<Suit, List<PlayingCard>> bySuit = <Suit, List<PlayingCard>>{};
+    for (final PlayingCard card in observation.hand) {
+      bySuit.putIfAbsent(card.suit, () => <PlayingCard>[]).add(card);
+    }
+
+    double tricks = 0;
+    for (final MapEntry<Suit, List<PlayingCard>> entry in bySuit.entries) {
+      final List<PlayingCard> cards = entry.value
+        ..sort(
+            (PlayingCard a, PlayingCard b) => b.strength.compareTo(a.strength));
+      final bool isTrump = entry.key == trump;
+      final int length = cards.length;
+
+      for (int index = 0; index < cards.length; index++) {
+        final Rank rank = cards[index].rank;
+        if (rank == Rank.ace) {
+          tricks += 1;
+        } else if (rank == Rank.king) {
+          // A king needs one card to duck under it before it can win.
+          tricks += length >= 2 ? 0.85 : 0.45;
+        } else if (rank == Rank.queen) {
+          tricks += length >= 3 ? 0.55 : 0.2;
+        } else if (isTrump && rank == Rank.jack && length >= 4) {
+          tricks += 0.3;
+        }
+      }
+
+      if (isTrump) {
+        // Trumps past the fourth tend to win once the others are drawn.
+        tricks += length > 4 ? (length - 4) * 0.8 : 0;
+      } else if (trump != null && length <= 1) {
+        // A short side suit is a chance to cut -- worth something, but less
+        // than tables assume, because every other seat must cut as well.
+        tricks += length == 0 ? 0.5 : 0.25;
+      }
+    }
+    return tricks;
+  }
 
   /// Synchronous variant for the headless simulator and the benchmark CLI,
   /// which run millions of decisions and should not pay for a future per card.

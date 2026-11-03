@@ -5,8 +5,13 @@ import 'package:flutter/material.dart';
 /// One authority for the table's shape, so a seat's panel and the card it
 /// plays can never drift apart: the card appears on the edge the player is
 /// sitting on. Seat 0 is always the person at the device, at the bottom of the
-/// screen, and the rest follow the engine's seating order anticlockwise --
-/// which, seen from seat 0, reads left, across, right.
+/// screen.
+///
+/// **Play passes to the right.** The engine's seating order is 0, 1, 2, 3, so
+/// seat 1 -- the next to act after the player -- is drawn on the **right** of
+/// the table and seat 3 on the left. Drawing seat 1 on the left would make the
+/// turn appear to travel anticlockwise, which is not how these games are
+/// dealt or played at a Turkish table.
 abstract final class TableGeometry {
   /// Where [seat]'s card lands, in multiples of the card's own width and
   /// height, measured from the middle of the table.
@@ -18,15 +23,15 @@ abstract final class TableGeometry {
     if (seatCount == 3) {
       return switch (seat) {
         0 => const Offset(0, 0.40),
-        1 => const Offset(-0.36, -0.26),
-        _ => const Offset(0.36, -0.26),
+        1 => const Offset(0.36, -0.26),
+        _ => const Offset(-0.36, -0.26),
       };
     }
     return switch (seat) {
       0 => const Offset(0, 0.40),
-      1 => const Offset(-0.34, 0),
+      1 => const Offset(0.34, 0),
       2 => const Offset(0, -0.40),
-      _ => const Offset(0.34, 0),
+      _ => const Offset(-0.34, 0),
     };
   }
 
@@ -35,14 +40,14 @@ abstract final class TableGeometry {
     if (seatCount == 3) {
       return switch (seat) {
         0 => -0.04,
-        1 => -0.08,
-        _ => 0.08,
+        1 => 0.08,
+        _ => -0.08,
       };
     }
     return switch (seat) {
-      1 => -0.08,
+      1 => 0.08,
       2 => 0.05,
-      3 => 0.08,
+      3 => -0.08,
       _ => -0.04,
     };
   }
@@ -64,8 +69,9 @@ abstract final class TableGeometry {
 /// panel on top of the cards once the system font grew; here the trick can
 /// only shrink, never be covered.
 ///
-/// Seat 0 is the player, along the bottom. With four seats the rest take the
-/// left, far and right edges; with three, the other two share the far edge.
+/// Seat 0 is the player, along the bottom. Play passes to the right, so seat 1
+/// sits on the right, seat 2 across and seat 3 on the left; with three seats,
+/// the other two share the far edge, seat 1 on the right.
 final class TableLayout extends StatelessWidget {
   const TableLayout({
     required this.seatCount,
@@ -89,9 +95,9 @@ final class TableLayout extends StatelessWidget {
           Expanded(
             child: Row(
               children: <Widget>[
-                _sideSeat(1),
-                Expanded(child: Center(child: center)),
                 _sideSeat(3),
+                Expanded(child: Center(child: center)),
+                _sideSeat(1),
               ],
             ),
           ),
@@ -106,8 +112,8 @@ final class TableLayout extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          SizedBox(width: TableGeometry.farSeatWidth, child: seatBuilder(1)),
           SizedBox(width: TableGeometry.farSeatWidth, child: seatBuilder(2)),
+          SizedBox(width: TableGeometry.farSeatWidth, child: seatBuilder(1)),
         ],
       );
     }

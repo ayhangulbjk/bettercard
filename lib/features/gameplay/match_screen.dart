@@ -15,12 +15,14 @@ import '../../core/table/seat_names.dart';
 import '../../games/spades_batak/spades_batak_engine.dart';
 import 'match_controller.dart';
 import 'match_session.dart';
+import 'match_turn.dart';
+import 'widgets/declaration_panel.dart';
 import 'widgets/felt_background.dart';
 import 'widgets/hand_fan.dart';
 import 'widgets/hand_summary_sheet.dart';
 import 'widgets/match_over_panel.dart';
 import 'widgets/match_table.dart';
-import 'widgets/score_strip.dart';
+import 'widgets/score_sheet_panel.dart';
 import 'widgets/turn_status_line.dart';
 
 /// The live table.
@@ -41,6 +43,12 @@ final class MatchScreen extends ConsumerStatefulWidget {
 
 class _MatchScreenState extends ConsumerState<MatchScreen> {
   static const SpadesBatakEngine _engine = SpadesBatakEngine();
+
+  /// Whether the scoreboard is open over the table.
+  ///
+  /// Screen state, not match state: closing the app with it open should not
+  /// reopen it, and the controller has no business knowing a sheet is up.
+  bool _showScores = false;
 
   @override
   Widget build(BuildContext context) {
@@ -93,23 +101,19 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               tooltip: strings.gameplayLeaveMatch,
               onPressed: () => _confirmLeave(strings),
             ),
+            actions: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.leaderboard_rounded),
+                tooltip: strings.gameplayScoreboardTooltip,
+                onPressed: () => setState(() => _showScores = !_showScores),
+              ),
+            ],
           ),
           body: SafeArea(
             child: Stack(
               children: <Widget>[
                 Column(
                   children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                      ),
-                      child: ScoreStrip(
-                        seatNames: seatNames,
-                        totals: session.totals,
-                        leadingSeats: session.match.leadingSeats,
-                        caption: _caption(strings, session),
-                      ),
-                    ),
                     Expanded(
                       // The table doubles as the drop zone, so a dragged card
                       // is played by letting go anywhere over it rather than
@@ -162,6 +166,32 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     onContinue: () =>
                         ref.read(matchProvider.notifier).continueAfterHand(),
                   ),
+                // Floated over the felt rather than stacked above the fan:
+                // the player decides by looking at their cards, so the hand
+                // stays on screen at full size and the picker takes the
+                // table's space, which is idle during the declaration round.
+                if (session.isAwaitingDeclaration)
+                  Align(
+                    alignment: const Alignment(0, -0.35),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                      ),
+                      child: DeclarationPanel(
+                        options: MatchTurn.legalDeclarations(session),
+                        strings: strings,
+                        onDeclare: (int tricks) => _declare(tricks, settings),
+                      ),
+                    ),
+                  ),
+                if (_showScores)
+                  ScoreSheetPanel(
+                    session: session,
+                    strings: strings,
+                    seatNames: seatNames,
+                    caption: _caption(strings, session),
+                    onClose: () => setState(() => _showScores = false),
+                  ),
                 if (session.isOver)
                   MatchOverPanel(
                     strings: strings,
@@ -191,6 +221,15 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
       HapticFeedback.selectionClick();
     }
     ref.read(matchProvider.notifier).playCard(card);
+  }
+
+  /// Records the player's declaration, with the same touch feedback a card
+  /// play gets: it is the same kind of commitment.
+  void _declare(int tricks, AppSettings settings) {
+    if (settings.hapticsEnabled) {
+      HapticFeedback.selectionClick();
+    }
+    ref.read(matchProvider.notifier).declare(tricks);
   }
 
   /// The cards the player may tap, straight from the engine.

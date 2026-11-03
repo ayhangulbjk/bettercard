@@ -37,6 +37,11 @@ final class HandSummarySheet extends StatelessWidget {
   final String actionLabel;
   final VoidCallback onContinue;
 
+  /// Whether this hand was played with declarations, and so needs the column
+  /// that explains why a seat with four tricks scored minus five.
+  bool get showDeclarations =>
+      score.declarations.any((int? value) => value != null);
+
   @override
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
@@ -56,11 +61,17 @@ final class HandSummarySheet extends StatelessWidget {
                 style: text.titleLarge?.copyWith(color: AppColors.goldBright),
               ),
               const SizedBox(height: AppSpacing.md),
-              _HeaderRow(strings: strings, text: text),
+              _HeaderRow(
+                strings: strings,
+                text: text,
+                showDeclarations: showDeclarations,
+              ),
               const Divider(color: AppColors.goldDim, height: AppSpacing.lg),
               for (int seat = 0; seat < score.seatCount; seat++)
                 _ScoreRow(
                   name: seat < seatNames.length ? seatNames[seat] : '',
+                  declaration: score.declarationOf(seat),
+                  showDeclarations: showDeclarations,
                   tricks: score.tricksOf(seat),
                   points: score.pointsOf(seat),
                   total: seat < totals.length ? totals[seat] : 0,
@@ -83,15 +94,28 @@ final class HandSummarySheet extends StatelessWidget {
 }
 
 class _HeaderRow extends StatelessWidget {
-  const _HeaderRow({required this.strings, required this.text});
+  const _HeaderRow({
+    required this.strings,
+    required this.text,
+    required this.showDeclarations,
+  });
 
   final AppStrings strings;
   final TextTheme text;
+  final bool showDeclarations;
 
   @override
   Widget build(BuildContext context) => Row(
         children: <Widget>[
-          const Spacer(flex: 3),
+          const Spacer(flex: 2),
+          if (showDeclarations)
+            Expanded(
+              child: Text(
+                strings.gameplayDeclarationColumn,
+                style: text.labelSmall,
+                textAlign: TextAlign.end,
+              ),
+            ),
           Expanded(
             child: Text(
               strings.gameplayTricksColumn,
@@ -120,6 +144,8 @@ class _HeaderRow extends StatelessWidget {
 class _ScoreRow extends StatelessWidget {
   const _ScoreRow({
     required this.name,
+    required this.declaration,
+    required this.showDeclarations,
     required this.tricks,
     required this.points,
     required this.total,
@@ -127,6 +153,8 @@ class _ScoreRow extends StatelessWidget {
   });
 
   final String name;
+  final int? declaration;
+  final bool showDeclarations;
   final int tricks;
   final int points;
   final int total;
@@ -138,7 +166,7 @@ class _ScoreRow extends StatelessWidget {
         child: Row(
           children: <Widget>[
             Expanded(
-              flex: 3,
+              flex: 2,
               child: Text(
                 name,
                 style: text.bodyMedium,
@@ -146,6 +174,14 @@ class _ScoreRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (showDeclarations)
+              Expanded(
+                child: Text(
+                  declaration == null ? '-' : '$declaration',
+                  style: text.bodyMedium,
+                  textAlign: TextAlign.end,
+                ),
+              ),
             Expanded(
               child: Text(
                 '$tricks',
@@ -155,8 +191,12 @@ class _ScoreRow extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                '+$points',
-                style: text.bodyMedium,
+                // Signed, not always "+": a broken promise costs points, and
+                // the old format printed that as "+-5".
+                points < 0 ? '$points' : '+$points',
+                style: text.bodyMedium?.copyWith(
+                  color: points < 0 ? AppColors.danger : null,
+                ),
                 textAlign: TextAlign.end,
               ),
             ),

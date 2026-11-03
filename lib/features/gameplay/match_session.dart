@@ -16,6 +16,12 @@ import '../../games/spades_batak/spades_batak_scorer.dart';
 /// table long enough to be read, and a finished hand has to be acknowledged
 /// before the next one starts.
 enum MatchPhase {
+  /// The player must say how many tricks they will take.
+  awaitingDeclaration,
+
+  /// An opponent is deciding what to declare.
+  opponentDeclaring,
+
   /// The player must choose a card.
   awaitingHuman,
 
@@ -93,6 +99,23 @@ final class MatchSession {
   TrickPlayState? get hand => match.hand;
 
   bool get isHumanTurn => phase == MatchPhase.awaitingHuman;
+
+  /// Whether the table is waiting for the player's declaration.
+  bool get isAwaitingDeclaration => phase == MatchPhase.awaitingDeclaration;
+
+  /// Whether the hand is still in its declaration round.
+  bool get isDeclaring =>
+      phase == MatchPhase.awaitingDeclaration ||
+      phase == MatchPhase.opponentDeclaring;
+
+  /// What each seat has declared for the hand on screen, null where a seat has
+  /// not spoken yet.
+  ///
+  /// Once a hand is scored the table shows the finished hand's numbers, for
+  /// the same reason its trick counts come from the score sheet: the engine
+  /// has already dealt the next hand underneath.
+  List<int?> get declarations =>
+      isShowingFinishedHand ? lastHandScore!.declarations : match.declarations;
 
   bool get isOver => phase == MatchPhase.matchOver;
 

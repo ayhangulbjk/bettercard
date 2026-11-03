@@ -36,6 +36,8 @@ final NotifierProvider<MatchController, MatchSession?> matchProvider =
 /// microseconds, but they are still awaited through [AiDecisionService], so
 /// the search-based levels drop in behind the same seam.
 final class MatchController extends Notifier<MatchSession?> {
+  static const SpadesBatakEngine _engine = SpadesBatakEngine();
+
   /// The opponents at this table. Empty when no match is open.
   OpponentRoster _opponents = OpponentRoster.empty;
 
@@ -135,6 +137,17 @@ final class MatchController extends Notifier<MatchSession?> {
     return true;
   }
 
+  /// Records the player's declaration. Ignored unless the table is waiting
+  /// for one.
+  void declare(int tricks) {
+    final MatchSession? session = state;
+    if (session == null || session.phase != MatchPhase.awaitingDeclaration) {
+      return;
+    }
+    _submitDeclaration(session.humanSeat, tricks);
+    unawaited(_drive(_generation));
+  }
+
   /// Plays [card] from the player's hand. Ignored unless it is their turn.
   void playCard(PlayingCard card) {
     final MatchSession? session = state;
@@ -195,10 +208,30 @@ final class MatchController extends Notifier<MatchSession?> {
       }
       switch (session.phase) {
         case MatchPhase.awaitingHuman:
+        case MatchPhase.awaitingDeclaration:
         case MatchPhase.handSummary:
         case MatchPhase.matchOver:
           // Waiting on the person at the device.
           return;
+
+        case MatchPhase.opponentDeclaring:
+          final SpadesBatakMatchState match = session.match;
+          final int? seat = match.declaringSeat;
+          final TrickPlayState? hand = match.hand;
+          if (seat == null || hand == null) {
+            return;
+          }
+          await MatchPacing.wait(_pacing.thinkDelay);
+          if (generation != _generation || state == null) {
+            return;
+          }
+          final int? declaration = await _decideDeclaration(seat, match, hand);
+          if (declaration == null ||
+              generation != _generation ||
+              state == null) {
+            return;
+          }
+          _submitDeclaration(seat, declaration);
 
         case MatchPhase.trickPause:
           await MatchPacing.wait(_pacing.trickPause);
@@ -250,6 +283,21 @@ final class MatchController extends Notifier<MatchSession?> {
     }
   }
 
+  /// Hands one declaration to the engine and folds the result into the table.
+  void _submitDeclaration(int seat, int tricks) {
+    final MatchSession session = state!;
+    final MatchTurnResult result = MatchTurn.declare(session, seat, tricks);
+    state = result.session;
+    if (!result.accepted) {
+      return;
+    }
+    // The log carries declarations alongside cards, so a resumed match knows
+    // what everybody promised. A declaration never ends a match, so unlike a
+    // card play there is no finished-match branch here.
+    _moves.add(SavedMatch.encodeDeclaration(tricks));
+    _save();
+  }
+
   /// Writes the match in progress.
   void _save() {
     final MatchSession? session = state;
@@ -275,6 +323,37 @@ final class MatchController extends Notifier<MatchSession?> {
             observation: SeatObservation.fromState(hand, seat),
             // The heuristic levels search nothing, so there is no budget to
             // spend. The search levels pass a real one; see milestone 4.
+            budget: AiComputeBudget.none,
+            requestId: requestId,
+          );
+    } on AiDecisionCancelled {
+      return null;
+    } finally {
+      if (_pendingRequest == requestId) {
+        _pendingRequest = null;
+      }
+    }
+  }
+
+  /// Asks [seat]'s policy for a declaration, through the decision service.
+  Future<int?> _decideDeclaration(
+    int seat,
+    SpadesBatakMatchState match,
+    TrickPlayState hand,
+  ) async {
+    final AiPolicy? policy = _opponents.policyFor(seat);
+    if (policy == null) {
+      return null;
+    }
+    final Object requestId = Object();
+    _pendingRequest = requestId;
+    try {
+      return await ref.read(aiDecisionServiceProvider).decideDeclaration(
+            policy: policy,
+            observation: SeatObservation.fromState(hand, seat),
+            // From the engine, never from the policy: what may be declared is
+            // a rule, and rules have one authority.
+            options: _engine.legalDeclarations(match),
             budget: AiComputeBudget.none,
             requestId: requestId,
           );

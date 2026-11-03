@@ -10,11 +10,57 @@ import 'package:batak_king/games/spades_batak/spades_batak_match_state.dart';
 import 'package:batak_king/games/spades_batak/spades_batak_scorer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Plays [state] to the end by always choosing the first legal card.
+/// Applies one legal command for whichever seat is to act.
+///
+/// Declarations and cards go through the same call because they are the same
+/// kind of thing to the engine: a command from the seat to act. Keeping one
+/// step function is what stops a test helper drifting out of step with the
+/// hand lifecycle -- which is exactly what happened when the declaration round
+/// landed and only one of the two helpers knew about it.
+SpadesBatakMatchState advance(
+  SpadesBatakMatchState state,
+  SpadesBatakEngine engine,
+) {
+  final int seat = engine.seatToAct(state)!;
+  final GameCommand command;
+  if (state.isDeclaring) {
+    final List<int> options = engine.legalDeclarations(state);
+    expect(options, isNotEmpty, reason: 'seat $seat had nothing to declare');
+    // The lowest non-nil number. Declaring nil every hand is legal but
+    // pathological: every seat would break it and no score would ever rise,
+    // so a match played to a target would never end.
+    command = PlaceBidCommand(
+      seat: seat,
+      tricks: options.firstWhere(
+        (int value) => value >= 1,
+        orElse: () => options.first,
+      ),
+    );
+  } else {
+    final List<PlayingCard> legal = engine.legalCards(state, seat);
+    expect(legal, isNotEmpty, reason: 'seat $seat had no legal card');
+    command = PlayCardCommand(seat: seat, card: legal.first);
+  }
+  final CommandOutcome<SpadesBatakMatchState> outcome =
+      engine.apply(state, command);
+  return switch (outcome) {
+    CommandAccepted<SpadesBatakMatchState>(
+      state: final SpadesBatakMatchState next
+    ) =>
+      next,
+    CommandRejected<SpadesBatakMatchState>(violation: final RuleViolation v) =>
+      fail('Engine rejected its own legal command for seat $seat: $v'),
+  };
+}
+
+/// Plays [state] to the end by always choosing the first legal option.
 ///
 /// Deliberately not random: a fixed choice makes a failure reproducible from
 /// the seed alone. Every ply is checked for invariants, so a lifecycle bug
 /// surfaces at the ply that caused it rather than at the end.
+///
+/// Declarations go through the same loop as cards, because they are the same
+/// kind of thing to the engine: a command from the seat to act.
 SpadesBatakMatchState playOut(
   SpadesBatakMatchState start, {
   SpadesBatakEngine engine = const SpadesBatakEngine(),
@@ -26,23 +72,7 @@ SpadesBatakMatchState playOut(
     if (++plies > plyLimit) {
       fail('Match did not finish within $plyLimit plies: $state');
     }
-    final int seat = engine.seatToAct(state)!;
-    final List<PlayingCard> legal = engine.legalCards(state, seat);
-    expect(legal, isNotEmpty, reason: 'seat $seat had no legal card');
-    final CommandOutcome<SpadesBatakMatchState> outcome = engine.apply(
-      state,
-      PlayCardCommand(seat: seat, card: legal.first),
-    );
-    state = switch (outcome) {
-      CommandAccepted<SpadesBatakMatchState>(
-        state: final SpadesBatakMatchState next
-      ) =>
-        next,
-      CommandRejected<SpadesBatakMatchState>(
-        violation: final RuleViolation v
-      ) =>
-        fail('Engine rejected its own legal card for seat $seat: $v'),
-    };
+    state = advance(state, engine);
     state.checkInvariants();
   }
   return state;
@@ -84,8 +114,9 @@ void main() {
         );
         expect(end.totals[seat], summed);
       }
-      // Eight hands of thirteen tricks at one point each.
-      expect(end.totals.reduce((int a, int b) => a + b), 8 * 13);
+      // No fixed table total any more: with declarations the hand pays each
+      // seat its own promise, so what the match sums to depends on who kept
+      // theirs. The invariant that matters is the one above.
     });
 
     test('the lead rotates so no seat always starts', () {
@@ -160,14 +191,16 @@ void main() {
         scoringRules: const BatakScoringRules(
           pointsPerTrickForOthers: 1,
           endCondition: MatchEndCondition.targetScore,
-          targetScore: 10,
+          // Low, because a seat that declares one trick a hand earns at most
+          // one point a hand; a higher target would simply run the match out.
+          targetScore: 5,
         ),
       );
       final SpadesBatakMatchState end = playOut(
         SpadesBatakEngine.start(profile: toTarget, seed: 606),
       );
       expect(end.isOver, isTrue);
-      expect(end.bestTotal, greaterThanOrEqualTo(10));
+      expect(end.bestTotal, greaterThanOrEqualTo(5));
       // It must not have run the full eight-hand default.
       expect(end.handsPlayed, lessThan(8));
     });
@@ -182,13 +215,7 @@ SpadesBatakMatchState playOneHand(
   final int startIndex = state.handsPlayed;
   SpadesBatakMatchState current = state;
   while (!engine.isTerminal(current) && current.handsPlayed == startIndex) {
-    final int seat = engine.seatToAct(current)!;
-    final List<PlayingCard> legal = engine.legalCards(current, seat);
-    final CommandOutcome<SpadesBatakMatchState> outcome = engine.apply(
-      current,
-      PlayCardCommand(seat: seat, card: legal.first),
-    );
-    current = (outcome as CommandAccepted<SpadesBatakMatchState>).state;
+    current = advance(current, engine);
   }
   return current;
 }

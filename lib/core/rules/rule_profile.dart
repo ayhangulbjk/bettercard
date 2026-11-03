@@ -3,6 +3,7 @@ import 'package:meta/meta.dart';
 import '../cards/suit.dart';
 import 'bidding_rules.dart';
 import 'bury_rules.dart';
+import 'declaration_rules.dart';
 import 'game_mode.dart';
 import 'king_rules.dart';
 import 'scoring_rules.dart';
@@ -28,6 +29,7 @@ class RuleProfile {
     required this.biddingRules,
     required this.scoringRules,
     required this.buryRules,
+    this.declarationRules = DeclarationRules.none,
     this.kingRules,
     this.fixedTrump,
     this.deckExclusions = const <int>{},
@@ -35,7 +37,10 @@ class RuleProfile {
   });
 
   /// Bumped whenever a field is added, removed or reinterpreted.
-  static const int currentSchemaVersion = 1;
+  ///
+  /// Version 2 adds [declarationRules]. A version 1 profile is read with
+  /// declarations off, which is what it was played under.
+  static const int currentSchemaVersion = 2;
 
   /// Stable identifier, e.g. `auction_batak_standard`.
   final String id;
@@ -48,6 +53,9 @@ class RuleProfile {
   final BiddingRules biddingRules;
   final BatakScoringRules scoringRules;
   final BuryRules buryRules;
+
+  /// The per-seat declaration round, when the mode opens a hand with one.
+  final DeclarationRules declarationRules;
 
   /// Present only for [GameMode.king].
   final KingRules? kingRules;
@@ -101,6 +109,7 @@ class RuleProfile {
     BiddingRules? biddingRules,
     BatakScoringRules? scoringRules,
     BuryRules? buryRules,
+    DeclarationRules? declarationRules,
     KingRules? kingRules,
     Suit? fixedTrump,
     bool clearFixedTrump = false,
@@ -115,6 +124,7 @@ class RuleProfile {
         biddingRules: biddingRules ?? this.biddingRules,
         scoringRules: scoringRules ?? this.scoringRules,
         buryRules: buryRules ?? this.buryRules,
+        declarationRules: declarationRules ?? this.declarationRules,
         kingRules: clearKingRules ? null : (kingRules ?? this.kingRules),
         fixedTrump: clearFixedTrump ? null : (fixedTrump ?? this.fixedTrump),
         deckExclusions: deckExclusions ?? this.deckExclusions,
@@ -130,6 +140,7 @@ class RuleProfile {
         'biddingRules': biddingRules.toJson(),
         'scoringRules': scoringRules.toJson(),
         'buryRules': buryRules.toJson(),
+        'declarationRules': declarationRules.toJson(),
         'kingRules': kingRules?.toJson(),
         'fixedTrump': fixedTrump?.name,
         'deckExclusions': deckExclusions.toList(growable: false)..sort(),
@@ -158,6 +169,11 @@ class RuleProfile {
         json['scoringRules']! as Map<String, Object?>,
       ),
       buryRules: BuryRules.fromJson(json['buryRules']! as Map<String, Object?>),
+      declarationRules: json['declarationRules'] == null
+          ? DeclarationRules.none
+          : DeclarationRules.fromJson(
+              json['declarationRules']! as Map<String, Object?>,
+            ),
       kingRules: king == null
           ? null
           : KingRules.fromJson(king as Map<String, Object?>),
@@ -181,6 +197,7 @@ class RuleProfile {
       other.biddingRules == biddingRules &&
       other.scoringRules == scoringRules &&
       other.buryRules == buryRules &&
+      other.declarationRules == declarationRules &&
       other.kingRules == kingRules &&
       other.fixedTrump == fixedTrump &&
       other.schemaVersion == schemaVersion &&
@@ -196,6 +213,7 @@ class RuleProfile {
         biddingRules,
         scoringRules,
         buryRules,
+        declarationRules,
         kingRules,
         fixedTrump,
         schemaVersion,

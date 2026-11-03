@@ -100,14 +100,58 @@ abstract final class MatchTurn {
   }
 
   /// Whose move it is, as a phase.
+  ///
+  /// The declaration round comes first, so it is asked about first: while a
+  /// seat still owes a number, nobody's turn to play has started.
   static MatchPhase phaseFor(SpadesBatakMatchState match, int humanSeat) {
     if (match.isOver) {
       return MatchPhase.matchOver;
+    }
+    final int? declaring = match.declaringSeat;
+    if (declaring != null) {
+      return declaring == humanSeat
+          ? MatchPhase.awaitingDeclaration
+          : MatchPhase.opponentDeclaring;
     }
     return match.hand!.turnSeat == humanSeat
         ? MatchPhase.awaitingHuman
         : MatchPhase.opponentThinking;
   }
+
+  /// Applies [tricks] as [seat]'s declaration.
+  ///
+  /// Nothing is captured beforehand the way a finished trick is: a
+  /// declaration never ends a hand, so there is no state about to be replaced.
+  static MatchTurnResult declare(MatchSession session, int seat, int tricks) {
+    final CommandOutcome<SpadesBatakMatchState> outcome = engine.apply(
+      session.match,
+      PlaceBidCommand(seat: seat, tricks: tricks),
+    );
+    return switch (outcome) {
+      CommandRejected<SpadesBatakMatchState>(
+        violation: final RuleViolation violation
+      ) =>
+        MatchTurnResult(
+          session: session.copyWith(rejection: violation.code),
+          accepted: false,
+        ),
+      CommandAccepted<SpadesBatakMatchState>(
+        state: final SpadesBatakMatchState after
+      ) =>
+        MatchTurnResult(
+          session: session.copyWith(
+            match: after,
+            phase: phaseFor(after, session.humanSeat),
+            clearRejection: true,
+          ),
+          accepted: true,
+        ),
+    };
+  }
+
+  /// The numbers the player may declare right now.
+  static List<int> legalDeclarations(MatchSession session) =>
+      engine.legalDeclarations(session.match);
 }
 
 /// The session after a play, and whether the engine took it.

@@ -30,6 +30,7 @@ import 'package:batak_king/core/rules/game_mode.dart';
 import 'package:batak_king/core/rules/rule_presets.dart';
 import 'package:batak_king/features/gameplay/match_controller.dart';
 import 'package:batak_king/features/gameplay/match_session.dart';
+import 'package:batak_king/features/gameplay/match_turn.dart';
 import 'package:batak_king/games/spades_batak/spades_batak_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -52,6 +53,7 @@ final class _Shot {
     this.route,
     this.arguments,
     this.textScale = 1,
+    this.tapIcon,
     this.drive,
     this.thenRoute,
   });
@@ -65,6 +67,10 @@ final class _Shot {
   /// Requested system text scale. The app clamps it to 1.35, so a value above
   /// that exercises the ceiling rather than the raw preference.
   final double textScale;
+
+  /// An icon to tap once the screen is in state, for a capture that lives
+  /// behind a button rather than on the screen itself.
+  final IconData? tapIcon;
 
   /// Pushed after [drive] has run, so a capture can show what a finished
   /// match leaves behind on another screen.
@@ -101,6 +107,12 @@ const List<_Shot> _shots = <_Shot>[
     route: AppRoutes.tablePreview,
     arguments: GameMode.spadesBatak,
   ),
+  // The declaration round, which is the first thing a hand now shows.
+  _Shot(
+    '05b-match-declaring',
+    route: AppRoutes.match,
+    drive: _driveToDeclaration,
+  ),
   _Shot('06-settings', route: AppRoutes.settings),
   _Shot('07-statistics', route: AppRoutes.statistics),
   _Shot('08-rules', route: AppRoutes.rules),
@@ -109,6 +121,13 @@ const List<_Shot> _shots = <_Shot>[
     '10-match-mid-trick',
     route: AppRoutes.match,
     drive: _driveToPlayerTurn,
+  ),
+  // The scoreboard, which now lives behind the app bar's button.
+  _Shot(
+    '10b-match-scoreboard',
+    route: AppRoutes.match,
+    drive: _driveToPlayerTurn,
+    tapIcon: Icons.leaderboard_rounded,
   ),
   _Shot(
     '11-match-hand-summary',
@@ -169,6 +188,19 @@ Future<void> _driveToPlayerTurn(
   );
 }
 
+/// The player's own declaration prompt, before any card is played.
+Future<void> _driveToDeclaration(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) => session.isAwaitingDeclaration,
+  );
+}
+
 Future<void> _driveToHandSummary(
   WidgetTester tester,
   ProviderContainer container,
@@ -217,9 +249,18 @@ Future<void> _advance(
             engine.legalCards(session.match, session.humanSeat);
         container.read(matchProvider.notifier).playCard(legal.first);
         await tester.pumpAndSettle();
+      case MatchPhase.awaitingDeclaration:
+        // The middle of the range: a number the hand can plausibly make, so
+        // the captures do not all show a seat that has already lost.
+        final List<int> options = MatchTurn.legalDeclarations(session);
+        container
+            .read(matchProvider.notifier)
+            .declare(options[options.length ~/ 3]);
+        await tester.pumpAndSettle();
       case MatchPhase.handSummary:
         container.read(matchProvider.notifier).continueAfterHand();
         await tester.pumpAndSettle();
+      case MatchPhase.opponentDeclaring:
       case MatchPhase.opponentThinking:
       case MatchPhase.trickPause:
       case MatchPhase.matchOver:
@@ -293,6 +334,11 @@ Future<void> _capture(WidgetTester tester, _Shot shot) async {
     } else {
       unawaitedPush(navigator, shot.thenRoute!, null);
     }
+    await tester.pumpAndSettle();
+  }
+
+  if (shot.tapIcon != null) {
+    await tester.tap(find.byIcon(shot.tapIcon!));
     await tester.pumpAndSettle();
   }
 

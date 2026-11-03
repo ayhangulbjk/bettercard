@@ -89,6 +89,37 @@ final class TurkishStrings implements AppStrings {
   String get gameplayWaiting => 'Bekleniyor';
 
   @override
+  String get gameplayDeclarePrompt => 'Kaç el alacaksınız?';
+
+  @override
+  String get gameplayDeclareHint =>
+      'Sözünüzü tutarsanız söylediğiniz kadar artı, tutamazsanız o kadar '
+      'eksi puan alırsınız.';
+
+  @override
+  String get gameplayNilLabel => 'El almaz';
+
+  @override
+  String get gameplayDeclaring => 'Sözler veriliyor';
+
+  @override
+  String get gameplayScoreboardTitle => 'Puan durumu';
+
+  @override
+  String get gameplayScoreboardTooltip => 'Puan durumunu göster';
+
+  @override
+  String get gameplayTrickWord => 'el';
+
+  @override
+  String declarationProgress(int taken, int declared) =>
+      declared == 0 ? '$taken / el almaz' : '$taken / $declared el';
+
+  @override
+  String declarationLabel(int declared) =>
+      declared == 0 ? gameplayNilLabel : 'Söz: $declared';
+
+  @override
   String get gameplayTrumpLabel => 'Koz';
 
   @override
@@ -120,6 +151,9 @@ final class TurkishStrings implements AppStrings {
 
   @override
   String get gameplayRematch => 'Yeniden oyna';
+
+  @override
+  String get gameplayDeclarationColumn => 'Söz';
 
   @override
   String get gameplayTricksColumn => 'El';

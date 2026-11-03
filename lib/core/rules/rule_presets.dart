@@ -1,6 +1,7 @@
 import '../cards/suit.dart';
 import 'bidding_rules.dart';
 import 'bury_rules.dart';
+import 'declaration_rules.dart';
 import 'game_mode.dart';
 import 'king_rules.dart';
 import 'rule_profile.dart';
@@ -40,7 +41,8 @@ abstract final class RulePresets {
       );
 
   /// Koz Maça: spades permanently trump, no auction, trump may not be led
-  /// until broken.
+  /// until broken, and every seat declares its own trick count before the
+  /// first card.
   static RuleProfile kozMacaStandard() => const RuleProfile(
         id: 'spades_batak_standard',
         turkishName: 'Koz Maça - Standart',
@@ -52,6 +54,7 @@ abstract final class RulePresets {
           pointsPerTrickForOthers: 1,
         ),
         buryRules: BuryRules.disabled,
+        declarationRules: DeclarationRules.kozMacaStandard,
         fixedTrump: Suit.spades,
       );
 

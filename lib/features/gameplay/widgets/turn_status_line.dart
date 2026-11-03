@@ -21,13 +21,21 @@ final class TurnStatusLine extends StatelessWidget {
     final String? rejection = session.rejection == null
         ? null
         : strings.moveRejected(session.rejection!);
-    final bool yours = session.isHumanTurn;
+    final bool yours = session.isHumanTurn || session.isAwaitingDeclaration;
+
+    final String status;
+    if (session.isAwaitingDeclaration) {
+      status = strings.gameplayDeclarePrompt;
+    } else if (session.isDeclaring) {
+      status = strings.gameplayDeclaring;
+    } else {
+      status = yours ? strings.gameplayYourTurn : strings.gameplayWaiting;
+    }
 
     return SizedBox(
       height: 22,
       child: Text(
-        rejection ??
-            (yours ? strings.gameplayYourTurn : strings.gameplayWaiting),
+        rejection ?? status,
         style: text.labelSmall?.copyWith(
           color: rejection != null
               ? AppColors.warning

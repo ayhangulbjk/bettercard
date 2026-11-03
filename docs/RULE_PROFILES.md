@@ -75,6 +75,14 @@ seat may discard freely. See open question B-3; both flags stay adjustable, so
 a table that plays the permissive reading changes a setting rather than the
 code.
 
+**Her el söz verilir.** Oyuncular kartlarını gördükten sonra, ilk kart
+atılmadan önce sırayla kaç el alacaklarını söyler. Sıra, ilk eli açacak
+oyuncudan başlar. Sözünü tutan söylediği kadar artı, tutamayan o kadar eksi
+puan alır. Fazla eller varsayılan olarak hiçbir şey kazandırmaz (açık soru
+K-4). "El almaz" diyen hiç el almazsa +50, bir el bile alırsa -50 alır (K-5).
+Bu bir ihale değildir: kimse kimseyi artırmaz, dolayısıyla `BiddingRules`
+değil `DeclarationRules` geçerlidir.
+
 Preset `spades_batak_standard`.
 
 ### 4. Uclu Gommeli Batak (`buried_batak`)
@@ -135,6 +143,9 @@ them to players.
 | K-1 | How many contracts does each player declare, and in what mix? | Koz x2 plus three penalties | `quotaPerPlayer` |
 | K-2 | Are Rifki and Son Iki part of a standard match? | Available at quota 0 | `quotaPerPlayer` |
 | K-3 | Exact point values per contract | See the table above | `pointsPerUnit` |
+| K-4 | Are tricks above a kept declaration worth anything (ciz / torba)? | No, extras pay nothing | `overtrickRule` |
+| K-5 | What does "el almaz" pay, and does a broken nil cost per trick? | +50 / -50, flat | `nilBonus` |
+| K-6 | May the four declarations sum to the trick count? | Yes, nothing forbids it | none yet; would need a new flag |
 
 ### How to resolve one
 

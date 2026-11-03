@@ -18,7 +18,7 @@ eşleştirilmiş). Başlangıç seviyesi +0,84 ± 0,03. Kontrol koşusu
 | Ölçüm | Değer |
 |---|---|
 | `lib/` | 76 Dart dosyası, 9.827 satır |
-| `test/` | 16 dosya, 2.390 satır, **161 test** |
+| `test/` | 16 dosya, 2.390 satır, **166 test** |
 | `tool/` | 2 benchmark CLI + kayıt doğrulama + ekran görüntüsü aracı |
 | Araç zinciri | Flutter 3.47.9 · Dart 3.13.7 · Android SDK 36 · NDK 28.2 · JDK 21 |
 | Paket adı | `com.batakking.batak_king` |
@@ -63,7 +63,7 @@ token'u var ama VS yükleyicisi 16389 ile reddediliyor), ve web hedefi
 
 Bunlar admin gerektirmiyor, hepsi doğrulandı:
 
-- [x] `dart format .` · `flutter analyze` · `flutter test` (161 test)
+- [x] `dart format .` · `flutter analyze` · `flutter test` (166 test)
 - [x] `flutter test tool/screenshots/capture_test.dart` — 14 ekran PNG olarak
       (`build/screenshots/`), canlı maçı gerçekten sürerek
 - [x] `dart run tool/checks/save_roundtrip.dart 150` — kayıt/geri yükleme
@@ -81,7 +81,7 @@ sonra:
 flutter create . --platforms=android,ios --project-name batak_king --org com.batakking
 rm -f test/widget_test.dart   # flutter create her seferinde geri ekler
 flutter pub get
-flutter test                  # 161 test burada da geçmeli
+flutter test                  # 166 test burada da geçmeli
 open -a Simulator             # ya da iPhone'u USB ile bağla
 flutter run                   # ilk pod install birkaç dakika surebilir
 ```
@@ -108,6 +108,18 @@ Cihazda doğrulanacaklar:
   türetiliyor, yani kayıttan dönünce aynı masa).
 - Ortaya atılan kartlar üst üste yığılıyor, el sinek/karo/maça/kupa sırasına
   göre diziliyor.
+
+İkinci cihaz turundan çıkanlar (2026-11-03, hepsi giderildi):
+
+- **El artık sağdan dönüyor.** 1. koltuk masanın sağına çizilir; oyun yönü
+  oyuncudan sağa doğrudur.
+- Biten el, kazanan oyuncunun önüne doğru toplanarak gidiyor; kim aldığı
+  animasyondan görülüyor.
+- Koltuk panelinde kart sayısı kaldırıldı; isim altında "alınan / söz" var.
+- Üstteki puan şeridi kaldırıldı. Puan durumu sağ üstteki simgenin arkasında.
+- **Koz Maça'da söz (ihale) turu eklendi.** Her elin başında dört oyuncu da
+  kaç el alacağını söyler; sözünü tutan artı, tutamayan eksi alır, "el almaz"
+  +50/-50. Kurallar `DeclarationRules`'ta, açık sorular K-4..K-6.
 
 > `ios/` ve `android/` klasörleri kasıtlı olarak depoda değil, commit edilmez.
 > `.flutter-plugins-dependencies` de üretilen bir dosya; `.gitignore`'da.

@@ -41,25 +41,37 @@ abstract final class SpadesBatakRestore {
         return null;
       }
 
-      final PlayingCard card;
-      try {
-        card = PlayingCard.fromId(save.moves[index]);
-      } on ArgumentError {
-        onProblem?.call('move $index is not a card id: ${save.moves[index]}');
-        return null;
+      final int move = save.moves[index];
+      final int? declared = SavedMatch.decodeDeclaration(move);
+
+      final GameCommand command;
+      final String description;
+      if (declared != null) {
+        command = PlaceBidCommand(seat: seat, tricks: declared);
+        description = 'declaration of $declared';
+      } else {
+        final PlayingCard card;
+        try {
+          card = PlayingCard.fromId(move);
+        } on ArgumentError {
+          onProblem?.call('move $index is not a card id: $move');
+          return null;
+        }
+        command = PlayCardCommand(seat: seat, card: card);
+        description = '$card';
       }
 
-      final CommandOutcome<SpadesBatakMatchState> outcome = engine.apply(
-        state,
-        PlayCardCommand(seat: seat, card: card),
-      );
+      final CommandOutcome<SpadesBatakMatchState> outcome =
+          engine.apply(state, command);
       switch (outcome) {
         case CommandAccepted<SpadesBatakMatchState>(
             state: final SpadesBatakMatchState next
           ):
           state = next;
         case CommandRejected<SpadesBatakMatchState>():
-          onProblem?.call('move $index ($card by seat $seat) is illegal');
+          onProblem?.call(
+            'move $index ($description by seat $seat) is illegal',
+          );
           return null;
       }
     }

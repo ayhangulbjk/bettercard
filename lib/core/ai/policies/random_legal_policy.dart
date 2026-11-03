@@ -32,6 +32,24 @@ final class RandomLegalPolicy implements AiPolicy {
   ) async =>
       chooseCardSync(observation);
 
+  @override
+  Future<int> chooseDeclaration(
+    SeatObservation observation,
+    List<int> options,
+    AiComputeBudget budget,
+  ) async =>
+      chooseDeclarationSync(observation, options);
+
+  /// A uniformly random legal declaration. As with the card choice, this is a
+  /// measurement baseline, not play: a random promise is wrong almost always,
+  /// which is exactly what makes it the floor to beat.
+  int chooseDeclarationSync(SeatObservation observation, List<int> options) {
+    if (options.isEmpty) {
+      throw NoLegalMoveError(observation.seat);
+    }
+    return options[_random.nextInt(options.length)];
+  }
+
   /// Synchronous variant used by the headless simulator, which runs millions
   /// of decisions and should not pay for a future per card.
   PlayingCard chooseCardSync(SeatObservation observation) {

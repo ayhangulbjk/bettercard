@@ -130,7 +130,6 @@ class _TableBody extends StatelessWidget {
                 vertical: seat != 0,
                 name: seatNames[seat],
                 tricksWon: tricks[seat],
-                cardsRemaining: state.handSizes[seat],
                 isActive: state.turnSeat == seat,
               ),
             ),

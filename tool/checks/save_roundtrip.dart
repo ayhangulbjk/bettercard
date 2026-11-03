@@ -51,12 +51,25 @@ Future<void> main(List<String> args) async {
     if (seat == null) {
       break;
     }
-    final PlayingCard card = policy.chooseCardSync(
-      SeatObservation.fromState(state.hand!, seat),
-    );
-    moves.add(card.id);
-    state =
-        switch (engine.apply(state, PlayCardCommand(seat: seat, card: card))) {
+    // Declarations are part of the log, so the round trip has to produce
+    // them as well as cards: a save whose declarations were dropped would
+    // replay into a hand nobody had promised anything in.
+    final GameCommand command;
+    final SeatObservation observation =
+        SeatObservation.fromState(state.hand!, seat);
+    if (state.isDeclaring) {
+      final int declared = policy.chooseDeclarationSync(
+        observation,
+        engine.legalDeclarations(state),
+      );
+      moves.add(SavedMatch.encodeDeclaration(declared));
+      command = PlaceBidCommand(seat: seat, tricks: declared);
+    } else {
+      final PlayingCard card = policy.chooseCardSync(observation);
+      moves.add(card.id);
+      command = PlayCardCommand(seat: seat, card: card);
+    }
+    state = switch (engine.apply(state, command)) {
       CommandAccepted<SpadesBatakMatchState>(
         state: final SpadesBatakMatchState next
       ) =>

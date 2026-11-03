@@ -4,17 +4,23 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
 import 'felt_background.dart';
 
-/// One opponent seat: name, avatar initial, trick count and turn indicator.
+/// One seat: name, avatar initial, how the hand is going for it, and whether
+/// it is to move.
 ///
 /// Compact by necessity. In portrait there is no room for a full avatar per
 /// seat, so the seat reads as a small badge and the eye stays on the trick in
 /// the middle of the table.
 ///
-/// Three opponent panels share a phone's width, which leaves each one roughly
-/// 80 logical pixels, so the text must be allowed to shrink: the name and the
-/// stat line are capped at one line and ellipsised rather than overflowing.
-/// That is why the text column sits in an [Expanded] instead of sizing to its
-/// natural width.
+/// Under the name goes one number: tricks taken. The remaining card count used
+/// to sit beside it and was dropped -- it is the same for everyone until
+/// somebody runs short, so it cost a line to say nothing. When the mode has a
+/// declaration round the line becomes `taken / declared`, because the promise
+/// is what the tricks now mean and a player cannot follow the hand without
+/// seeing everyone's.
+///
+/// A side seat is about 80 logical pixels wide, so the name is capped at one
+/// line and ellipsised rather than overflowing. That is why the text column
+/// sits in an [Expanded] instead of sizing to its natural width.
 ///
 /// [vertical] stacks the badge above the name instead of beside it, which is
 /// what the three opponent seats of a four-player table need: side by side
@@ -25,7 +31,8 @@ final class SeatPanel extends StatelessWidget {
     required this.name,
     required this.tricksWon,
     this.isActive = false,
-    this.cardsRemaining,
+    this.declaration,
+    this.awaitingDeclaration = false,
     this.contract,
     this.vertical = false,
     super.key,
@@ -37,8 +44,13 @@ final class SeatPanel extends StatelessWidget {
   /// Whether it is this seat's turn.
   final bool isActive;
 
-  /// Public card count. Null hides the row.
-  final int? cardsRemaining;
+  /// What this seat promised, or null in a mode without declarations or
+  /// before it has spoken.
+  final int? declaration;
+
+  /// Whether this seat still owes a declaration, which is shown as a dash so
+  /// an empty line does not read as "declared nothing".
+  final bool awaitingDeclaration;
 
   /// Contract summary, when the mode has one.
   final String? contract;
@@ -155,9 +167,15 @@ final class SeatPanel extends StatelessWidget {
         ),
       );
 
+  /// The line under the name: tricks taken, against the promise when there is
+  /// one.
   List<String> get _statParts => <String>[
-        '$tricksWon el',
-        if (cardsRemaining != null) '$cardsRemaining kart',
+        if (declaration != null)
+          '$tricksWon / $declaration'
+        else if (awaitingDeclaration)
+          '-'
+        else
+          '$tricksWon el',
         if (contract != null) contract!,
       ];
 }
