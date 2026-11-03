@@ -93,6 +93,17 @@ afterwards. `flutter create` also appends platform `exclude` entries to
 `analysis_options.yaml` (keep those) and leaves `pubspec.yaml` and
 `lib/main.dart` alone (verified).
 
+It also writes Flutter's default launcher icon into the new host folders, so
+the app icon has to be regenerated from the committed source every time:
+
+```bash
+dart run flutter_launcher_icons
+```
+
+The source is `assets/icon/app_icon.png`; the config is the
+`flutter_launcher_icons:` block in `pubspec.yaml`. See `docs/DECISIONS.md`
+D-25.
+
 Only Android and iOS are targets. `web` and `windows` are not, and web
 **cannot** work: the domain owns a 64-bit PRNG that JavaScript cannot
 represent. See `docs/DECISIONS.md` D-14 before trying `-d chrome`.

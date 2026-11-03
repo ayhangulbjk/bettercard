@@ -39,8 +39,6 @@ abstract interface class AppStrings {
   String get setupOverwriteAction;
   String get setupRuleIssuesTitle;
   String get setupNoIssues;
-  String get setupPlayerCount;
-  String get setupTricksPerHand;
 
   /// Heading for the "how many extra tricks sink a made word" choice.
   String get setupOvertrickBustTitle;
@@ -53,12 +51,6 @@ abstract interface class AppStrings {
 
   /// `3 yan`: the option that busts on that many extras.
   String overtrickBustOption(int extras);
-
-  /// Row label: what one declared trick is worth.
-  String get setupDeclarationStake;
-
-  /// Row label: what one extra trick is worth.
-  String get setupOvertrickValue;
 
   // Gameplay.
   String get gameplayTrickLabel;

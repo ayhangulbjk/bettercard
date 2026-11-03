@@ -113,7 +113,9 @@ abstract final class TrickLegalMoves {
         .toList(growable: false);
 
     if (rules.mustFollowSuit && ofLeadSuit.isNotEmpty) {
-      if (!rules.mustBeatLeadSuitWhenPossible) {
+      final bool mustRaise = rules.mustBeatLeadSuitWhenPossible &&
+          !_alreadyCut(trick: trick, trump: trump, leadSuit: leadSuit);
+      if (!mustRaise) {
         return List<PlayingCard>.unmodifiable(ofLeadSuit);
       }
       final int bestSoFar = _highestStrengthOfSuit(trick, leadSuit);
@@ -155,6 +157,29 @@ abstract final class TrickLegalMoves {
       }
     }
     return List<PlayingCard>.unmodifiable(trumps);
+  }
+
+  /// Whether [trick] has already been cut: a trump played to a trick that was
+  /// not led with trump.
+  ///
+  /// Once that has happened no card of the lead suit can win the trick any
+  /// more, so the obligation to raise the lead suit lapses -- a seat holding
+  /// the lead suit may follow with any of it. Turkish tables play it this way
+  /// for the obvious reason: enforcing the raise after a cut would make a
+  /// player throw a high card away for nothing.
+  ///
+  /// This is deliberately not a [TrickRules] flag. It is not a regional
+  /// variation but a consequence of the raise obligation itself, and it
+  /// depends on the trick in hand rather than on the rule set.
+  static bool _alreadyCut({
+    required Trick trick,
+    required Suit? trump,
+    required Suit leadSuit,
+  }) {
+    if (trump == null || trump == leadSuit) {
+      return false;
+    }
+    return trick.plays.any((PlayedCard play) => play.card.suit == trump);
   }
 
   /// Highest strength of [suit] present in [trick], or 0 when absent.

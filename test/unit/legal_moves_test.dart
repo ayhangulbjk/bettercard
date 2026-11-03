@@ -140,6 +140,67 @@ void main() {
         unorderedEquals(hand),
       );
     });
+
+    test('Koz Maca makes raising compulsory in a plain suit', () {
+      expect(
+        TrickLegalMoves.forHand(
+          hand: <PlayingCard>[
+            card(Suit.diamonds, Rank.three),
+            card(Suit.diamonds, Rank.six),
+            card(Suit.clubs, Rank.ace),
+          ],
+          trick: leadWith(Suit.diamonds, Rank.five),
+          trump: Suit.spades,
+          rules: TrickRules.kozMaca,
+          trumpBroken: true,
+        ),
+        <PlayingCard>[card(Suit.diamonds, Rank.six)],
+      );
+    });
+
+    test('a cut trick releases the obligation to raise', () {
+      // Diamonds led, then cut with a spade: no diamond can win the trick any
+      // more, so the seat may follow with any diamond it likes.
+      final List<PlayingCard> diamonds = <PlayingCard>[
+        card(Suit.diamonds, Rank.three),
+        card(Suit.diamonds, Rank.six),
+      ];
+      expect(
+        TrickLegalMoves.forHand(
+          hand: <PlayingCard>[...diamonds, card(Suit.clubs, Rank.ace)],
+          trick: Trick(
+            leadSeat: 0,
+            expectedPlays: 4,
+            plays: <PlayedCard>[
+              PlayedCard(seat: 0, card: card(Suit.diamonds, Rank.five)),
+              PlayedCard(seat: 1, card: card(Suit.spades, Rank.two)),
+            ],
+          ),
+          trump: Suit.spades,
+          rules: TrickRules.kozMaca,
+          trumpBroken: true,
+        ),
+        unorderedEquals(diamonds),
+      );
+    });
+
+    test('a trump lead still has to be raised', () {
+      // The exemption is about a trick being cut, not about trump being in it:
+      // when trump is the lead suit, raising is the overtrump rule.
+      expect(
+        TrickLegalMoves.forHand(
+          hand: <PlayingCard>[
+            card(Suit.spades, Rank.three),
+            card(Suit.spades, Rank.king),
+          ],
+          trick: leadWith(Suit.spades, Rank.ten),
+          trump: Suit.spades,
+          rules: TrickRules.kozMaca,
+          trumpBroken: true,
+        ),
+        <PlayingCard>[card(Suit.spades, Rank.king)],
+      );
+    });
   });
 
   group('void in the lead suit', () {

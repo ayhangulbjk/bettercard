@@ -102,6 +102,15 @@ const List<_Shot> _shots = <_Shot>[
     route: AppRoutes.gameSetup,
     arguments: GameMode.spadesBatak,
   ),
+  // The same screen at the text-scale ceiling, where the list genuinely does
+  // not fit: what this capture is for is the start button, which is pinned
+  // below the scroll area and so has to be on screen either way.
+  _Shot(
+    '04b-game-setup-large-text',
+    route: AppRoutes.gameSetup,
+    arguments: GameMode.spadesBatak,
+    textScale: 1.4,
+  ),
   _Shot(
     '05-table-preview-koz-maca',
     route: AppRoutes.tablePreview,

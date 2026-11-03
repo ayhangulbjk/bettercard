@@ -74,30 +74,18 @@ final class TurkishStrings implements AppStrings {
   String get setupNoIssues => 'Kural seti tutarlı.';
 
   @override
-  String get setupPlayerCount => 'Oyuncu sayısı';
-
-  @override
-  String get setupTricksPerHand => 'Dağıtım başına el sayısı';
-
-  @override
   String get setupOvertrickBustTitle => 'Kaç yanda batılır?';
 
   @override
   String get setupOvertrickBustHint =>
-      'Sözünüzü tuttuktan sonra aldığınız fazla eller "yan" sayılır. '
-      'Seçtiğiniz kadar yan toplarsanız el batar.';
+      'Sözden fazla alınan her el bir "yan"dır; seçtiğiniz sayıya '
+      'ulaşınca el batar.';
 
   @override
   String get setupOvertrickBustNever => 'Batmaz';
 
   @override
   String overtrickBustOption(int extras) => '$extras yan';
-
-  @override
-  String get setupDeclarationStake => 'Söz başına puan';
-
-  @override
-  String get setupOvertrickValue => 'Yan başına puan';
 
   @override
   String get gameplayTrickLabel => 'El';

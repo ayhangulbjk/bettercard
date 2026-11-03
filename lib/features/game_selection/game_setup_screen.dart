@@ -9,7 +9,6 @@ import '../../app/routes.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/ai/ai_difficulty.dart';
-import '../../core/rules/declaration_rules.dart';
 import '../../core/rules/game_mode.dart';
 import '../../core/rules/rule_profile.dart';
 import '../../core/rules/rule_validation.dart';
@@ -53,67 +52,85 @@ class _GameSetupScreenState extends ConsumerState<GameSetupScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(title: Text(widget.mode.turkishName)),
         body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              AppSpacing.thumbZoneReserve,
-            ),
+          // The start button is pinned below the scroll area rather than being
+          // the last row of it. At the default text size everything above now
+          // fits without scrolling, but the player should never have to go
+          // looking for the button to find out -- and at 1.35x type the list
+          // genuinely does not fit, which is exactly when a buried button
+          // would be hardest to reach.
+          child: Column(
             children: <Widget>[
-              if (!widget.mode.isPlayable) ...<Widget>[
-                PlaceholderBanner(
-                  title: strings.modeNotPlayableBadge,
-                  message: strings.modeNotPlayableExplanation,
-                ),
-                const SizedBox(height: AppSpacing.xl),
-              ],
-              Text(strings.setupRuleProfile, style: text.labelSmall),
-              const SizedBox(height: AppSpacing.sm),
-              ...presets.map(
-                (RuleProfile preset) => RuleProfileOption(
-                  profile: preset,
-                  selected: preset.id == profile.id,
-                  onSelect: () => setState(() => _selected = preset),
-                ),
-              ),
-              if (profile.declarationRules.enabled) ...<Widget>[
-                const SizedBox(height: AppSpacing.xl),
-                OvertrickBustSelector(
-                  value: profile.declarationRules.overtrickBustThreshold,
-                  strings: strings,
-                  onChanged: (int? extras) => setState(
-                    () => _selected = profile.copyWith(
-                      declarationRules: profile.declarationRules.copyWith(
-                        overtrickBustThreshold: extras,
-                        clearOvertrickBustThreshold: extras == null,
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  children: <Widget>[
+                    if (!widget.mode.isPlayable) ...<Widget>[
+                      PlaceholderBanner(
+                        title: strings.modeNotPlayableBadge,
+                        message: strings.modeNotPlayableExplanation,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                    Text(strings.setupRuleProfile, style: text.labelSmall),
+                    const SizedBox(height: AppSpacing.sm),
+                    ...presets.map(
+                      (RuleProfile preset) => RuleProfileOption(
+                        profile: preset,
+                        selected: preset.id == profile.id,
+                        onSelect: () => setState(() => _selected = preset),
                       ),
                     ),
-                  ),
+                    if (profile.declarationRules.enabled) ...<Widget>[
+                      const SizedBox(height: AppSpacing.lg),
+                      OvertrickBustSelector(
+                        value: profile.declarationRules.overtrickBustThreshold,
+                        strings: strings,
+                        onChanged: (int? extras) => setState(
+                          () => _selected = profile.copyWith(
+                            declarationRules: profile.declarationRules.copyWith(
+                              overtrickBustThreshold: extras,
+                              clearOvertrickBustThreshold: extras == null,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(strings.setupDifficulty, style: text.labelSmall),
+                    const SizedBox(height: AppSpacing.sm),
+                    const DifficultySelector(),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(strings.setupRuleIssuesTitle, style: text.labelSmall),
+                    const SizedBox(height: AppSpacing.sm),
+                    RuleIssueList(
+                      issues: issues,
+                      emptyMessage: strings.setupNoIssues,
+                    ),
+                  ],
                 ),
-              ],
-              const SizedBox(height: AppSpacing.xl),
-              _ProfileFacts(profile: profile, strings: strings),
-              const SizedBox(height: AppSpacing.xl),
-              Text(strings.setupDifficulty, style: text.labelSmall),
-              const SizedBox(height: AppSpacing.sm),
-              const DifficultySelector(),
-              const SizedBox(height: AppSpacing.xl),
-              Text(strings.setupRuleIssuesTitle, style: text.labelSmall),
-              const SizedBox(height: AppSpacing.sm),
-              RuleIssueList(
-                issues: issues,
-                emptyMessage: strings.setupNoIssues,
               ),
-              const SizedBox(height: AppSpacing.xxl),
-              FilledButton(
-                // A playable mode opens a real table; the rest can only be
-                // previewed, and the button says which one you are getting.
-                onPressed: consistent ? () => unawaited(_open(profile)) : null,
-                child: Text(
-                  widget.mode.isPlayable
-                      ? strings.setupStart
-                      : strings.previewTableTitle,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                ),
+                child: FilledButton(
+                  // A playable mode opens a real table; the rest can only be
+                  // previewed, and the button says which one you are getting.
+                  onPressed:
+                      consistent ? () => unawaited(_open(profile)) : null,
+                  child: Text(
+                    widget.mode.isPlayable
+                        ? strings.setupStart
+                        : strings.previewTableTitle,
+                  ),
                 ),
               ),
             ],
@@ -124,8 +141,7 @@ class _GameSetupScreenState extends ConsumerState<GameSetupScreen> {
   }
 }
 
-/// Derived facts about the selected profile, so the player can see what the
-/// rule set actually implies before starting.
+/// Navigation out of the setup screen.
 extension on _GameSetupScreenState {
   /// Starts the match, or opens the preview for a mode that has no lifecycle
   /// yet.
@@ -182,77 +198,4 @@ extension on _GameSetupScreenState {
     );
     return overwrite ?? false;
   }
-}
-
-class _ProfileFacts extends StatelessWidget {
-  const _ProfileFacts({required this.profile, required this.strings});
-
-  final RuleProfile profile;
-  final AppStrings strings;
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    return AppPanel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          _row(text, strings.setupPlayerCount, '${profile.playerCount}'),
-          _row(text, strings.setupTricksPerHand, '${profile.tricksPerHand}'),
-          _row(
-            text,
-            strings.gameplayTrumpLabel,
-            profile.fixedTrump?.turkishName ??
-                (profile.biddingRules.declarerNamesTrump
-                    ? 'İhaleyi alan seçer'
-                    : strings.gameplayNoTrump),
-          ),
-          if (profile.biddingRules.hasAuction)
-            _row(
-              text,
-              'İhale aralığı',
-              '${profile.biddingRules.minimumBid} - '
-                  '${profile.biddingRules.maximumBid}',
-            ),
-          if (profile.declarationRules.enabled) ...<Widget>[
-            _row(
-              text,
-              strings.setupDeclarationStake,
-              '${profile.declarationRules.pointsPerDeclaredTrick}',
-            ),
-            _row(
-              text,
-              strings.setupOvertrickValue,
-              profile.declarationRules.overtrickRule == OvertrickRule.scored
-                  ? '${profile.declarationRules.pointsPerOvertrick}'
-                  : '0',
-            ),
-            _row(
-              text,
-              strings.setupOvertrickBustTitle,
-              profile.declarationRules.overtrickBustThreshold == null
-                  ? strings.setupOvertrickBustNever
-                  : strings.overtrickBustOption(
-                      profile.declarationRules.overtrickBustThreshold!,
-                    ),
-            ),
-          ],
-          if (profile.buryRules.enabled)
-            _row(text, 'Gömülecek kart', '${profile.buryRules.cardsToBury}'),
-          if (profile.kingRules != null)
-            _row(text, 'Toplam el', '${profile.kingRules!.totalHands}'),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(TextTheme text, String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-        child: Row(
-          children: <Widget>[
-            Expanded(child: Text(label, style: text.bodyMedium)),
-            Text(value, style: text.titleMedium),
-          ],
-        ),
-      );
 }

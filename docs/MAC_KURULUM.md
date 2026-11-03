@@ -173,6 +173,17 @@ ekler — **onlar kalsın**. `pubspec.yaml` ve `lib/main.dart`'a dokunmaz.
 flutter pub get
 ```
 
+`flutter create` yeni `ios/` klasörüne Flutter'ın kendi varsayılan ikonunu
+koyar. Uygulamanın ikonunu depodaki kaynaktan yeniden üret:
+
+```bash
+dart run flutter_launcher_icons
+```
+
+Kaynak `assets/icon/app_icon.png`, ayarlar `pubspec.yaml` içindeki
+`flutter_launcher_icons:` bloğu. Bu adım her `flutter create`'ten sonra
+gerekiyor, yoksa cihazda mavi Flutter logosu görünür.
+
 ## 7. Doğrulama zinciri — Mac'te de geçmeli
 
 ```bash

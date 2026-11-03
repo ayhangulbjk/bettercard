@@ -142,6 +142,21 @@ Cihazda doğrulanacaklar:
   başına 1 puan, varsayılan 3 yanda batma. Kaç yanda batılacağı kurulum
   ekranından seçiliyor (D-22, B-1/B-2/K-4 kapandı).
 
+Dördüncü cihaz turundan çıkanlar (2026-11-03, hepsi giderildi):
+
+- **Yükseltme zorunlu oldu.** Koz Maça'da renge uyarken elde daha büyük kart
+  varsa oynanmak zorunda: karo 5 atıldıysa karo 3 ile karo 6'dan yalnız 6
+  oynanabilir, küçük kart sönük görünür. **Ama el çakıldıysa bu zorunluluk
+  kalkar** -- araya maça girdiyse hiçbir karo eli alamaz, o yüzden istenen
+  karo oynanabilir (D-24, B-5 kapandı).
+- **Kurulum ekranı tek sayfaya sığdı.** "Kaç yanda batılır?" seçenekleri tek
+  satıra indi, oyuncu sayısı / el sayısı / koz gibi bilgileri listeleyen panel
+  kaldırıldı (oyun adı zaten söylüyor) ve **Başla** düğmesi listenin içinden
+  çıkıp en alta sabitlendi: %135 yazı boyutunda bile ekranda duruyor.
+- **Uygulama ikonu değişti.** Kaynak `assets/icon/app_icon.png`,
+  `flutter_launcher_icons` ile üretiliyor; `flutter create`'ten sonra
+  `dart run flutter_launcher_icons` çalıştırmak gerekiyor (D-25).
+
 > `ios/` ve `android/` klasörleri kasıtlı olarak depoda değil, commit edilmez.
 > `.flutter-plugins-dependencies` de üretilen bir dosya; `.gitignore`'da.
 

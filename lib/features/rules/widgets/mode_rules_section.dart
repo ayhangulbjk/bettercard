@@ -56,6 +56,8 @@ final class ModeRulesSection extends StatelessWidget {
           'koz ${profile.fixedTrump!.turkishName}',
         if (profile.trickRules.mustPlayTrumpWhenVoid) 'koz kesme zorunlu',
         if (profile.trickRules.mustOvertrumpWhenPossible) 'ustune koz zorunlu',
+        if (profile.trickRules.mustBeatLeadSuitWhenPossible)
+          'yükseltme zorunlu',
         if (profile.declarationRules.enabled) ...<String>[
           'her el soz verilir'
               '${profile.declarationRules.allowNil ? ' (el almaz dahil)' : ''}',

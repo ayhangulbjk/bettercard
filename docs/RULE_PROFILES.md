@@ -37,13 +37,23 @@ set.
 | `mustFollowSuit` | Holding the lead suit obliges playing it |
 | `mustPlayTrumpWhenVoid` | A void seat must trump if it can (koz kesme zorunlulugu) |
 | `mustOvertrumpWhenPossible` | Trumping into a trumped trick must beat the best trump |
-| `mustBeatLeadSuitWhenPossible` | Following suit must beat the best card so far, if able |
+| `mustBeatLeadSuitWhenPossible` | Following suit must beat the best card so far, if able (yukseltme zorunlu) |
 | `trumpLeadRule: onlyAfterBroken` | Trump may not be led until trump has been played |
 
 Every restriction yields when a seat cannot satisfy it: a trump-only hand may
 lead trump even unbroken, and a seat that cannot overtrump may still play a low
 trump. The legal move set is never empty for a non-empty hand, and that is
 tested.
+
+`mustBeatLeadSuitWhenPossible` has one further exemption, and it is not a
+setting: **once the trick has been cut, the obligation to raise lapses.** If
+diamonds are led and someone trumps with a spade, no diamond can win the trick
+any more, so a seat holding diamonds may follow with any of them. Enforcing
+the raise after a cut would make a player throw a high card away for nothing,
+and no table plays it that way. The exemption lives in `TrickLegalMoves`
+rather than in `TrickRules` because it depends on the trick in hand, not on
+the rule set. It does not apply when trump is itself the lead suit -- raising
+a trump lead is the overtrump rule.
 
 ## The five modes
 
@@ -75,6 +85,15 @@ where Turkish Koz Maca parts company with international Spades, where a void
 seat may discard freely. B-3 is settled in favour of the compulsory reading,
 and both flags stay adjustable, so a table that plays the permissive reading
 changes a setting rather than the code.
+
+Raising is compulsory in the plain suits too (`mustBeatLeadSuitWhenPossible`,
+"yukseltme zorunlu"): a seat following suit must beat the best card of that
+suit already in the trick if it holds one. Diamond 5 led and a hand holding
+the 3 and the 6 may only play the 6. The obligation ends the moment the trick
+is cut -- see the exemption described under trick-play options -- so after a
+spade lands on that diamond 5 either diamond is legal. B-5 is settled in
+favour of the compulsory reading for Koz Maca; the auction modes still carry
+the permissive default, pending the owner's word on them.
 
 **Her el söz verilir.** Oyuncular kartlarını gördükten sonra, ilk kart
 atılmadan önce sırayla kaç el alacaklarını söyler. Sıra, ilk eli açacak
@@ -149,7 +168,6 @@ them to players.
 | Id | Question | Current default | Setting |
 |---|---|---|---|
 | B-4 | In three-player buried Batak, how many cards are buried, and do they score for the declarer? | One buried, credited to the declarer | `BuryRules` |
-| B-5 | Must a seat following suit beat the best card so far? | No | `mustBeatLeadSuitWhenPossible` |
 | B-6 | When everyone passes, is it a redeal or must the dealer bid? | Dealer must bid | `passOutRule` |
 | B-7 | Does the maximum bid score as an all-or-nothing hand? | No | `maximumBidIsShootTheMoon` |
 | K-1 | How many contracts does each player declare, and in what mix? | Koz x2 plus three penalties | `quotaPerPlayer` |
@@ -169,6 +187,7 @@ rather than the code.
 | B-1 | Does a kept word score the tricks above it? | Yes: each extra ("yan") pays 1 on top of `soz x 10`, so 5 said and 7 taken writes 52 | `overtrickRule`, `pointsPerOvertrick` |
 | B-2 | What does a broken word cost? | The same stake it would have paid: `soz x 10`. 5 said and missed is -50 | `pointsPerDeclaredTrick` |
 | B-3 | Is trumping when void compulsory at every table? | Yes, in every mode including Koz Maca | `mustPlayTrumpWhenVoid` |
+| B-5 | Must a seat following suit beat the best card so far? | Yes in Koz Maca, until the trick is cut. Still off in the auction modes, which are not playable yet | `mustBeatLeadSuitWhenPossible` |
 | K-4 | Are tricks above a kept word worth anything (ciz / torba)? | Yes, 1 each -- **but** collecting too many sinks the hand. The number of extras that busts is chosen per match; the default is 3 | `overtrickBustThreshold` |
 
 B-1 and B-2 were answered for the **declaration** round, which is the only

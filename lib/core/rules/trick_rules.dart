@@ -42,9 +42,16 @@ class TrickRules {
   /// while holding a spade is treated as a misdeal, not as a choice. See open
   /// question B-3 in docs/RULE_PROFILES.md for the tables that disagree; the
   /// flags stay adjustable so that reading is a setting, not a rewrite.
+  ///
+  /// Raising is compulsory in the plain suits too ("yukseltme zorunlu"): a
+  /// seat following suit must beat the best card of that suit already played
+  /// if it holds one. The obligation lapses the moment the trick is cut --
+  /// that exemption lives in TrickLegalMoves, because it depends on the trick
+  /// rather than on the rule set.
   static const TrickRules kozMaca = TrickRules(
     mustPlayTrumpWhenVoid: true,
     mustOvertrumpWhenPossible: true,
+    mustBeatLeadSuitWhenPossible: true,
     trumpLeadRule: TrumpLeadRule.onlyAfterBroken,
   );
 

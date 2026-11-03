@@ -73,6 +73,8 @@ Bu kod **Flutter 3.47.9 / Dart 3.13.7** ile doğrulandı.
 flutter create . --platforms=android,ios --project-name batak_king
 
 flutter pub get
+# Uygulama ikonu da bu klasörlere üretiliyor, her flutter create'ten sonra:
+dart run flutter_launcher_icons
 dart format .
 flutter analyze
 flutter test

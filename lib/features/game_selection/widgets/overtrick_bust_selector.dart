@@ -55,14 +55,20 @@ final class OvertrickBustSelector extends StatelessWidget {
                     onChanged(option);
                   }
                 },
-                // Styled like the difficulty chips rather than left to the
-                // Material default, whose selected tint is a green that
-                // fights the felt.
+                // Sized and styled like the difficulty chips rather than left
+                // to the Material default: the default padding made four
+                // short options take three rows, and the default selected
+                // tint is a green that fights the felt.
+                backgroundColor: AppColors.surfaceElevated,
                 selectedColor: AppColors.goldDim,
+                labelStyle: text.bodyMedium,
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 side: BorderSide(
                   color: option == value
                       ? AppColors.goldBright
                       : AppColors.textMuted,
+                  width: 0.6,
                 ),
               ),
           ],
