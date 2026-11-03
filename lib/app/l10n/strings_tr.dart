@@ -1,3 +1,5 @@
+import '../../core/rules/auction_scoring_rules.dart';
+import '../../core/rules/bidding_rules.dart';
 import '../../core/rules/rule_violation.dart';
 import 'app_strings.dart';
 
@@ -74,6 +76,42 @@ final class TurkishStrings implements AppStrings {
   String get setupNoIssues => 'Kural seti tutarlı.';
 
   @override
+  String get setupRoundCount => 'Dağıtım sayısı';
+
+  @override
+  String roundCountOption(int rounds) => '$rounds dağıtım';
+
+  @override
+  String get setupPassOutTitle => 'Herkes pas derse';
+
+  @override
+  String passOutOption(PassOutRule rule) => switch (rule) {
+        PassOutRule.openerMustBid => 'İhaleyi açan tutar',
+        PassOutRule.dealerMustBid => 'Dağıtan tutar',
+        PassOutRule.redeal => 'Yeniden dağıtılır',
+      };
+
+  @override
+  String setupPassOutHint(int forcedBid) =>
+      'Zorunlu ihale $forcedBid eldir; kimse istemediği için en düşük '
+      'gönüllü ihaleden küçüktür.';
+
+  @override
+  String get setupDefenderNilTitle => 'Hiç el alamayan savunma';
+
+  @override
+  String defenderNilOption(DefenderNilPenalty penalty, int flat) =>
+      switch (penalty) {
+        DefenderNilPenalty.contractValue => 'İhale kadar batar',
+        DefenderNilPenalty.flat => '$flat batar',
+        DefenderNilPenalty.none => 'Batmaz',
+      };
+
+  @override
+  String get setupDefenderNilHint =>
+      'Yan batma. Açıkken savunmadaki herkesin en az bir el alma derdi olur.';
+
+  @override
   String get setupOvertrickBustTitle => 'Kaç yanda batılır?';
 
   @override
@@ -86,6 +124,42 @@ final class TurkishStrings implements AppStrings {
 
   @override
   String overtrickBustOption(int extras) => '$extras yan';
+
+  @override
+  String get gameplayBidTitle => 'İhaleniz?';
+
+  @override
+  String get gameplayNoBidYet => 'Henüz kimse ihale vermedi.';
+
+  @override
+  String gameplayStandingBid(String name, int tricks) =>
+      '$name $tricks dedi. Üstüne çıkın ya da pas geçin.';
+
+  @override
+  String get gameplayPass => 'Pas';
+
+  @override
+  String get gameplayPassed => 'Pas';
+
+  @override
+  String get gameplayTrumpTitle => 'Kozu seçin';
+
+  @override
+  String gameplayYourContract(int tricks) => 'İhale sizde: $tricks el.';
+
+  @override
+  String gameplayForcedContract(int tricks) =>
+      'Kimse ihale vermedi; $tricks el zorunlu olarak sizde.';
+
+  @override
+  String gameplayContractLine(String name, int tricks) =>
+      'İhale: $name $tricks';
+
+  @override
+  String get gameplayWaitingForBids => 'İhale sürüyor';
+
+  @override
+  String get gameplayWaitingForTrump => 'Koz seçiliyor';
 
   @override
   String get gameplayTrickLabel => 'El';

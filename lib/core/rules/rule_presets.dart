@@ -1,4 +1,5 @@
 import '../cards/suit.dart';
+import 'auction_scoring_rules.dart';
 import 'bidding_rules.dart';
 import 'bury_rules.dart';
 import 'declaration_rules.dart';
@@ -16,13 +17,50 @@ import 'trick_rules.dart';
 /// the most commonly reported reading and the setting stays adjustable.
 abstract final class RulePresets {
   /// Herkes Tek İhaleli Batak, four players, 13 tricks, bids from 5.
+  ///
+  /// One contract against three defenders, scored on the classic ten-based
+  /// table: `soz x 10` won or lost whole, one more for each overtrick, ten a
+  /// trick for a defender, and the contract's value charged to a defender
+  /// that takes none ("yan batma"). A passed-out hand sticks the seat that
+  /// opened the auction with four.
+  ///
+  /// Koz Maca's "yan 3 batar" does not apply here and must never be carried
+  /// across: a declarer three tricks over its contract is simply three
+  /// points better off.
   static RuleProfile auctionBatakStandard() => const RuleProfile(
         id: 'auction_batak_standard',
         turkishName: 'Tek İhaleli Batak - Standart',
         mode: GameMode.auctionBatak,
         trickRules: TrickRules.batakStandard,
         biddingRules: BiddingRules.fourPlayerStandard,
-        scoringRules: BatakScoringRules(),
+        scoringRules: BatakScoringRules(roundCount: 9),
+        auctionScoringRules: AuctionScoringRules.classicTenBased,
+        buryRules: BuryRules.disabled,
+      );
+
+  /// The same game scored the Gamyun way: a made contract pays a premium and
+  /// a shut-out defender pays a flat fifty.
+  static RuleProfile auctionBatakGamyun() => const RuleProfile(
+        id: 'auction_batak_gamyun',
+        turkishName: 'Tek İhaleli Batak - Gamyun',
+        mode: GameMode.auctionBatak,
+        trickRules: TrickRules.batakStandard,
+        biddingRules: BiddingRules.fourPlayerStandard,
+        scoringRules: BatakScoringRules(roundCount: 9),
+        auctionScoringRules: AuctionScoringRules.gamyun,
+        buryRules: BuryRules.disabled,
+      );
+
+  /// El basina puan: the same game kept in tricks rather than points, with
+  /// no penalty for a defender that takes none.
+  static RuleProfile auctionBatakPerTrick() => const RuleProfile(
+        id: 'auction_batak_per_trick',
+        turkishName: 'Tek İhaleli Batak - El Başına',
+        mode: GameMode.auctionBatak,
+        trickRules: TrickRules.batakStandard,
+        biddingRules: BiddingRules.fourPlayerStandard,
+        scoringRules: BatakScoringRules(roundCount: 9),
+        auctionScoringRules: AuctionScoringRules.perTrick,
         buryRules: BuryRules.disabled,
       );
 
@@ -110,6 +148,8 @@ abstract final class RulePresets {
   /// Every preset, in menu order.
   static List<RuleProfile> all() => <RuleProfile>[
         auctionBatakStandard(),
+        auctionBatakGamyun(),
+        auctionBatakPerTrick(),
         partnershipBatakStandard(),
         kozMacaStandard(),
         buriedBatakStandard(),

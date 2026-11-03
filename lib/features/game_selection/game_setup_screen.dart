@@ -15,6 +15,7 @@ import '../../core/rules/rule_validation.dart';
 import '../gameplay/match_controller.dart';
 import '../gameplay/widgets/felt_background.dart';
 import '../gameplay/widgets/placeholder_banner.dart';
+import 'widgets/auction_options.dart';
 import 'widgets/difficulty_selector.dart';
 import 'widgets/overtrick_bust_selector.dart';
 import 'widgets/rule_issue_list.dart';
@@ -85,6 +86,15 @@ class _GameSetupScreenState extends ConsumerState<GameSetupScreen> {
                         onSelect: () => setState(() => _selected = preset),
                       ),
                     ),
+                    if (profile.auctionScoringRules.enabled) ...<Widget>[
+                      const SizedBox(height: AppSpacing.lg),
+                      AuctionOptions(
+                        profile: profile,
+                        strings: strings,
+                        onChanged: (RuleProfile next) =>
+                            setState(() => _selected = next),
+                      ),
+                    ],
                     if (profile.declarationRules.enabled) ...<Widget>[
                       const SizedBox(height: AppSpacing.lg),
                       OvertrickBustSelector(

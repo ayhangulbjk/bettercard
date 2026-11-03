@@ -1,3 +1,5 @@
+import '../../core/rules/auction_scoring_rules.dart';
+import '../../core/rules/bidding_rules.dart';
 import '../../core/rules/rule_violation.dart';
 
 /// The application's user-visible text, as an interface.
@@ -40,6 +42,30 @@ abstract interface class AppStrings {
   String get setupRuleIssuesTitle;
   String get setupNoIssues;
 
+  /// Heading for the match length choice.
+  String get setupRoundCount;
+
+  /// `9 dağıtım`.
+  String roundCountOption(int rounds);
+
+  /// Heading for the "what happens when everybody passes" choice.
+  String get setupPassOutTitle;
+
+  /// One option of that choice.
+  String passOutOption(PassOutRule rule);
+
+  /// Explains the forced contract the choice produces.
+  String setupPassOutHint(int forcedBid);
+
+  /// Heading for the "what does a defender with no tricks pay" choice.
+  String get setupDefenderNilTitle;
+
+  /// One option of that choice. [flat] is the fixed charge, when it applies.
+  String defenderNilOption(DefenderNilPenalty penalty, int flat);
+
+  /// Explains what the choice above is for.
+  String get setupDefenderNilHint;
+
   /// Heading for the "how many extra tricks sink a made word" choice.
   String get setupOvertrickBustTitle;
 
@@ -51,6 +77,41 @@ abstract interface class AppStrings {
 
   /// `3 yan`: the option that busts on that many extras.
   String overtrickBustOption(int extras);
+
+  // Gameplay - the auction.
+
+  /// Title of the panel that asks the player for a contract.
+  String get gameplayBidTitle;
+
+  /// Shown above the grid when nobody has bid yet.
+  String get gameplayNoBidYet;
+
+  /// `Selin 6 dedi`: who holds the standing contract, and for how much.
+  String gameplayStandingBid(String name, int tricks);
+
+  /// The button that withdraws a seat from the auction.
+  String get gameplayPass;
+
+  /// `Pas` next to a seat that has withdrawn.
+  String get gameplayPassed;
+
+  /// Title of the panel that asks the contract winner for a trump.
+  String get gameplayTrumpTitle;
+
+  /// `7 el sözünüz var`: the contract the trump has to make.
+  String gameplayYourContract(int tricks);
+
+  /// The same, when nobody bid and the contract was forced.
+  String gameplayForcedContract(int tricks);
+
+  /// `İhale: Selin 7` on the table while the hand is played.
+  String gameplayContractLine(String name, int tricks);
+
+  /// Status line while an opponent is bidding.
+  String get gameplayWaitingForBids;
+
+  /// Status line while the contract winner is choosing a trump.
+  String get gameplayWaitingForTrump;
 
   // Gameplay.
   String get gameplayTrickLabel;

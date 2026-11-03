@@ -3,7 +3,7 @@ import '../game_engine/game_command.dart';
 import '../game_engine/game_engine.dart';
 import '../game_engine/trick/trick_play_engine.dart';
 import '../game_engine/trick/trick_play_state.dart';
-import '../rules/declaration_rules.dart';
+import 'match_context.dart';
 
 /// Plays out the last few tricks exactly, given a world.
 ///
@@ -41,13 +41,12 @@ abstract final class EndgameSolver {
   /// rather than act on half an answer.
   static PlayingCard? bestCard({
     required TrickPlayState state,
-    required DeclarationRules rules,
-    required List<int?> declarations,
+    required MatchContext match,
   }) {
     if (_engine.isTerminal(state)) {
       return null;
     }
-    final _Search search = _Search(rules: rules, declarations: declarations);
+    final _Search search = _Search(match);
     final _Line line = search.solve(state);
     return search.exhausted ? null : line.card;
   }
@@ -59,10 +58,9 @@ abstract final class EndgameSolver {
   /// in the currency the scoreboard uses.
   static List<double>? values({
     required TrickPlayState state,
-    required DeclarationRules rules,
-    required List<int?> declarations,
+    required MatchContext match,
   }) {
-    final _Search search = _Search(rules: rules, declarations: declarations);
+    final _Search search = _Search(match);
     final _Line line = search.solve(state);
     return search.exhausted ? null : line.values;
   }
@@ -77,10 +75,9 @@ final class _Line {
 }
 
 final class _Search {
-  _Search({required this.rules, required this.declarations});
+  _Search(this.match);
 
-  final DeclarationRules rules;
-  final List<int?> declarations;
+  final MatchContext match;
 
   int _nodes = 0;
   bool exhausted = false;
@@ -124,20 +121,16 @@ final class _Search {
 
   /// What every seat scores for the hand as it now stands.
   ///
-  /// Through [DeclarationRules.scoreFor] for a declaring profile, so the
-  /// search optimises what the scoreboard pays rather than a proxy for it.
+  /// Through [MatchContext.pointsFor], so the search optimises what the
+  /// scoreboard pays under whichever payoff this hand is using. A seat with
+  /// no payoff of its own falls back to its trick count, which keeps the
+  /// comparison meaningful in a mode that scores nothing else.
   List<double> _payoff(TrickPlayState state) {
     final List<int> tricks = state.tricksWon;
     return <double>[
       for (int seat = 0; seat < tricks.length; seat++)
-        seat < declarations.length && declarations[seat] != null
-            ? rules
-                .scoreFor(
-                  declaration: declarations[seat]!,
-                  tricksTaken: tricks[seat],
-                )
-                .toDouble()
-            : tricks[seat].toDouble(),
+        (match.pointsFor(seat: seat, tricksTaken: tricks[seat]) ?? tricks[seat])
+            .toDouble(),
     ];
   }
 

@@ -10,24 +10,42 @@ import 'felt_background.dart';
 /// player sitting there.
 ///
 /// It used to carry the trump as well. The trump moved to [TrumpBadge] on the
-/// felt, where it is next to the cards it governs, and this pill went back to
-/// saying one thing.
+/// felt, where it is next to the cards it governs. What it does carry, in the
+/// modes that have one, is the contract: who took the hand and for how much
+/// is the number every decision for the next thirteen tricks is measured
+/// against, so it stays visible rather than being announced once.
 final class TrickStatusPill extends StatelessWidget {
-  const TrickStatusPill({required this.progressLabel, super.key});
+  const TrickStatusPill({
+    required this.progressLabel,
+    this.contractLabel,
+    super.key,
+  });
 
   /// `El 3 / 13`.
   final String progressLabel;
 
+  /// `İhale: Selin 7`, or null in a mode with no contract.
+  final String? contractLabel;
+
   @override
-  Widget build(BuildContext context) => AppPanel(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.xxs,
-        ),
-        borderRadius: AppRadius.pill,
-        child: Text(
-          progressLabel,
-          style: Theme.of(context).textTheme.labelSmall,
-        ),
-      );
+  Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
+    return AppPanel(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xxs,
+      ),
+      borderRadius: AppRadius.pill,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(progressLabel, style: text.labelSmall),
+          if (contractLabel != null) ...<Widget>[
+            const SizedBox(width: AppSpacing.md),
+            Text(contractLabel!, style: text.labelSmall),
+          ],
+        ],
+      ),
+    );
+  }
 }

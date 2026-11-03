@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 
+import '../rules/auction_scoring_rules.dart';
 import '../rules/declaration_rules.dart';
 
 /// The match-level facts a seat may legally know, beyond the cards.
@@ -24,6 +25,9 @@ class MatchContext {
     required this.declarationRules,
     required List<int?> declarations,
     required List<int> totalScores,
+    this.auctionScoringRules = AuctionScoringRules.none,
+    this.declarerSeat,
+    this.contractBid,
   })  : declarations = List<int?>.unmodifiable(declarations),
         totalScores = List<int>.unmodifiable(totalScores);
 
@@ -49,6 +53,55 @@ class MatchContext {
   /// Running match totals per seat, as shown on the scoreboard.
   final List<int> totalScores;
 
+  /// The payoff for a single-contract hand, when the mode plays one.
+  ///
+  /// A mode has this or [declarationRules], never both: four independent
+  /// promises and one contract are different games, and a policy that read
+  /// the wrong one would be optimising a payoff nobody is being paid.
+  final AuctionScoringRules auctionScoringRules;
+
+  /// Who won the contract, or null in a mode with no auction or before one
+  /// is settled. Public: the auction is spoken aloud.
+  final int? declarerSeat;
+
+  /// What the contract is for, or null when there is none yet.
+  final int? contractBid;
+
+  /// Whether this hand is one contract against the rest of the table.
+  bool get hasContract =>
+      auctionScoringRules.enabled &&
+      declarerSeat != null &&
+      contractBid != null;
+
+  /// Whether [seat] is defending the contract.
+  ///
+  /// False in a mode with no contract, where nobody is defending anything.
+  bool isDefender(int seat) => hasContract && seat != declarerSeat;
+
+  /// What [seat] would score on [tricksTaken], under whichever payoff this
+  /// hand is actually using, or null when neither applies.
+  ///
+  /// The one place that chooses between the two scorers, so no policy has to
+  /// remember which mode it is in.
+  int? pointsFor({required int seat, required int tricksTaken}) {
+    if (hasContract) {
+      return auctionScoringRules.scoreFor(
+        seat: seat,
+        declarerSeat: declarerSeat!,
+        bid: contractBid!,
+        tricksTaken: tricksTaken,
+      );
+    }
+    final int? declared = declarationOf(seat);
+    if (declared == null || !declarationRules.enabled) {
+      return null;
+    }
+    return declarationRules.scoreFor(
+      declaration: declared,
+      tricksTaken: tricksTaken,
+    );
+  }
+
   /// Whether this hand has a declaration round at all.
   bool get hasDeclarations => declarationRules.enabled;
 
@@ -61,5 +114,5 @@ class MatchContext {
 
   @override
   String toString() => 'MatchContext(declarations: $declarations, '
-      'totals: $totalScores)';
+      'totals: $totalScores, declarer: $declarerSeat, bid: $contractBid)';
 }

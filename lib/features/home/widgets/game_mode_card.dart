@@ -19,8 +19,11 @@ import '../../gameplay/widgets/suit_pip.dart';
 /// beside a badge, and a name cut off mid-word is worse than a shorter one;
 /// the setup screen that opens from here carries the full name.
 ///
-/// The "not ready" badge stays, and is not detail: a mode whose lifecycle is
-/// unfinished has to say so on the row the player is about to tap.
+/// A mode with no table yet is drawn dimmed as well as badged. The badge
+/// says it, but a row that looks exactly like the playable ones invites the
+/// tap anyway; dimming answers the question before it is asked. It stays
+/// tappable, because the setup screen behind it still shows the rules and a
+/// table preview -- it is unfinished, not off limits.
 final class GameModeCard extends StatelessWidget {
   const GameModeCard({
     required this.mode,
@@ -40,54 +43,60 @@ final class GameModeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextTheme text = Theme.of(context).textTheme;
     final _ModeStyle style = _ModeStyle.of(mode);
+    final bool ready = mode.isPlayable;
 
     return Semantics(
       button: true,
+      enabled: ready,
       label: '${mode.turkishName}. ${mode.turkishTagline}',
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.panel),
-        child: InkWell(
-          onTap: onTap,
+      child: Opacity(
+        // Dimmed, not disabled: the row still opens its rules and preview.
+        opacity: ready ? 1 : 0.45,
+        child: Material(
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.panel),
-          child: Container(
-            constraints: const BoxConstraints(
-              minHeight: AppSpacing.minTapTarget,
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.panel),
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: <Color>[style.tint, AppColors.surfaceElevated],
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppRadius.panel),
+            child: Container(
+              constraints: const BoxConstraints(
+                minHeight: AppSpacing.minTapTarget,
               ),
-              border: Border.all(color: const Color(0x26FFFFFF), width: 0.6),
-            ),
-            child: Row(
-              children: <Widget>[
-                _Motif(suit: style.suit, color: style.accent),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    mode.turkishShortName,
-                    style: text.titleLarge,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.sm,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.panel),
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: <Color>[style.tint, AppColors.surfaceElevated],
+                ),
+                border: Border.all(color: const Color(0x26FFFFFF), width: 0.6),
+              ),
+              child: Row(
+                children: <Widget>[
+                  _Motif(suit: style.suit, color: style.accent),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      mode.turkishShortName,
+                      style: text.titleLarge,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                if (!mode.isPlayable) ...<Widget>[
-                  _Badge(label: notPlayableLabel),
-                  const SizedBox(width: AppSpacing.sm),
+                  if (!mode.isPlayable) ...<Widget>[
+                    _Badge(label: notPlayableLabel),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.goldDim,
+                  ),
                 ],
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.goldDim,
-                ),
-              ],
+              ),
             ),
           ),
         ),

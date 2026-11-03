@@ -6,6 +6,7 @@ import '../../../app/theme/app_theme.dart';
 import '../../../core/cards/suit.dart';
 import '../../../core/game_engine/trick/trick.dart';
 import '../../../core/game_engine/trick/trick_play_state.dart';
+import '../../../games/auction_batak/auction_state.dart';
 import '../match_session.dart';
 import 'seat_panel.dart';
 import 'table_layout.dart';
@@ -36,6 +37,28 @@ final class MatchTable extends StatelessWidget {
   /// Whether a card is being dragged over the table right now.
   final bool highlightDropZone;
 
+  /// What a seat has said in the auction, while one is running.
+  ///
+  /// Only during the auction: once the contract is settled the pill above
+  /// says who holds it, and leaving stale calls on the rails would compete
+  /// with that. A seat that has passed keeps saying so, because a pass is
+  /// permanent and that is the thing a player needs to remember.
+  static String? _auctionLabel(
+    MatchSession session,
+    AppStrings strings,
+    int seat,
+  ) {
+    if (!session.isBidding) {
+      return null;
+    }
+    for (final AuctionCall call in session.auctionCalls.reversed) {
+      if (call.seat == seat) {
+        return call.isPass ? strings.gameplayPassed : '${call.tricks}';
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final TrickPlayState? hand = session.hand;
@@ -44,9 +67,9 @@ final class MatchTable extends StatelessWidget {
     // Nobody is to move while a scored hand is on screen, so no seat is lit.
     final int? active = session.isShowingFinishedHand
         ? null
-        : (session.match.declaringSeat ?? hand?.turnSeat);
+        : (session.match.seatToAct ?? hand?.turnSeat);
     final int? winner = session.highlightedWinner;
-    final Suit? trump = hand?.trump ?? session.profile.fixedTrump;
+    final Suit? trump = session.trump;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
@@ -58,6 +81,16 @@ final class MatchTable extends StatelessWidget {
               session.displayTrickNumber,
               session.profile.tricksPerHand,
             ),
+            // Who holds the contract and for how much, in the modes that
+            // have one. It stays up for the whole hand because it is the
+            // number every other decision is measured against.
+            contractLabel:
+                session.declarerSeat == null || session.contractBid == null
+                    ? null
+                    : strings.gameplayContractLine(
+                        seatNames[session.declarerSeat!],
+                        session.contractBid!,
+                      ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Expanded(
@@ -97,6 +130,7 @@ final class MatchTable extends StatelessWidget {
                   awaitingDeclaration: session.isDeclaring &&
                       seat < declarations.length &&
                       declarations[seat] == null,
+                  contract: _auctionLabel(session, strings, seat),
                   isActive: seat == active || seat == winner,
                 ),
               ),

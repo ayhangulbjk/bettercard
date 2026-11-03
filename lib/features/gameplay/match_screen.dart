@@ -7,15 +7,16 @@ import '../../app/providers.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/cards/card_sorting.dart';
 import '../../core/cards/playing_card.dart';
+import '../../core/cards/suit.dart';
 import '../../core/persistence/app_settings.dart';
 import '../../core/rules/rule_profile.dart';
 import '../../core/table/seat_names.dart';
-import '../../games/spades_batak/spades_batak_engine.dart';
 import 'match_controller.dart';
 import 'match_labels.dart';
 import 'match_pacing.dart';
 import 'match_session.dart';
 import 'match_turn.dart';
+import 'widgets/bidding_panel.dart';
 import 'widgets/declaration_panel.dart';
 import 'widgets/felt_background.dart';
 import 'widgets/hand_fan.dart';
@@ -24,6 +25,7 @@ import 'widgets/leave_match_dialog.dart';
 import 'widgets/match_over_panel.dart';
 import 'widgets/match_table.dart';
 import 'widgets/score_sheet_panel.dart';
+import 'widgets/trump_picker.dart';
 import 'widgets/turn_status_line.dart';
 
 /// The live table.
@@ -43,8 +45,6 @@ final class MatchScreen extends ConsumerStatefulWidget {
 }
 
 class _MatchScreenState extends ConsumerState<MatchScreen> {
-  static const SpadesBatakEngine _engine = SpadesBatakEngine();
-
   /// Whether the scoreboard is open over the table.
   ///
   /// Screen state, not match state: closing the app with it open should not
@@ -180,18 +180,42 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                 // the player decides by looking at their cards, so the hand
                 // stays on screen at full size and the picker takes the
                 // table's space, which is idle during the declaration round.
+                // The auction, the trump choice and the declaration round all
+                // float over the felt rather than stacking above the fan: the
+                // player decides by looking at their cards, so the hand stays
+                // on screen at full size and the panel takes the table's
+                // space, which is idle while a question is open.
+                if (session.isAwaitingBid)
+                  _overlay(
+                    BiddingPanel(
+                      options: session.legalBids,
+                      strings: strings,
+                      standingBid: session.standingBid,
+                      standingBidderName: session.standingBidder == null
+                          ? null
+                          : seatNames[session.standingBidder!],
+                      onBid: (int tricks) => _bid(tricks, settings),
+                      onPass: () => _pass(settings),
+                    ),
+                    maxWidth: 282,
+                  ),
+                if (session.isAwaitingTrump)
+                  _overlay(
+                    TrumpPicker(
+                      options: session.legalTrumps,
+                      strings: strings,
+                      bid: session.contractBid ?? 0,
+                      wasForced: session.contractWasForced,
+                      onChoose: (Suit trump) => _chooseTrump(trump, settings),
+                    ),
+                    maxWidth: 282,
+                  ),
                 if (session.isAwaitingDeclaration)
-                  Align(
-                    alignment: const Alignment(0, -0.35),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                      ),
-                      child: DeclarationPanel(
-                        options: MatchTurn.legalDeclarations(session),
-                        strings: strings,
-                        onDeclare: (int tricks) => _declare(tricks, settings),
-                      ),
+                  _overlay(
+                    DeclarationPanel(
+                      options: MatchTurn.legalDeclarations(session),
+                      strings: strings,
+                      onDeclare: (int tricks) => _declare(tricks, settings),
                     ),
                   ),
                 if (_showScores)
@@ -218,6 +242,47 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
         ),
       ),
     );
+  }
+
+  /// Floats a question over the felt, where the table is idle anyway.
+  ///
+  /// Width-capped so the side seats stay visible beside it. Who is still in
+  /// the auction and who has passed is part of the question being asked, so a
+  /// panel that covered those rails would be hiding its own context.
+  Widget _overlay(Widget child, {double maxWidth = 400}) => Align(
+        alignment: const Alignment(0, -0.35),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: child,
+          ),
+        ),
+      );
+
+  /// Offers a contract, with the same touch feedback a card play gets.
+  void _bid(int tricks, AppSettings settings) {
+    if (settings.hapticsEnabled) {
+      HapticFeedback.selectionClick();
+    }
+    ref.read(matchProvider.notifier).bid(tricks);
+  }
+
+  /// Withdraws from the auction. Final for the hand, so it gets the heavier
+  /// feedback a committed decision deserves.
+  void _pass(AppSettings settings) {
+    if (settings.hapticsEnabled) {
+      HapticFeedback.mediumImpact();
+    }
+    ref.read(matchProvider.notifier).pass();
+  }
+
+  /// Names the trump for the hand.
+  void _chooseTrump(Suit trump, AppSettings settings) {
+    if (settings.hapticsEnabled) {
+      HapticFeedback.selectionClick();
+    }
+    ref.read(matchProvider.notifier).chooseTrump(trump);
   }
 
   /// Plays [card], with the touch feedback the player asked for.
@@ -271,7 +336,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     if (!session.isHumanTurn) {
       return const <PlayingCard>{};
     }
-    return _engine.legalCards(session.match, session.humanSeat).toSet();
+    return session.match.legalCards(session.humanSeat).toSet();
   }
 
   Future<void> _confirmLeave(AppStrings strings) async {

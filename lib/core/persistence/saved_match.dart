@@ -45,20 +45,51 @@ class SavedMatch {
   /// Version 3 lets the log carry declarations as well as cards. A version 2
   /// file still reads: its log is all cards, and the profile it carries has no
   /// declaration round, so replaying it reproduces the match it recorded.
-  static const int currentSchemaVersion = 3;
+  ///
+  /// Version 4 adds the three calls an auction needs -- a bid, a pass and a
+  /// named trump. Older files still read: their logs use only the card and
+  /// declaration ranges, which are unchanged.
+  static const int currentSchemaVersion = 4;
 
   /// Oldest log format this build can replay.
   static const int oldestReadableSchemaVersion = 2;
 
-  /// How a declaration of [tricks] is written into [moves].
+  /// How each kind of move is written into [moves].
   ///
-  /// Card ids are dense and non-negative, so the negatives are free. Keeping
-  /// the two directions next to each other is what stops a writer and a
-  /// reader drifting apart over a format with no field names.
+  /// Card ids are dense and non-negative, so the negatives are free, and each
+  /// kind gets a band of its own. Keeping every encoder next to its decoder
+  /// is what stops a writer and a reader drifting apart over a format with no
+  /// field names.
+  ///
+  /// | Band | Meaning |
+  /// |---|---|
+  /// | `0 .. 51` | a card id |
+  /// | `-1 .. -14` | a Koz Maca declaration |
+  /// | `-100` | a pass |
+  /// | `-201 .. -213` | an auction bid |
+  /// | `-301 .. -304` | a named trump |
   static int encodeDeclaration(int tricks) => -(tricks + 1);
 
-  /// The declaration [move] encodes, or null when it is a card id.
-  static int? decodeDeclaration(int move) => move < 0 ? -move - 1 : null;
+  /// The declaration [move] encodes, or null when it is something else.
+  static int? decodeDeclaration(int move) =>
+      move < 0 && move > -100 ? -move - 1 : null;
+
+  /// The pass marker.
+  static const int passMove = -100;
+
+  /// How an auction bid of [tricks] is written.
+  static int encodeBid(int tricks) => -(200 + tricks);
+
+  /// The bid [move] encodes, or null when it is something else.
+  static int? decodeBid(int move) =>
+      move <= -201 && move >= -299 ? -move - 200 : null;
+
+  /// How a trump of suit index [suitIndex] is written.
+  static int encodeTrump(int suitIndex) => -(301 + suitIndex);
+
+  /// The trump suit index [move] encodes, or null when it is something else.
+  static int? decodeTrump(int move) =>
+      move <= -301 && move >= -399 ? -move - 301 : null;
 
   /// Unique id for this match.
   final String matchId;

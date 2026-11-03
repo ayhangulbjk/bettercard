@@ -12,11 +12,22 @@ import 'package:flutter_test/flutter_test.dart';
 
 const TrickPlayEngine engine = TrickPlayEngine();
 
+/// Following and cutting compulsory, nothing else.
+///
+/// Named here rather than borrowed from [TrickRules.batakStandard], which
+/// also makes raising compulsory and forbids leading an unbroken trump.
+/// These tests are about following and cutting alone, and a preset that
+/// grows a rule should not silently change what they assert.
+const TrickRules followAndCutOnly = TrickRules(
+  mustPlayTrumpWhenVoid: true,
+  mustOvertrumpWhenPossible: true,
+);
+
 PlayingCard c(Suit suit, Rank rank) => PlayingCard(suit, rank);
 
 /// A tiny four-seat position: two cards each, spades trump.
 TrickPlayState openingState({
-  TrickRules rules = TrickRules.batakStandard,
+  TrickRules rules = followAndCutOnly,
   Suit? trump = Suit.spades,
   int leadSeat = 0,
 }) =>

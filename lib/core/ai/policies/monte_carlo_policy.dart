@@ -4,7 +4,6 @@ import '../../game_engine/game_engine.dart';
 import '../../game_engine/trick/trick.dart';
 import '../../game_engine/trick/trick_play_engine.dart';
 import '../../game_engine/trick/trick_play_state.dart';
-import '../../rules/declaration_rules.dart';
 import '../../util/seeded_random.dart';
 import '../ai_difficulty.dart';
 import '../ai_policy.dart';
@@ -172,8 +171,7 @@ final class MonteCarloPolicy implements AiPolicy {
     }
     final List<double>? values = EndgameSolver.values(
       state: next,
-      rules: observation.match.declarationRules,
-      declarations: observation.match.declarations,
+      match: observation.match,
     );
     return values?[observation.seat];
   }
@@ -234,18 +232,16 @@ final class MonteCarloPolicy implements AiPolicy {
 
   /// What [tricks] is worth to this seat at the end of the hand.
   ///
-  /// Through [DeclarationRules.scoreFor], so the search optimises exactly what
-  /// the scoreboard pays. With no declaration round the tricks themselves are
-  /// the payoff, which is what those modes score.
-  static double _valueOf(SeatObservation observation, int tricks) {
-    final int? declared = observation.myDeclaration;
-    if (declared == null) {
-      return tricks.toDouble();
-    }
-    return observation.match.declarationRules
-        .scoreFor(declaration: declared, tricksTaken: tricks)
-        .toDouble();
-  }
+  /// Through [MatchContext.pointsFor], which picks the payoff this hand is
+  /// actually being paid under -- four independent promises, or one contract
+  /// against three defenders -- so the search optimises the scoreboard rather
+  /// than a proxy for it, in either mode. With neither payoff in force the
+  /// tricks themselves are the score, which is what those modes pay.
+  static double _valueOf(SeatObservation observation, int tricks) =>
+      (observation.match
+                  .pointsFor(seat: observation.seat, tricksTaken: tricks) ??
+              tricks)
+          .toDouble();
 
   static TrickPlayState? _apply(
     TrickPlayState state,

@@ -2,12 +2,14 @@ import 'package:meta/meta.dart';
 
 import '../../core/ai/ai_difficulty.dart';
 import '../../core/cards/playing_card.dart';
+import '../../core/cards/suit.dart';
 import '../../core/game_engine/trick/trick.dart';
 import '../../core/game_engine/trick/trick_play_state.dart';
 import '../../core/rules/rule_profile.dart';
 import '../../core/rules/rule_violation.dart';
-import '../../games/spades_batak/spades_batak_match_state.dart';
+import '../../games/auction_batak/auction_state.dart';
 import '../../games/spades_batak/spades_batak_scorer.dart';
+import 'match_runtime.dart';
 
 /// What the table is doing right now.
 ///
@@ -16,6 +18,18 @@ import '../../games/spades_batak/spades_batak_scorer.dart';
 /// table long enough to be read, and a finished hand has to be acknowledged
 /// before the next one starts.
 enum MatchPhase {
+  /// The player must bid or pass in an open auction.
+  awaitingBid,
+
+  /// An opponent is deciding what to bid.
+  opponentBidding,
+
+  /// The player won the contract and must name a trump.
+  awaitingTrump,
+
+  /// An opponent won the contract and is choosing a trump.
+  opponentChoosingTrump,
+
   /// The player must say how many tricks they will take.
   awaitingDeclaration,
 
@@ -72,8 +86,8 @@ final class MatchSession {
   /// without asking the engine to hand back what it started with.
   final int dealSeed;
 
-  /// Authoritative match state.
-  final SpadesBatakMatchState match;
+  /// Authoritative match state, whichever game is on the table.
+  final MatchRuntime match;
 
   final MatchPhase phase;
 
@@ -114,6 +128,70 @@ final class MatchSession {
   bool get isDeclaring =>
       phase == MatchPhase.awaitingDeclaration ||
       phase == MatchPhase.opponentDeclaring;
+
+  /// Whether the table is waiting for the player to bid or pass.
+  bool get isAwaitingBid => phase == MatchPhase.awaitingBid;
+
+  /// Whether an auction is running, whoever is speaking.
+  bool get isBidding =>
+      phase == MatchPhase.awaitingBid || phase == MatchPhase.opponentBidding;
+
+  /// Whether the table is waiting for the player to name a trump.
+  bool get isAwaitingTrump => phase == MatchPhase.awaitingTrump;
+
+  /// Whether a contract is waiting for a trump, whoever holds it.
+  bool get isChoosingTrump =>
+      phase == MatchPhase.awaitingTrump ||
+      phase == MatchPhase.opponentChoosingTrump;
+
+  /// Whether the player should be looking at the table rather than a panel.
+  bool get isPlayingCards =>
+      !isBidding && !isChoosingTrump && !isDeclaring && !isOver;
+
+  /// The calls made in the auction so far, oldest first.
+  List<AuctionCall> get auctionCalls => match.auctionCalls;
+
+  /// The highest contract offered so far, or null.
+  int? get standingBid => match.standingBid;
+
+  /// The seat holding the standing bid, or null.
+  int? get standingBidder => match.standingBidder;
+
+  /// The contracts the player may offer right now.
+  List<int> get legalBids => match.legalBids(humanSeat);
+
+  /// The trumps the player may name right now.
+  List<Suit> get legalTrumps => match.legalTrumps;
+
+  /// Who holds the contract for the hand on screen, or null.
+  ///
+  /// Read from the finished hand's score sheet while that is up, for the same
+  /// reason the trick counts are: the engine has already dealt the next hand
+  /// underneath.
+  int? get declarerSeat {
+    if (!isShowingFinishedHand) {
+      return match.declarerSeat;
+    }
+    for (int seat = 0; seat < seatCount; seat++) {
+      if (lastHandScore!.declarationOf(seat) != null) {
+        return seat;
+      }
+    }
+    return null;
+  }
+
+  /// The contract for the hand on screen, or null.
+  int? get contractBid => isShowingFinishedHand
+      ? (declarerSeat == null
+          ? null
+          : lastHandScore!.declarationOf(declarerSeat!))
+      : match.contractBid;
+
+  /// Whether the contract was forced by a passed-out auction.
+  bool get contractWasForced => match.contractWasForced;
+
+  /// The trump in force, or null before one is known.
+  Suit? get trump => match.trump;
 
   /// What each seat has declared for the hand on screen, null where a seat has
   /// not spoken yet.
@@ -211,7 +289,7 @@ final class MatchSession {
   bool get humanWon => winners.contains(humanSeat);
 
   MatchSession copyWith({
-    SpadesBatakMatchState? match,
+    MatchRuntime? match,
     MatchPhase? phase,
     CompletedTrick? lastTrick,
     bool clearLastTrick = false,

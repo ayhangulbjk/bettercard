@@ -1,33 +1,35 @@
 import '../../core/cards/playing_card.dart';
+import '../../core/cards/suit.dart';
 import '../../core/game_engine/game_command.dart';
-import '../../core/game_engine/game_engine.dart';
 import '../../core/game_engine/trick/trick.dart';
 import '../../core/game_engine/trick/trick_play_state.dart';
 import '../../core/game_engine/trick/trick_resolver.dart';
-import '../../core/rules/rule_violation.dart';
-import '../../games/spades_batak/spades_batak_engine.dart';
-import '../../games/spades_batak/spades_batak_match_state.dart';
+import 'match_runtime.dart';
 import 'match_session.dart';
 
-/// What one card play does to the table.
+/// What one decision does to the table.
 ///
-/// Pure: a session and a play in, a new session out. Separated from the
+/// Pure: a session and a command in, a new session out. Separated from the
 /// controller because it answers a different question -- the controller
-/// decides *when* a play happens and what waits around it, this decides what
-/// the table looks like afterwards -- and because a pure function is the part
-/// worth reasoning about carefully.
+/// decides *when* something happens and what waits around it, this decides
+/// what the table looks like afterwards -- and because a pure function is the
+/// part worth reasoning about carefully.
 ///
-/// It decides no rules. The play goes to [SpadesBatakEngine], which
-/// re-validates it, and the winner of a finished trick comes from
-/// [TrickResolver], the same authority the engine uses.
+/// It decides no rules. Every command goes through [MatchRuntime] to the
+/// game's own engine, which re-validates it, and the winner of a finished
+/// trick comes from [TrickResolver], the same authority the engine uses.
+///
+/// It knows nothing about which game is on the table either. That is the
+/// point of the runtime seam: a bid and a card are the same shape of thing
+/// here, and the mode decides what they mean.
 abstract final class MatchTurn {
-  static const SpadesBatakEngine engine = SpadesBatakEngine();
-
   /// Applies [card] from [seat].
   static MatchTurnResult apply(
-      MatchSession session, int seat, PlayingCard card) {
-    final SpadesBatakMatchState before = session.match;
-    final TrickPlayState? hand = before.hand;
+    MatchSession session,
+    int seat,
+    PlayingCard card,
+  ) {
+    final TrickPlayState? hand = session.match.hand;
     if (hand == null) {
       return MatchTurnResult(session: session, accepted: false);
     }
@@ -36,33 +38,62 @@ abstract final class MatchTurn {
     // next deal, and its last trick would otherwise be unrecoverable.
     final CompletedTrick? finished = trickAfter(hand, seat, card);
 
-    final CommandOutcome<SpadesBatakMatchState> outcome = engine.apply(
-      before,
+    return _submit(
+      session,
       PlayCardCommand(seat: seat, card: card),
+      finished: finished,
     );
+  }
 
-    return switch (outcome) {
-      CommandRejected<SpadesBatakMatchState>(
-        violation: final RuleViolation violation
-      ) =>
-        MatchTurnResult(
-          session: session.copyWith(rejection: violation.code),
-          accepted: false,
-        ),
-      CommandAccepted<SpadesBatakMatchState>(
-        state: final SpadesBatakMatchState after
-      ) =>
-        MatchTurnResult(
-          session: _fold(session, before, after, finished),
-          accepted: true,
-        ),
-    };
+  /// Applies [tricks] as [seat]'s declaration.
+  static MatchTurnResult declare(MatchSession session, int seat, int tricks) =>
+      _submit(session, PlaceBidCommand(seat: seat, tricks: tricks));
+
+  /// Applies [tricks] as [seat]'s contract bid.
+  ///
+  /// The same command as a declaration, because at the engine level it is the
+  /// same thing: a seat naming a number. What differs is the mode's rules
+  /// about who may say what, and those belong to the engine.
+  static MatchTurnResult bid(MatchSession session, int seat, int tricks) =>
+      _submit(session, PlaceBidCommand(seat: seat, tricks: tricks));
+
+  /// Withdraws [seat] from the auction.
+  static MatchTurnResult pass(MatchSession session, int seat) =>
+      _submit(session, PassBidCommand(seat: seat));
+
+  /// Names [trump] for the hand.
+  static MatchTurnResult chooseTrump(
+    MatchSession session,
+    int seat,
+    Suit trump,
+  ) =>
+      _submit(session, DeclareTrumpCommand(seat: seat, trump: trump));
+
+  /// Hands [command] to the engine and folds the answer into the session.
+  static MatchTurnResult _submit(
+    MatchSession session,
+    GameCommand command, {
+    CompletedTrick? finished,
+  }) {
+    final MatchRuntime before = session.match;
+    final MatchRuntimeOutcome outcome = before.apply(command);
+    final MatchRuntime? after = outcome.runtime;
+    if (after == null) {
+      return MatchTurnResult(
+        session: session.copyWith(rejection: outcome.rejection),
+        accepted: false,
+      );
+    }
+    return MatchTurnResult(
+      session: _fold(session, before, after, finished),
+      accepted: true,
+    );
   }
 
   static MatchSession _fold(
     MatchSession session,
-    SpadesBatakMatchState before,
-    SpadesBatakMatchState after,
+    MatchRuntime before,
+    MatchRuntime after,
     CompletedTrick? finished,
   ) {
     final bool handEnded = after.handsPlayed > before.handsPlayed;
@@ -101,60 +132,33 @@ abstract final class MatchTurn {
 
   /// Whose move it is, as a phase.
   ///
-  /// The declaration round comes first, so it is asked about first: while a
-  /// seat still owes a number, nobody's turn to play has started.
-  static MatchPhase phaseFor(SpadesBatakMatchState match, int humanSeat) {
-    if (match.isOver) {
+  /// Asked of the runtime's step rather than of either game's internals, so a
+  /// mode that adds a phase declares it once, where the step is derived.
+  static MatchPhase phaseFor(MatchRuntime match, int humanSeat) {
+    final int? seat = match.seatToAct;
+    if (match.isOver || seat == null) {
       return MatchPhase.matchOver;
     }
-    final int? declaring = match.declaringSeat;
-    if (declaring != null) {
-      return declaring == humanSeat
-          ? MatchPhase.awaitingDeclaration
-          : MatchPhase.opponentDeclaring;
-    }
-    return match.hand!.turnSeat == humanSeat
-        ? MatchPhase.awaitingHuman
-        : MatchPhase.opponentThinking;
-  }
-
-  /// Applies [tricks] as [seat]'s declaration.
-  ///
-  /// Nothing is captured beforehand the way a finished trick is: a
-  /// declaration never ends a hand, so there is no state about to be replaced.
-  static MatchTurnResult declare(MatchSession session, int seat, int tricks) {
-    final CommandOutcome<SpadesBatakMatchState> outcome = engine.apply(
-      session.match,
-      PlaceBidCommand(seat: seat, tricks: tricks),
-    );
-    return switch (outcome) {
-      CommandRejected<SpadesBatakMatchState>(
-        violation: final RuleViolation violation
-      ) =>
-        MatchTurnResult(
-          session: session.copyWith(rejection: violation.code),
-          accepted: false,
-        ),
-      CommandAccepted<SpadesBatakMatchState>(
-        state: final SpadesBatakMatchState after
-      ) =>
-        MatchTurnResult(
-          session: session.copyWith(
-            match: after,
-            phase: phaseFor(after, session.humanSeat),
-            clearRejection: true,
-          ),
-          accepted: true,
-        ),
+    final bool mine = seat == humanSeat;
+    return switch (match.step) {
+      MatchStep.bidding =>
+        mine ? MatchPhase.awaitingBid : MatchPhase.opponentBidding,
+      MatchStep.choosingTrump =>
+        mine ? MatchPhase.awaitingTrump : MatchPhase.opponentChoosingTrump,
+      MatchStep.declaring =>
+        mine ? MatchPhase.awaitingDeclaration : MatchPhase.opponentDeclaring,
+      MatchStep.playing =>
+        mine ? MatchPhase.awaitingHuman : MatchPhase.opponentThinking,
+      MatchStep.finished => MatchPhase.matchOver,
     };
   }
 
   /// The numbers the player may declare right now.
   static List<int> legalDeclarations(MatchSession session) =>
-      engine.legalDeclarations(session.match);
+      session.match.legalDeclarations;
 }
 
-/// The session after a play, and whether the engine took it.
+/// The session after a decision, and whether the engine took it.
 ///
 /// A rejection still produces a session -- one carrying the violation, so the
 /// table can say why -- which is why this is a pair rather than a nullable.

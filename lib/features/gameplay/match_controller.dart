@@ -6,16 +6,17 @@ import '../../app/providers.dart';
 import '../../core/ai/ai_decision_service.dart';
 import '../../core/ai/ai_difficulty.dart';
 import '../../core/ai/ai_policy.dart';
+import '../../core/ai/auction_policy.dart';
 import '../../core/ai/seat_observation.dart';
 import '../../core/cards/playing_card.dart';
+import '../../core/cards/suit.dart';
 import '../../core/game_engine/trick/trick_play_state.dart';
 import '../../core/persistence/saved_match.dart';
 import '../../core/rules/rule_profile.dart';
-import '../../games/spades_batak/spades_batak_engine.dart';
-import '../../games/spades_batak/spades_batak_match_state.dart';
-import '../../games/spades_batak/spades_batak_restore.dart';
 import 'match_pacing.dart';
 import 'match_persistence.dart';
+import 'match_restore.dart';
+import 'match_runtime.dart';
 import 'match_session.dart';
 import 'match_turn.dart';
 
@@ -23,20 +24,30 @@ import 'match_turn.dart';
 final NotifierProvider<MatchController, MatchSession?> matchProvider =
     NotifierProvider<MatchController, MatchSession?>(MatchController.new);
 
-/// Drives a Koz Maca match: feeds the player's taps and the opponents' answers
-/// to the engine, and paces what the table shows.
+/// Drives a match: feeds the player's taps and the opponents' answers to the
+/// engine, and paces what the table shows.
 ///
-/// It owns no rules. Every state change is a [PlayCardCommand] handed to
-/// [SpadesBatakEngine], which re-validates it, so a bug here can produce a
-/// rejection but never an illegal game. What it does own is scheduling: the
-/// pause that lets a finished trick be read, the opponents' thinking delay,
-/// and cancelling in-flight AI work when the player leaves the table.
+/// Which game is on the table is [MatchRuntime]'s business, not this class's.
+/// A bid, a declaration, a named trump and a card are all just decisions it
+/// schedules, asks a policy for, and hands on.
+///
+/// It owns no rules. Every state change is a command handed through the
+/// runtime to the game's own engine, which re-validates it, so a bug here can
+/// produce a rejection but never an illegal game. What it does own is
+/// scheduling: the pause that lets a finished trick be read, the opponents'
+/// thinking delay, and cancelling in-flight AI work when the player leaves
+/// the table.
 ///
 /// The UI thread is never blocked on a decision. Today's policies answer in
 /// microseconds, but they are still awaited through [AiDecisionService], so
 /// the search-based levels drop in behind the same seam.
 final class MatchController extends Notifier<MatchSession?> {
-  static const SpadesBatakEngine _engine = SpadesBatakEngine();
+  /// The auction player, for the modes that have one.
+  ///
+  /// Stateless and shared: unlike a card policy it carries no generator,
+  /// because a bid is a function of the hand and the scoreboard rather than
+  /// of a random draw.
+  static const HeuristicAuctionPolicy _auction = HeuristicAuctionPolicy();
 
   /// The opponents at this table. Empty when no match is open.
   OpponentRoster _opponents = OpponentRoster.empty;
@@ -73,10 +84,8 @@ final class MatchController extends Notifier<MatchSession?> {
     int? seed,
   }) {
     final int matchSeed = seed ?? _seedFromClock();
-    final SpadesBatakMatchState match = SpadesBatakEngine.start(
-      profile: profile,
-      seed: matchSeed,
-    );
+    final MatchRuntime match =
+        MatchRuntime.start(profile: profile, seed: matchSeed);
 
     _cancelPending();
     _generation++;
@@ -107,7 +116,7 @@ final class MatchController extends Notifier<MatchSession?> {
   /// A save that fails to replay is dropped here rather than left on disk to
   /// fail again on the next launch.
   bool resume(SavedMatch save) {
-    final SpadesBatakMatchState? restored = SpadesBatakRestore.replay(save);
+    final MatchRuntime? restored = MatchRestore.replay(save);
     if (restored == null) {
       unawaited(_persistence.clear());
       return false;
@@ -145,6 +154,38 @@ final class MatchController extends Notifier<MatchSession?> {
       return;
     }
     _submitDeclaration(session.humanSeat, tricks);
+    unawaited(_drive(_generation));
+  }
+
+  /// Offers [tricks] in the auction. Ignored unless it is the player's turn
+  /// to speak.
+  void bid(int tricks) {
+    final MatchSession? session = state;
+    if (session == null || session.phase != MatchPhase.awaitingBid) {
+      return;
+    }
+    _submitBid(session.humanSeat, tricks);
+    unawaited(_drive(_generation));
+  }
+
+  /// Withdraws the player from the auction, for good.
+  void pass() {
+    final MatchSession? session = state;
+    if (session == null || session.phase != MatchPhase.awaitingBid) {
+      return;
+    }
+    _submitPass(session.humanSeat);
+    unawaited(_drive(_generation));
+  }
+
+  /// Names [trump] for the hand. Ignored unless the player holds the
+  /// contract and has not named one.
+  void chooseTrump(Suit trump) {
+    final MatchSession? session = state;
+    if (session == null || session.phase != MatchPhase.awaitingTrump) {
+      return;
+    }
+    _submitTrump(session.humanSeat, trump);
     unawaited(_drive(_generation));
   }
 
@@ -209,14 +250,16 @@ final class MatchController extends Notifier<MatchSession?> {
       switch (session.phase) {
         case MatchPhase.awaitingHuman:
         case MatchPhase.awaitingDeclaration:
+        case MatchPhase.awaitingBid:
+        case MatchPhase.awaitingTrump:
         case MatchPhase.handSummary:
         case MatchPhase.matchOver:
           // Waiting on the person at the device.
           return;
 
         case MatchPhase.opponentDeclaring:
-          final SpadesBatakMatchState match = session.match;
-          final int? seat = match.declaringSeat;
+          final MatchRuntime match = session.match;
+          final int? seat = match.seatToAct;
           final TrickPlayState? hand = match.hand;
           if (seat == null || hand == null) {
             return;
@@ -232,6 +275,57 @@ final class MatchController extends Notifier<MatchSession?> {
             return;
           }
           _submitDeclaration(seat, declaration);
+
+        case MatchPhase.opponentBidding:
+          final MatchRuntime auctioning = session.match;
+          final int? bidder = auctioning.seatToAct;
+          final TrickPlayState? cards = auctioning.hand;
+          if (bidder == null || cards == null) {
+            return;
+          }
+          await MatchPacing.wait(_pacing.thinkDelay);
+          if (generation != _generation || state == null) {
+            return;
+          }
+          final int? offer = _auction.chooseBid(
+            SeatObservation.fromState(
+              cards,
+              bidder,
+              match: auctioning.aiContext,
+            ),
+            auctioning.legalBids(bidder),
+          );
+          if (generation != _generation || state == null) {
+            return;
+          }
+          if (offer == null) {
+            _submitPass(bidder);
+          } else {
+            _submitBid(bidder, offer);
+          }
+
+        case MatchPhase.opponentChoosingTrump:
+          final MatchRuntime naming = session.match;
+          final int? winner = naming.seatToAct;
+          final TrickPlayState? held = naming.hand;
+          if (winner == null || held == null) {
+            return;
+          }
+          await MatchPacing.wait(_pacing.thinkDelay);
+          if (generation != _generation || state == null) {
+            return;
+          }
+          _submitTrump(
+            winner,
+            _auction.chooseTrump(
+              SeatObservation.fromState(
+                held,
+                winner,
+                match: naming.aiContext,
+              ),
+              naming.legalTrumps,
+            ),
+          );
 
         case MatchPhase.trickPause:
           // Beat one: the four cards lie still so the player can read them.
@@ -259,7 +353,7 @@ final class MatchController extends Notifier<MatchSession?> {
           if (hand == null) {
             return;
           }
-          final SpadesBatakMatchState playing = session.match;
+          final MatchRuntime playing = session.match;
           final int seat = hand.turnSeat;
           await MatchPacing.wait(_pacing.thinkDelay);
           if (generation != _generation || state == null) {
@@ -310,6 +404,46 @@ final class MatchController extends Notifier<MatchSession?> {
     _save();
   }
 
+  /// Hands one auction bid to the engine and folds the result into the table.
+  void _submitBid(int seat, int tricks) {
+    final MatchSession session = state!;
+    final MatchTurnResult result = MatchTurn.bid(session, seat, tricks);
+    state = result.session;
+    if (!result.accepted) {
+      return;
+    }
+    _moves.add(SavedMatch.encodeBid(tricks));
+    _save();
+  }
+
+  /// Hands one pass to the engine.
+  ///
+  /// A pass can finish the auction, and a passed-out auction forces a
+  /// contract, but neither ends a match, so this has no finished-match branch
+  /// either.
+  void _submitPass(int seat) {
+    final MatchSession session = state!;
+    final MatchTurnResult result = MatchTurn.pass(session, seat);
+    state = result.session;
+    if (!result.accepted) {
+      return;
+    }
+    _moves.add(SavedMatch.passMove);
+    _save();
+  }
+
+  /// Hands the named trump to the engine.
+  void _submitTrump(int seat, Suit trump) {
+    final MatchSession session = state!;
+    final MatchTurnResult result = MatchTurn.chooseTrump(session, seat, trump);
+    state = result.session;
+    if (!result.accepted) {
+      return;
+    }
+    _moves.add(SavedMatch.encodeTrump(trump.index));
+    _save();
+  }
+
   /// Writes the match in progress.
   void _save() {
     final MatchSession? session = state;
@@ -324,7 +458,7 @@ final class MatchController extends Notifier<MatchSession?> {
   /// Asks [seat]'s policy for a card, through the decision service.
   Future<PlayingCard?> _decide(
     int seat,
-    SpadesBatakMatchState match,
+    MatchRuntime match,
     TrickPlayState hand,
   ) async {
     final AiPolicy? policy = _opponents.policyFor(seat);
@@ -359,7 +493,7 @@ final class MatchController extends Notifier<MatchSession?> {
   /// Asks [seat]'s policy for a declaration, through the decision service.
   Future<int?> _decideDeclaration(
     int seat,
-    SpadesBatakMatchState match,
+    MatchRuntime match,
     TrickPlayState hand,
   ) async {
     final AiPolicy? policy = _opponents.policyFor(seat);
@@ -378,7 +512,7 @@ final class MatchController extends Notifier<MatchSession?> {
             ),
             // From the engine, never from the policy: what may be declared is
             // a rule, and rules have one authority.
-            options: _engine.legalDeclarations(match),
+            options: match.legalDeclarations,
             budget: _opponents.difficulty.budget,
             requestId: requestId,
           );

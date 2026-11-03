@@ -174,8 +174,7 @@ class SeatObservation {
     if (declared == null) {
       return null;
     }
-    return match.declarationRules
-        .scoreFor(declaration: declared, tricksTaken: myTricks);
+    return match.pointsFor(seat: seat, tricksTaken: myTricks);
   }
 
   /// What [seat] would score on its current trick count, or null when it has
@@ -185,8 +184,7 @@ class SeatObservation {
     if (declared == null) {
       return null;
     }
-    return match.declarationRules
-        .scoreFor(declaration: declared, tricksTaken: tricksWon[other]);
+    return match.pointsFor(seat: other, tricksTaken: tricksWon[other]);
   }
 
   /// The observer's partner, when the mode has partnerships.

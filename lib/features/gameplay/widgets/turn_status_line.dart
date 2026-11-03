@@ -21,15 +21,24 @@ final class TurnStatusLine extends StatelessWidget {
     final String? rejection = session.rejection == null
         ? null
         : strings.moveRejected(session.rejection!);
-    final bool yours = session.isHumanTurn || session.isAwaitingDeclaration;
+    final bool yours = session.isHumanTurn ||
+        session.isAwaitingDeclaration ||
+        session.isAwaitingBid ||
+        session.isAwaitingTrump;
 
     final String status;
-    if (session.isAwaitingDeclaration) {
-      // The picker over the table asks the question in full. Repeating it
-      // here printed the same sentence twice on one screen.
+    if (session.isAwaitingDeclaration ||
+        session.isAwaitingBid ||
+        session.isAwaitingTrump) {
+      // The panel over the table asks the question in full. Repeating it here
+      // printed the same sentence twice on one screen.
       status = '';
     } else if (session.isDeclaring) {
       status = strings.gameplayDeclaring;
+    } else if (session.isBidding) {
+      status = strings.gameplayWaitingForBids;
+    } else if (session.isChoosingTrump) {
+      status = strings.gameplayWaitingForTrump;
     } else {
       status = yours ? strings.gameplayYourTurn : strings.gameplayWaiting;
     }

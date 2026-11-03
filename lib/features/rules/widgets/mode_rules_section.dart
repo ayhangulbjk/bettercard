@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_theme.dart';
+import '../../../core/rules/auction_scoring_rules.dart';
 import '../../../core/rules/game_mode.dart';
 import '../../../core/rules/rule_presets.dart';
 import '../../../core/rules/rule_profile.dart';
@@ -64,6 +65,20 @@ final class ModeRulesSection extends StatelessWidget {
           'soz basina ${profile.declarationRules.pointsPerDeclaredTrick} puan',
           if (profile.declarationRules.overtrickBustThreshold != null)
             '${profile.declarationRules.overtrickBustThreshold} yanda batar',
+        ],
+        if (profile.auctionScoringRules.enabled) ...<String>[
+          'ihaleyi alan kozu secer',
+          'ihale basina '
+              '${profile.auctionScoringRules.pointsPerBidTrick} puan',
+          'savunma el basina '
+              '${profile.auctionScoringRules.pointsPerDefenderTrick} puan',
+          switch (profile.auctionScoringRules.defenderNilPenalty) {
+            DefenderNilPenalty.none => 'yan batma yok',
+            DefenderNilPenalty.flat => 'el alamayan savunma '
+                '${profile.auctionScoringRules.flatNilPenalty} eksi',
+            DefenderNilPenalty.contractValue =>
+              'el alamayan savunma ihale kadar batar',
+          },
         ],
         if (profile.buryRules.enabled)
           '${profile.buryRules.cardsToBury} kart gömme',

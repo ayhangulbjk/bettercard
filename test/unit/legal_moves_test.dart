@@ -6,6 +6,17 @@ import 'package:batak_king/core/game_engine/trick/trick_legal_moves.dart';
 import 'package:batak_king/core/rules/trick_rules.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Following and cutting compulsory, nothing else.
+///
+/// Named here rather than borrowed from [TrickRules.batakStandard], which
+/// also makes raising compulsory and forbids leading an unbroken trump.
+/// These tests are about following and cutting alone, and a preset that
+/// grows a rule should not silently change what they assert.
+const TrickRules followAndCutOnly = TrickRules(
+  mustPlayTrumpWhenVoid: true,
+  mustOvertrumpWhenPossible: true,
+);
+
 PlayingCard card(Suit suit, Rank rank) => PlayingCard(suit, rank);
 
 Trick leadWith(Suit suit, Rank rank, {int seat = 0}) => Trick(
@@ -28,7 +39,7 @@ void main() {
           hand: hand,
           trick: null,
           trump: Suit.spades,
-          rules: TrickRules.batakStandard,
+          rules: followAndCutOnly,
           trumpBroken: false,
         ),
         unorderedEquals(hand),
@@ -98,7 +109,7 @@ void main() {
           ],
           trick: leadWith(Suit.hearts, Rank.five),
           trump: Suit.spades,
-          rules: TrickRules.batakStandard,
+          rules: followAndCutOnly,
           trumpBroken: true,
         ),
         unorderedEquals(<PlayingCard>[

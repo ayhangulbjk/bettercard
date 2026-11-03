@@ -31,7 +31,6 @@ import 'package:batak_king/core/rules/rule_presets.dart';
 import 'package:batak_king/features/gameplay/match_controller.dart';
 import 'package:batak_king/features/gameplay/match_session.dart';
 import 'package:batak_king/features/gameplay/match_turn.dart';
-import 'package:batak_king/games/spades_batak/spades_batak_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -122,6 +121,28 @@ const List<_Shot> _shots = <_Shot>[
     route: AppRoutes.match,
     drive: _driveToDeclaration,
   ),
+  // Herkes Tek Ihaleli, which is the mode's whole new vocabulary: an open
+  // auction, a trump to name, and a contract on the table afterwards.
+  _Shot(
+    '15-auction-setup',
+    route: AppRoutes.gameSetup,
+    arguments: GameMode.auctionBatak,
+  ),
+  _Shot(
+    '16-auction-bidding',
+    route: AppRoutes.match,
+    drive: _driveToBidding,
+  ),
+  _Shot(
+    '17-auction-trump',
+    route: AppRoutes.match,
+    drive: _driveToTrumpChoice,
+  ),
+  _Shot(
+    '18-auction-play',
+    route: AppRoutes.match,
+    drive: _driveToAuctionPlay,
+  ),
   _Shot('06-settings', route: AppRoutes.settings),
   _Shot('07-statistics', route: AppRoutes.statistics),
   _Shot('08-rules', route: AppRoutes.rules),
@@ -178,14 +199,57 @@ const List<_Shot> _shots = <_Shot>[
 /// dealt a different hand every time would make a layout regression invisible.
 Future<void> _startMatch(
   WidgetTester tester,
-  ProviderContainer container,
-) async {
+  ProviderContainer container, {
+  GameMode mode = GameMode.spadesBatak,
+  int seed = 20260202,
+}) async {
   container.read(matchProvider.notifier).start(
-        profile: RulePresets.defaultFor(GameMode.spadesBatak),
+        profile: RulePresets.defaultFor(mode),
         difficulty: AiDifficulty.normal,
-        seed: 20260202,
+        seed: seed,
       );
   await tester.pumpAndSettle();
+}
+
+/// The auction, waiting on the player. The first thing the mode shows.
+Future<void> _driveToBidding(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container, mode: GameMode.auctionBatak);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) => session.phase == MatchPhase.awaitingBid,
+  );
+}
+
+/// The player has taken the contract and must name a trump.
+Future<void> _driveToTrumpChoice(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container, mode: GameMode.auctionBatak);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) => session.phase == MatchPhase.awaitingTrump,
+  );
+}
+
+/// A contract hand being played, with the contract on the pill above.
+Future<void> _driveToAuctionPlay(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container, mode: GameMode.auctionBatak);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) =>
+        session.phase == MatchPhase.awaitingHuman &&
+        !(session.hand?.currentTrick.isEmpty ?? true),
+  );
 }
 
 /// A trick in progress with the player to move: cards already on the table,
@@ -287,7 +351,6 @@ Future<void> _advance(
   bool Function(MatchSession session) done, {
   int maxSteps = 1200,
 }) async {
-  const SpadesBatakEngine engine = SpadesBatakEngine();
   for (int step = 0; step < maxSteps; step++) {
     final MatchSession? session = container.read(matchProvider);
     if (session == null || done(session)) {
@@ -296,7 +359,7 @@ Future<void> _advance(
     switch (session.phase) {
       case MatchPhase.awaitingHuman:
         final List<PlayingCard> legal =
-            engine.legalCards(session.match, session.humanSeat);
+            session.match.legalCards(session.humanSeat);
         container.read(matchProvider.notifier).playCard(legal.first);
         await tester.pumpAndSettle();
       case MatchPhase.awaitingDeclaration:
@@ -310,6 +373,24 @@ Future<void> _advance(
       case MatchPhase.handSummary:
         container.read(matchProvider.notifier).continueAfterHand();
         await tester.pumpAndSettle();
+      case MatchPhase.awaitingBid:
+        // Take the smallest contract on offer, which is the one most likely
+        // to be made: a capture should show a table mid-game, not one that
+        // has already gone down.
+        final List<int> bids = session.legalBids;
+        if (bids.isEmpty) {
+          container.read(matchProvider.notifier).pass();
+        } else {
+          container.read(matchProvider.notifier).bid(bids.first);
+        }
+        await tester.pumpAndSettle();
+      case MatchPhase.awaitingTrump:
+        container
+            .read(matchProvider.notifier)
+            .chooseTrump(session.legalTrumps.first);
+        await tester.pumpAndSettle();
+      case MatchPhase.opponentBidding:
+      case MatchPhase.opponentChoosingTrump:
       case MatchPhase.opponentDeclaring:
       case MatchPhase.opponentThinking:
       case MatchPhase.trickPause:

@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 
 import '../cards/suit.dart';
+import 'auction_scoring_rules.dart';
 import 'bidding_rules.dart';
 import 'bury_rules.dart';
 import 'declaration_rules.dart';
@@ -30,6 +31,7 @@ class RuleProfile {
     required this.scoringRules,
     required this.buryRules,
     this.declarationRules = DeclarationRules.none,
+    this.auctionScoringRules = AuctionScoringRules.none,
     this.kingRules,
     this.fixedTrump,
     this.deckExclusions = const <int>{},
@@ -39,8 +41,11 @@ class RuleProfile {
   /// Bumped whenever a field is added, removed or reinterpreted.
   ///
   /// Version 2 adds [declarationRules]. A version 1 profile is read with
-  /// declarations off, which is what it was played under.
-  static const int currentSchemaVersion = 2;
+  /// declarations off, which is what it was played under. Version 3 adds
+  /// [auctionScoringRules], and an older profile is read with it off for the
+  /// same reason: it is what that match was played under, and no existing
+  /// field is reinterpreted.
+  static const int currentSchemaVersion = 3;
 
   /// Stable identifier, e.g. `auction_batak_standard`.
   final String id;
@@ -56,6 +61,15 @@ class RuleProfile {
 
   /// The per-seat declaration round, when the mode opens a hand with one.
   final DeclarationRules declarationRules;
+
+  /// The payoff for a single-contract auction hand, when the mode has one.
+  ///
+  /// Separate from [scoringRules] rather than folded into it, because the
+  /// two describe different games. A mode has one or the other: Koz Maca
+  /// pays four promises through [declarationRules], Herkes Tek Ihaleli pays
+  /// one contract through this, and a profile with both enabled is rejected
+  /// by the validator rather than silently resolved.
+  final AuctionScoringRules auctionScoringRules;
 
   /// Present only for [GameMode.king].
   final KingRules? kingRules;
@@ -110,6 +124,7 @@ class RuleProfile {
     BatakScoringRules? scoringRules,
     BuryRules? buryRules,
     DeclarationRules? declarationRules,
+    AuctionScoringRules? auctionScoringRules,
     KingRules? kingRules,
     Suit? fixedTrump,
     bool clearFixedTrump = false,
@@ -125,6 +140,7 @@ class RuleProfile {
         scoringRules: scoringRules ?? this.scoringRules,
         buryRules: buryRules ?? this.buryRules,
         declarationRules: declarationRules ?? this.declarationRules,
+        auctionScoringRules: auctionScoringRules ?? this.auctionScoringRules,
         kingRules: clearKingRules ? null : (kingRules ?? this.kingRules),
         fixedTrump: clearFixedTrump ? null : (fixedTrump ?? this.fixedTrump),
         deckExclusions: deckExclusions ?? this.deckExclusions,
@@ -141,6 +157,7 @@ class RuleProfile {
         'scoringRules': scoringRules.toJson(),
         'buryRules': buryRules.toJson(),
         'declarationRules': declarationRules.toJson(),
+        'auctionScoringRules': auctionScoringRules.toJson(),
         'kingRules': kingRules?.toJson(),
         'fixedTrump': fixedTrump?.name,
         'deckExclusions': deckExclusions.toList(growable: false)..sort(),
@@ -169,6 +186,11 @@ class RuleProfile {
         json['scoringRules']! as Map<String, Object?>,
       ),
       buryRules: BuryRules.fromJson(json['buryRules']! as Map<String, Object?>),
+      auctionScoringRules: json['auctionScoringRules'] == null
+          ? AuctionScoringRules.none
+          : AuctionScoringRules.fromJson(
+              json['auctionScoringRules']! as Map<String, Object?>,
+            ),
       declarationRules: json['declarationRules'] == null
           ? DeclarationRules.none
           : DeclarationRules.fromJson(
@@ -198,6 +220,7 @@ class RuleProfile {
       other.scoringRules == scoringRules &&
       other.buryRules == buryRules &&
       other.declarationRules == declarationRules &&
+      other.auctionScoringRules == auctionScoringRules &&
       other.kingRules == kingRules &&
       other.fixedTrump == fixedTrump &&
       other.schemaVersion == schemaVersion &&
@@ -214,6 +237,7 @@ class RuleProfile {
         scoringRules,
         buryRules,
         declarationRules,
+        auctionScoringRules,
         kingRules,
         fixedTrump,
         schemaVersion,

@@ -573,3 +573,104 @@ table in front of the players. `SeatObservation.fromState` is still the only
 funnel, and `test/simulation/policy_fairness_test.dart` now asserts the
 consequence rather than the plumbing -- same public record, same decision,
 whatever the hidden cards are.
+
+## D-27: Herkes Tek Ihaleli is a separate game, not a Koz Maca variant
+
+The two modes share a deck, a trick resolver and a legal-move generator, and
+nothing else. Koz Maca pays four independent promises; this pays **one**
+contract against three defenders. Every place the two could have been merged
+is a place a rule would eventually leak across, so they are kept apart:
+
+- `AuctionScoringRules` is a new record rather than fields on
+  `BatakScoringRules` or a reading of `DeclarationRules`. A profile with both
+  payoffs enabled is an **error** in the validator, not a precedence rule:
+  there is no sensible way to score a hand twice.
+- `AuctionBatakScorer` does not call the Koz Maca scorer. `HandScore` is
+  shared, because a score sheet is a score sheet.
+- "Yan 3 batar" is absent, and a test asserts its absence rather than trusting
+  it: a declarer three tricks over its contract scores +53, not -50.
+
+`AuctionState` derives everything -- the standing bid, who is still in, whose
+turn it is, whether it is over -- from the list of calls. The case that is
+easy to get wrong is the third pass: the standing bidder is never asked to
+outbid itself, so the auction ends the moment it is the only active seat, not
+when a fourth call arrives. Deriving it makes that one condition rather than a
+flag somebody has to remember to set.
+
+The contract winner leads the first trick, which is why the trump is named
+**before** the trick state gets its lead seat: the hand is dealt with no trump
+and a placeholder lead, and `_withTrump` rebuilds it once both are known. A
+seat leading because of where it sits is the bug this shape makes impossible.
+
+`TrickRules.batakStandard` gained compulsory raising and the unbroken-trump
+lead restriction, which is what Turkish tables play and what this mode's spec
+asks for. Three unit tests had been using that preset as a stand-in for
+"following and cutting only"; they now name the rules they mean, so a preset
+growing a rule cannot silently change what a test asserts.
+
+## D-28: The bidder values ground, not points
+
+This payoff is not zero sum. A made contract of five pays the declarer fifty
+and still leaves eight tricks paying the defenders eighty between them, so
+nearly every seat finishes nearly every hand richer. A bidder that maximises
+its own expected points therefore concludes, correctly and uselessly, that
+defending is profitable -- and passes on every hand it is ever dealt. The
+first version did exactly that: six auctions in ten passed out.
+
+So every option is valued as **own points minus the table average**, which is
+the quantity that is actually zero sum, and bidding and passing are compared
+on it. Passing is not a fallback with a threshold in front of it; it is an
+option with a value, computed from this hand's own chance of being shut out
+and charged under "yan batma".
+
+Two things measurement decided rather than argument, through
+`tool/checks/auction_probe.dart`:
+
+- **`BidEvaluator.capacityBias` is 1.2 tricks.** The hand count values the
+  winners a hand can point at and misses everything else -- a long suit that
+  runs, a cut that lands, an honour that falls under a higher one. Without the
+  correction the appraisal averaged 3.9 tricks against a measured 5.9. This is
+  the same lesson as Koz Maca's `capacityBias`, learned the same way.
+- **More optimism is worse.** Rotated head-to-head on paired deals, a seat
+  bidding with +0.4, +0.8 and +1.2 extra tricks of optimism lost 1.3, 4.6 and
+  10.4 points of ground per hand against three copies of the tuned bidder.
+  The curve is flat between -0.4 and 0, so the setting sits at a measured
+  optimum rather than a guessed one.
+
+## D-29: One table, two games, through a runtime seam
+
+The table screen, the controller and the save layer all ask a match the same
+questions -- whose turn, what may be played, what does the scoreboard say --
+and the answers differ only in how each engine works them out. Before this
+they asked `SpadesBatakMatchState` directly, so a second playable mode would
+have meant a branch per mode in all three, and a third would have meant
+finding every one of them again.
+
+`MatchRuntime` is that seam: a sealed pair of wrappers, one per game, that
+forward every question to the game's own engine. It owns no rules, which is
+what makes it safe -- a runtime cannot disagree with the authority it wraps,
+because it has nothing of its own to disagree with.
+
+Three consequences worth stating:
+
+- **`MatchTurn` stopped knowing which game it is folding.** A bid, a pass, a
+  named trump, a declaration and a card are all one `_submit`, and the mode
+  decides what they mean. `phaseFor` reads the runtime's coarse `MatchStep`
+  rather than either game's internals, so a mode that adds a phase declares
+  it once.
+- **`MatchRuntime.start` is the only place a mode becomes a table.** A profile
+  no table exists for throws there rather than falling back to another game's
+  engine. That is the other half of `GameMode.isPlayable`: the menu dims what
+  cannot be played, and the runtime refuses it even if something gets past
+  the menu.
+- **The move log grew three bands rather than a new format.** A bid, a pass
+  and a named trump each got a range of the negative space that card ids and
+  declarations already left free, so version 2 and 3 saves still replay
+  unchanged. `MatchRestore` replays against the seat the engine says is on
+  turn, never a seat named in the file, so a log that disagrees with the
+  rules fails at the move where it first disagrees.
+
+The unplayable modes are now dimmed in the menu as well as badged. A row that
+looked identical to the playable ones invited the tap the badge was there to
+discourage; they stay tappable, because the setup screen behind them still
+shows the rules and a table preview.

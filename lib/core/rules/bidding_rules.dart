@@ -1,12 +1,21 @@
 import 'package:meta/meta.dart';
 
 /// What happens when every seat passes the auction.
+///
+/// Turkish tables disagree here and the disagreement changes who is in
+/// trouble, so it is a setting. The common reading at a four-handed table is
+/// that the seat which opened the auction -- the dealer's right-hand
+/// neighbour -- is stuck with a small forced contract.
 enum PassOutRule {
-  /// Redeal the hand with the same dealer.
+  /// Redeal the hand with the same dealer. No score, no contract.
   redeal,
 
-  /// The dealer is forced to take the minimum contract (dagitan tutar).
+  /// The dealer is forced to take [BiddingRules.forcedBid] (dagitan tutar).
   dealerMustBid,
+
+  /// The seat that opened the auction is forced to take
+  /// [BiddingRules.forcedBid].
+  openerMustBid,
 }
 
 /// Auction configuration.
@@ -24,6 +33,7 @@ class BiddingRules {
     this.declarerNamesTrump = true,
     this.allowPassAfterBidding = true,
     this.maximumBidIsShootTheMoon = false,
+    this.forcedBid,
   });
 
   /// No auction at all (Koz Maca, King). Both bounds are zero and the UI must
@@ -35,9 +45,16 @@ class BiddingRules {
   );
 
   /// Four-player Batak: bids run from 5 to 13 of the 13 tricks.
+  ///
+  /// A passed-out hand sticks the seat that opened the auction with four,
+  /// which is deliberately *below* [minimumBid]: nobody chose it, so it is
+  /// not held to the floor a voluntary contract is. See
+  /// docs/RULE_PROFILES.md.
   static const BiddingRules fourPlayerStandard = BiddingRules(
     minimumBid: 5,
     maximumBid: 13,
+    passOutRule: PassOutRule.openerMustBid,
+    forcedBid: 4,
   );
 
   /// Three-player buried Batak: 17 tricks are in play, so the bid range and
@@ -66,6 +83,19 @@ class BiddingRules {
   /// an enlarged payoff. Tables disagree; off by default.
   final bool maximumBidIsShootTheMoon;
 
+  /// The contract a passed-out hand forces on a seat, or null to use
+  /// [minimumBid].
+  ///
+  /// Separate from [minimumBid] because it is a different number for a
+  /// different reason: the floor is what a seat may *choose*, and this is
+  /// what a seat is *given* when nobody chose anything. The common Turkish
+  /// reading makes the forced contract smaller than the floor, which is only
+  /// expressible with two fields.
+  final int? forcedBid;
+
+  /// The contract value a passed-out hand forces.
+  int get effectiveForcedBid => forcedBid ?? minimumBid;
+
   bool get hasAuction => maximumBid > 0;
 
   /// Whether [bid] is a legal contract value in isolation.
@@ -86,6 +116,7 @@ class BiddingRules {
         'declarerNamesTrump': declarerNamesTrump,
         'allowPassAfterBidding': allowPassAfterBidding,
         'maximumBidIsShootTheMoon': maximumBidIsShootTheMoon,
+        'forcedBid': forcedBid,
       };
 
   static BiddingRules fromJson(Map<String, Object?> json) => BiddingRules(
@@ -99,6 +130,7 @@ class BiddingRules {
         allowPassAfterBidding: json['allowPassAfterBidding'] as bool? ?? true,
         maximumBidIsShootTheMoon:
             json['maximumBidIsShootTheMoon'] as bool? ?? false,
+        forcedBid: json['forcedBid'] as int?,
       );
 
   @override
@@ -109,7 +141,8 @@ class BiddingRules {
       other.passOutRule == passOutRule &&
       other.declarerNamesTrump == declarerNamesTrump &&
       other.allowPassAfterBidding == allowPassAfterBidding &&
-      other.maximumBidIsShootTheMoon == maximumBidIsShootTheMoon;
+      other.maximumBidIsShootTheMoon == maximumBidIsShootTheMoon &&
+      other.forcedBid == forcedBid;
 
   @override
   int get hashCode => Object.hash(
@@ -119,5 +152,28 @@ class BiddingRules {
         declarerNamesTrump,
         allowPassAfterBidding,
         maximumBidIsShootTheMoon,
+        forcedBid,
+      );
+
+  BiddingRules copyWith({
+    int? minimumBid,
+    int? maximumBid,
+    PassOutRule? passOutRule,
+    bool? declarerNamesTrump,
+    bool? allowPassAfterBidding,
+    bool? maximumBidIsShootTheMoon,
+    int? forcedBid,
+    bool clearForcedBid = false,
+  }) =>
+      BiddingRules(
+        minimumBid: minimumBid ?? this.minimumBid,
+        maximumBid: maximumBid ?? this.maximumBid,
+        passOutRule: passOutRule ?? this.passOutRule,
+        declarerNamesTrump: declarerNamesTrump ?? this.declarerNamesTrump,
+        allowPassAfterBidding:
+            allowPassAfterBidding ?? this.allowPassAfterBidding,
+        maximumBidIsShootTheMoon:
+            maximumBidIsShootTheMoon ?? this.maximumBidIsShootTheMoon,
+        forcedBid: clearForcedBid ? null : (forcedBid ?? this.forcedBid),
       );
 }

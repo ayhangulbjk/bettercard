@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 
+import 'auction_scoring_rules.dart';
 import 'declaration_rules.dart';
 import 'game_mode.dart';
 import 'king_rules.dart';
@@ -56,6 +57,7 @@ abstract final class RuleProfileValidator {
       ..._validateKing(profile),
       ..._validateScoring(profile),
       ..._validateDeclarations(profile),
+      ..._validateAuctionScoring(profile),
     ];
     issues.sort((RuleIssue a, RuleIssue b) =>
         (a.isError ? 0 : 1).compareTo(b.isError ? 0 : 1));
@@ -291,6 +293,82 @@ abstract final class RuleProfileValidator {
         code: 'scoring.non_positive_target',
         turkishMessage: 'Hedef puan pozitif olmalıdır.',
       ));
+    }
+    return issues;
+  }
+
+  /// The single-contract payoff, and the combinations it cannot share a
+  /// profile with.
+  ///
+  /// The important one is the first: a mode pays four independent promises or
+  /// one contract, never both. A profile with both enabled would score every
+  /// hand twice and there is no sensible way to resolve it, so it is an error
+  /// rather than a warning.
+  static List<RuleIssue> _validateAuctionScoring(RuleProfile profile) {
+    final AuctionScoringRules rules = profile.auctionScoringRules;
+    final List<RuleIssue> issues = <RuleIssue>[];
+
+    if (rules.enabled && profile.declarationRules.enabled) {
+      issues.add(
+        const RuleIssue(
+          code: 'auction.double_payoff',
+          turkishMessage:
+              'Bir el ya tek ihale ile ya da herkesin sözü ile puanlanır; '
+              'ikisi birden açık olamaz.',
+          severity: RuleIssueSeverity.error,
+        ),
+      );
+    }
+    if (rules.enabled && !profile.biddingRules.hasAuction) {
+      issues.add(
+        const RuleIssue(
+          code: 'auction.scoring_without_auction',
+          turkishMessage:
+              'İhale puanlaması açık ama bu kural setinde ihale yok.',
+          severity: RuleIssueSeverity.error,
+        ),
+      );
+    }
+    if (!rules.enabled) {
+      return issues;
+    }
+    if (rules.pointsPerBidTrick <= 0) {
+      issues.add(
+        const RuleIssue(
+          code: 'auction.non_positive_stake',
+          turkishMessage: 'İhale başına puan pozitif olmalıdır.',
+          severity: RuleIssueSeverity.error,
+        ),
+      );
+    }
+    if (rules.failureMultiplier <= 0) {
+      issues.add(
+        const RuleIssue(
+          code: 'auction.non_positive_penalty',
+          turkishMessage: 'Batma çarpanı pozitif olmalıdır.',
+          severity: RuleIssueSeverity.error,
+        ),
+      );
+    }
+    final int forced = profile.biddingRules.effectiveForcedBid;
+    if (forced < 1 || forced > profile.tricksPerHand) {
+      issues.add(
+        RuleIssue(
+          code: 'auction.forced_bid_out_of_range',
+          turkishMessage: 'Zorunlu ihale $forced, bu dağıtımda oynanamaz.',
+          severity: RuleIssueSeverity.error,
+        ),
+      );
+    } else if (forced > profile.biddingRules.minimumBid) {
+      issues.add(
+        const RuleIssue(
+          code: 'auction.forced_above_minimum',
+          turkishMessage:
+              'Zorunlu ihale, gönüllü en düşük ihaleden büyük. Kimsenin '
+              'seçmediği bir el, seçilebilecek en küçüğünden ağır oluyor.',
+          severity: RuleIssueSeverity.warning,
+        ),
+      );
     }
     return issues;
   }

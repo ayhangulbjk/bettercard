@@ -27,10 +27,19 @@ class TrickRules {
     this.trumpLeadRule = TrumpLeadRule.unrestricted,
   });
 
-  /// Standard Batak play: all five modes in this app use mandatory following.
+  /// Standard Batak play: following, cutting, overcutting and raising are
+  /// all compulsory.
+  ///
+  /// Raising is on here for the same reason it is on in [kozMaca]: Turkish
+  /// tables play "yukseltme zorunlu" in the plain suits, not only in trump.
+  /// The exemption once a trick is cut is handled by TrickLegalMoves rather
+  /// than by a second flag, because it follows from the obligation rather
+  /// than varying between tables.
   static const TrickRules batakStandard = TrickRules(
     mustPlayTrumpWhenVoid: true,
     mustOvertrumpWhenPossible: true,
+    mustBeatLeadSuitWhenPossible: true,
+    trumpLeadRule: TrumpLeadRule.onlyAfterBroken,
   );
 
   /// Koz Maca: spades are permanent trump and may not be led until broken.

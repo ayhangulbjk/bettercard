@@ -123,9 +123,11 @@ void main() {
   ) async {
     await pumpPortraitApp(tester);
 
+    // A mode that is not playable yet, so the button offers a preview rather
+    // than a table.
     await revealAndTap(
       tester,
-      find.text(GameMode.auctionBatak.turkishShortName),
+      find.text(GameMode.partnershipBatak.turkishShortName),
     );
     await revealAndTap(
       tester,

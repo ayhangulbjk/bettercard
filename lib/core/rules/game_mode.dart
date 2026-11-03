@@ -96,7 +96,15 @@ enum GameMode {
   /// that reason about their cards. The other four still lack their auction,
   /// contract or burying lifecycle, so they stay false and the home screen
   /// labels them rather than opening a table that cannot be played.
-  bool get isPlayable => this == GameMode.spadesBatak;
+  /// Whether a mode can be played from the product today.
+  ///
+  /// Koz Maca and Herkes Tek Ihaleli Batak have tables; the rest do not yet,
+  /// and the menu shows them dimmed rather than letting a tap reach an engine
+  /// that would refuse their profile. `MatchRuntime.start` is the other half
+  /// of the same guarantee: it throws for a profile no table exists for,
+  /// rather than falling back to another game's engine.
+  bool get isPlayable =>
+      this == GameMode.spadesBatak || this == GameMode.auctionBatak;
 
   /// Looks up a mode by its persisted [id].
   static GameMode fromId(String id) => values.firstWhere(

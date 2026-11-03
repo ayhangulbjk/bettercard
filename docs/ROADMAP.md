@@ -179,6 +179,42 @@ Yapay zeka turu (2026-11-03) — `docs/AI_STRATEGY.md`, ölçümler
   +4.03 ± 0.80 puan/el. **Uzman ve Efsane kapalı kaldı:** oyun sonu çözücü
   yazıldı ama ölçülebilir kazanç vermedi (−0.49 ± 2.06).
 
+Herkes Tek İhaleli Batak (2026-11-03) — **alan katmanı bitti, arayüz kaldı**:
+
+- Açık artırmalı ihale durum makinesi (`AuctionState`), pas kalıcı, üçüncü
+  pastan sonra ihale kapanır, 13 ihalesi anında bitirir, herkes pas geçerse
+  açan oyuncuya zorunlu 4 (`PassOutRule.openerMustBid`).
+- İhaleyi alan kozu seçer ve **ilk löveyi açar**; koz seçilmeden kart
+  oynanamaz.
+- Tek sözleşmeli puanlama (`AuctionScoringRules`): klasik 10 tabanlı, Gamyun
+  ve el başına profilleri. Yan batma ayarlanabilir. **Yan 3 batar burada
+  yok** ve yokluğu test ediliyor.
+- İhale ve koz seçimi yapay zekâsı (`BidEvaluator`, `HeuristicAuctionPolicy`):
+  dört rengi ayrı ayrı değerlendirir, pası da bir seçenek olarak puanlar,
+  skor durumuna göre risk alır (D-28).
+- 237 test; 1200 dağıtımlık stres testi üç puanlama profilinde de değişmezleri
+  koruyor.
+
+**Arayüz de bağlandı (2026-11-03):**
+
+- `MatchRuntime` seam'i: masa ekranı, denetleyici ve kayıt katmanı artık tek
+  bir arayüzle konuşuyor, oyun seçimi orada yapılıyor (D-29).
+- İhale paneli (yalnız yasal teklifler + Pas), koz seçici, masada sözleşme
+  şeridi (`El 3 / 13  İhale: Siz 6`), ihale sırasında koltuk raylarında kimin
+  ne dediği / kimin pas geçtiği.
+- Otomatik kayıt ve devam: hamle kaydı ihale, pas ve koz çağrılarını da
+  taşıyor (şema 4; eski kayıtlar bozulmadan okunuyor).
+- Ayarlar: dağıtım sayısı (5/7/9/11/13), herkes pas derse (açan / dağıtan /
+  yeniden dağıtım), hiç el alamayan savunma (ihale kadar / 50 / batmaz).
+  Puanlama şekli ayrı kural profili olarak seçiliyor.
+- Menüde oynanamayan üç mod soluk gösteriliyor; `GameMode.isPlayable` artık
+  Koz Maça ve Tek İhaleli'yi açıyor.
+
+**Kalan iş:** §27'deki ayrı "Nasıl Oynanır?" ekranı (kurallar ekranı şimdilik
+aktif profilden türetilen doğru bir özet gösteriyor) ve bu moda özel bir güç
+benchmark'ı (`run_matchup.dart` hâlâ Koz Maça'ya özel; ihale kalibrasyonu
+`tool/checks/auction_probe.dart` ile ölçülüyor).
+
 > `ios/` ve `android/` klasörleri kasıtlı olarak depoda değil, commit edilmez.
 > `.flutter-plugins-dependencies` de üretilen bir dosya; `.gitignore`'da.
 
