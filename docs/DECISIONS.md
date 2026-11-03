@@ -430,3 +430,61 @@ directions are defined in one place and used everywhere.
 Schema 3. A schema 2 file still replays: its log is all cards, and the rule
 profile it carries has no declaration round, so it reproduces exactly the match
 it recorded -- which is the point of storing the profile in full.
+
+## D-22: A declaration stakes ten a trick, and too many extras sink it
+
+The first cut of the declaration round paid a kept word its own number: said
+five, took five, scored five. That is not what the table it was built for
+plays, and the owner said so after the first device round.
+
+Two things changed, and both are settings on `DeclarationRules` rather than
+constants.
+
+**The stake is `declaration * pointsPerDeclaredTrick`, with ten a trick.**
+Saying five puts fifty on the table, won or lost. This is why a Koz Maca score
+sheet reads in tens, and it is also what makes the single extra point an extra
+trick pays worth having rather than noise.
+
+**Extras pay one each, until there are too many.** A trick above the word is a
+"yan" and pays `pointsPerOvertrick`; so five said and seven taken writes 52.
+But `overtrickBustThreshold` extras turn the hand round completely: at the
+default of three, five said and eight taken is -50, the same as never making
+it. Tables disagree about where that line sits and some do not draw it, so it
+is chosen per match on the setup screen and frozen into the profile.
+
+Two consequences worth stating:
+
+- `HandScore.madeDeclaration` now reads the **points**, not the trick count.
+  A seat can clear its number and still be charged, so recomputing "did it
+  make it?" from tricks would have produced a score sheet that contradicted
+  its own arithmetic.
+- `DeclarationRules`'s constructor defaults stay on the old flat reading --
+  one point a trick, extras ignored, no bust -- and `kozMacaStandard` spells
+  out the new values instead. `fromJson` therefore reproduces the old payoff
+  for a profile stored before these fields existed, which is what a match in
+  progress is entitled to.
+
+The owner answered this as B-1 and B-2 in docs/RULE_PROFILES.md. Both are
+recorded there as resolved **for the declaration round only**: Koz Maca has no
+auction, the auction modes are not playable, and `BatakScoringRules` is
+untouched until their own payoff is confirmed.
+
+## D-23: The hand fan is a list of slots, not a list of cards
+
+`HandFan` takes `List<PlayingCard?>` -- one entry per card the hand was dealt,
+null where that card has been played -- and lays itself out from the slot
+count rather than from what is left.
+
+Laying out from what is left is what it used to do, and it meant the fan
+closed up after every trick: thirteen cards became twelve and every card
+moved. Two things went wrong. The card the player was reaching for slid out
+from under their thumb between the tap being decided and the tap landing. And
+the mental map of the hand -- "my spades are over on the right" -- was
+invalidated thirteen times a hand.
+
+The slots are memoised in `_MatchScreenState`, not in the session: where a
+card is drawn is presentation, and the domain has no business holding a
+rendering order. They are rebuilt when the engine deals a new hand, and also
+when the hand is somehow larger than the slots, which is what a match resumed
+mid-hand looks like -- the save restores the cards but not the arrangement
+they were last seen in, so that hand re-fans once and is stable afterwards.

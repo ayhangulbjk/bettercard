@@ -9,21 +9,24 @@ import 'table_layout.dart';
 /// Each card is thrown towards the seat that played it, taking its position
 /// and tilt from [TableGeometry], so the pile says who contributed what
 /// without anything having to be labelled. The cards overlap, the way thrown
-/// cards do, but only on their inner halves: every card keeps the outer half
-/// that carries its corner index.
+/// cards do; a buried card still reads because every card carries its index
+/// in both corners (see [PlayingCardView]).
 ///
 /// Painted in play order, so the card just played lands on top.
 ///
-/// When [winnerSeat] is set the whole pile gathers up and slides to that
-/// seat's edge, which is how the table answers "who took that?" without a
-/// label or a sound. The controller holds the trick on screen for a moment
-/// first (`MatchPacing.trickPause`), so the slide reads as the winner
-/// collecting the cards rather than as the trick vanishing.
+/// A finished trick is shown in two beats, which is the whole point of the
+/// widget taking [winnerSeat] and [gathering] separately. First it sits
+/// still, face up, long enough to see what took it. Then [gathering] turns on
+/// and the pile bundles up, shrinks and travels to the winner's edge. Running
+/// those together -- which is what happened while the winner alone drove the
+/// animation -- meant the cards started leaving the instant the last one
+/// landed, and nobody could tell who had won.
 final class TrickArea extends StatelessWidget {
   const TrickArea({
     required this.trick,
     this.winnerSeat,
-    this.cardWidth = 54,
+    this.gathering = false,
+    this.gatherDuration = const Duration(milliseconds: 620),
     super.key,
   });
 
@@ -32,77 +35,97 @@ final class TrickArea extends StatelessWidget {
   /// The seat collecting this trick, while it is being shown.
   final int? winnerSeat;
 
-  final double cardWidth;
+  /// Whether the pile is travelling to [winnerSeat] right now.
+  final bool gathering;
 
-  /// How far towards the winner the pile travels, in card widths. Short of the
-  /// seat panel itself: the cards are meant to be read on their way, not
-  /// hidden behind a badge.
-  static const double _gatherDistance = 2.1;
+  /// How long the travel takes. Driven by the player's animation-speed
+  /// setting, so "yavas" really is slower.
+  final Duration gatherDuration;
 
-  /// Long enough to follow with the eye, short enough not to hold the hand up.
-  static const Duration _gatherDuration = Duration(milliseconds: 420);
+  /// How far towards the winner the pile travels, in card widths. Far enough
+  /// to land on that seat's rail, so the cards are seen arriving somewhere
+  /// rather than merely drifting.
+  static const double _gatherDistance = 6.0;
+
+  /// Card width as a fraction of the space the middle of the table has.
+  /// Bounded so the pile neither disappears on a small phone nor swamps the
+  /// felt on a large one.
+  static const double _widthFraction = 0.30;
+  static const double _minCardWidth = 58;
+  static const double _maxCardWidth = 92;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final double cardWidth = (constraints.maxWidth * _widthFraction)
+              .clamp(_minCardWidth, _maxCardWidth);
+          return _pile(cardWidth);
+        },
+      );
+
+  Widget _pile(double cardWidth) {
     final double cardHeight = cardWidth * PlayingCardView.aspectRatio;
     final int seats = trick.expectedPlays;
     final int? winner = winnerSeat;
+    final bool travelling = gathering && winner != null;
 
     // Towards the winner's own edge, reusing the seat geometry so the cards
     // travel to where that player is actually sitting.
-    final Offset gather = winner == null
-        ? Offset.zero
-        : Offset(
-            TableGeometry.cardOffset(winner, seats).dx *
-                cardWidth *
-                _gatherDistance,
-            TableGeometry.cardOffset(winner, seats).dy *
-                cardHeight *
-                _gatherDistance,
-          );
+    final Offset direction =
+        winner == null ? Offset.zero : TableGeometry.cardOffset(winner, seats);
+
+    final double boxWidth = cardWidth * 2;
+    final double boxHeight = cardHeight * 1.9;
 
     return SizedBox(
-      width: cardWidth * 2,
-      height: cardHeight * 1.9,
+      width: boxWidth,
+      height: boxHeight,
       child: AnimatedSlide(
-        duration: _gatherDuration,
-        curve: Curves.easeInCubic,
-        offset: Offset(
-          gather.dx / (cardWidth * 2),
-          gather.dy / (cardHeight * 1.9),
-        ),
+        duration: gatherDuration,
+        curve: Curves.easeInOutCubic,
+        offset: travelling
+            ? Offset(
+                direction.dx * cardWidth * _gatherDistance / boxWidth,
+                direction.dy * cardHeight * _gatherDistance / boxHeight,
+              )
+            : Offset.zero,
         child: AnimatedScale(
-          duration: _gatherDuration,
-          curve: Curves.easeInCubic,
+          duration: gatherDuration,
+          curve: Curves.easeInOutCubic,
           // The pile shrinks as it goes, which reads as distance and keeps it
           // from covering the seat it is travelling to.
-          scale: winner == null ? 1 : 0.66,
-          child: Stack(
-            alignment: Alignment.center,
-            children: <Widget>[
-              for (final PlayedCard play in trick.plays)
-                if (play.seat < seats)
-                  AnimatedSlide(
-                    duration: _gatherDuration,
-                    curve: Curves.easeInCubic,
-                    // Each card slides back to the middle as the pile leaves,
-                    // so what travels is one bundle rather than a loose cross.
-                    offset: winner == null
-                        ? Offset(
-                            TableGeometry.cardOffset(play.seat, seats).dx,
-                            TableGeometry.cardOffset(play.seat, seats).dy,
-                          )
-                        : Offset.zero,
-                    child: Transform.rotate(
-                      angle: TableGeometry.cardTilt(play.seat, seats),
-                      child: PlayingCardView(
-                        card: play.card,
-                        width: cardWidth,
-                        isPlayable: false,
+          scale: travelling ? 0.40 : 1,
+          child: AnimatedRotation(
+            duration: gatherDuration,
+            curve: Curves.easeInOutCubic,
+            // A quarter of a turn's worth of twist: enough to read as a
+            // bundle being swept up rather than a picture being moved.
+            turns: travelling ? 0.08 : 0,
+            child: Stack(
+              alignment: Alignment.center,
+              children: <Widget>[
+                for (final PlayedCard play in trick.plays)
+                  if (play.seat < seats)
+                    AnimatedSlide(
+                      duration: gatherDuration,
+                      curve: Curves.easeInOutCubic,
+                      // Each card slides back to the middle as the pile
+                      // leaves, so what travels is one bundle rather than a
+                      // loose cross.
+                      offset: travelling
+                          ? Offset.zero
+                          : TableGeometry.cardOffset(play.seat, seats),
+                      child: Transform.rotate(
+                        angle: TableGeometry.cardTilt(play.seat, seats),
+                        child: PlayingCardView(
+                          card: play.card,
+                          width: cardWidth,
+                          isPlayable: false,
+                        ),
                       ),
                     ),
-                  ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

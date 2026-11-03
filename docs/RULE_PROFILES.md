@@ -17,6 +17,7 @@ setting, and the disagreement is logged below as an open question.
 | `TrickRules` | Following suit, compulsory trump, overtrumping, trump leads |
 | `BiddingRules` | Bid range, pass-out resolution, who names trump |
 | `BatakScoringRules` | Declarer payoff and penalty, others' trick points, match end |
+| `DeclarationRules` | Per-seat trick promises: what they stake, what extras pay, when extras bust |
 | `BuryRules` | Surplus cards, how many are buried, restrictions, who they score for |
 | `KingRules` | Contract set, point values, per-player quotas (match length is derived) |
 | `fixedTrump` | A trump set by the rules rather than chosen |
@@ -71,17 +72,31 @@ Cutting is compulsory: a seat void in the lead suit must play a spade if it
 holds one, and must overcut a spade already in the trick if it can
 (`mustPlayTrumpWhenVoid` and `mustOvertrumpWhenPossible` are both on). This is
 where Turkish Koz Maca parts company with international Spades, where a void
-seat may discard freely. See open question B-3; both flags stay adjustable, so
-a table that plays the permissive reading changes a setting rather than the
-code.
+seat may discard freely. B-3 is settled in favour of the compulsory reading,
+and both flags stay adjustable, so a table that plays the permissive reading
+changes a setting rather than the code.
 
 **Her el söz verilir.** Oyuncular kartlarını gördükten sonra, ilk kart
 atılmadan önce sırayla kaç el alacaklarını söyler. Sıra, ilk eli açacak
-oyuncudan başlar. Sözünü tutan söylediği kadar artı, tutamayan o kadar eksi
-puan alır. Fazla eller varsayılan olarak hiçbir şey kazandırmaz (açık soru
-K-4). "El almaz" diyen hiç el almazsa +50, bir el bile alırsa -50 alır (K-5).
-Bu bir ihale değildir: kimse kimseyi artırmaz, dolayısıyla `BiddingRules`
-değil `DeclarationRules` geçerlidir.
+oyuncudan başlar. Bu bir ihale değildir: kimse kimseyi artırmaz, dolayısıyla
+`BiddingRules` değil `DeclarationRules` geçerlidir.
+
+**Puanlama.** Söz başına 10 puan yazılır; bu yüzden masada "5 dedim" demek 50
+puanı ortaya koymak demektir.
+
+| Durum | Sonuç | Örnek |
+|---|---|---|
+| Sözünü tutar | +söz x 10, artı her yan için 1 puan | 5 dedi, 6 aldı: **51** |
+| Sözünü tutamaz | -söz x 10 | 5 dedi, 3 aldı: **-50** |
+| Çok yan toplar | -söz x 10 | 5 dedi, 8 aldı (3 yan): **-50** |
+| "El almaz" tutar | +50 | hiç el almadı: **+50** |
+| "El almaz" bozulur | -50 | bir el aldı: **-50** |
+
+Sözün üstüne alınan fazla eller **yan**dır ve tanesi 1 puandır: 5 deyip 7 alan
+52 yazar. Kaç yanda batılacağı masadan masaya değişir, bu yüzden oyun kurulum
+ekranında seçilir (`overtrickBustThreshold`): varsayılan **3 yan**, seçenekler
+2, 3, 4 ve "batmaz". Seçim o partinin kural profiline dondurulur, yani ayarı
+sonradan değiştirmek süren bir partiyi etkilemez.
 
 Preset `spades_batak_standard`.
 
@@ -133,9 +148,6 @@ them to players.
 
 | Id | Question | Current default | Setting |
 |---|---|---|---|
-| B-1 | Does a declarer who takes more than its bid score the overtricks? | Yes, tricks taken | `declarerSuccess` |
-| B-2 | Is a failed contract minus the bid, or double? | Minus the bid | `declarerFailure` |
-| B-3 | Is trumping when void compulsory at every table? | Yes, in every mode including Koz Maca | `mustPlayTrumpWhenVoid` |
 | B-4 | In three-player buried Batak, how many cards are buried, and do they score for the declarer? | One buried, credited to the declarer | `BuryRules` |
 | B-5 | Must a seat following suit beat the best card so far? | No | `mustBeatLeadSuitWhenPossible` |
 | B-6 | When everyone passes, is it a redeal or must the dealer bid? | Dealer must bid | `passOutRule` |
@@ -143,9 +155,27 @@ them to players.
 | K-1 | How many contracts does each player declare, and in what mix? | Koz x2 plus three penalties | `quotaPerPlayer` |
 | K-2 | Are Rifki and Son Iki part of a standard match? | Available at quota 0 | `quotaPerPlayer` |
 | K-3 | Exact point values per contract | See the table above | `pointsPerUnit` |
-| K-4 | Are tricks above a kept declaration worth anything (ciz / torba)? | No, extras pay nothing | `overtrickRule` |
 | K-5 | What does "el almaz" pay, and does a broken nil cost per trick? | +50 / -50, flat | `nilBonus` |
 | K-6 | May the four declarations sum to the trick count? | Yes, nothing forbids it | none yet; would need a new flag |
+
+### Resolved
+
+The owner plays at a table that settles these, and the presets now follow it.
+Each remains a setting, so a table that plays otherwise changes a profile
+rather than the code.
+
+| Id | Question | Answer | Setting |
+|---|---|---|---|
+| B-1 | Does a kept word score the tricks above it? | Yes: each extra ("yan") pays 1 on top of `soz x 10`, so 5 said and 7 taken writes 52 | `overtrickRule`, `pointsPerOvertrick` |
+| B-2 | What does a broken word cost? | The same stake it would have paid: `soz x 10`. 5 said and missed is -50 | `pointsPerDeclaredTrick` |
+| B-3 | Is trumping when void compulsory at every table? | Yes, in every mode including Koz Maca | `mustPlayTrumpWhenVoid` |
+| K-4 | Are tricks above a kept word worth anything (ciz / torba)? | Yes, 1 each -- **but** collecting too many sinks the hand. The number of extras that busts is chosen per match; the default is 3 | `overtrickBustThreshold` |
+
+B-1 and B-2 were answered for the **declaration** round, which is the only
+place either currently applies: Koz Maca has no auction, and the auction modes
+are not playable yet. `BatakScoringRules.declarerSuccess` and
+`declarerFailure` are therefore unchanged, and the auction's own payoff is
+still to be confirmed with the owner before those modes are built.
 
 ### How to resolve one
 

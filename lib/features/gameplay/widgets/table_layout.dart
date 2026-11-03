@@ -1,5 +1,24 @@
 import 'package:flutter/material.dart';
 
+/// Which edge of the table a seat sits on.
+///
+/// The seat panel draws itself differently per edge -- the two side seats are
+/// narrow rails with their text turned a quarter turn -- so the edge is part
+/// of the geometry rather than something each caller works out again.
+enum SeatEdge {
+  /// The person at the device.
+  bottom,
+
+  /// Across the felt.
+  top,
+
+  /// The seat to the player's left on screen.
+  left,
+
+  /// The seat to the player's right on screen.
+  right,
+}
+
 /// Where each seat sits at the table, and where its played card lands.
 ///
 /// One authority for the table's shape, so a seat's panel and the card it
@@ -13,12 +32,27 @@ import 'package:flutter/material.dart';
 /// turn appear to travel anticlockwise, which is not how these games are
 /// dealt or played at a Turkish table.
 abstract final class TableGeometry {
+  /// Which edge [seat] sits on.
+  static SeatEdge edgeOf(int seat, int seatCount) {
+    if (seat == 0) {
+      return SeatEdge.bottom;
+    }
+    if (seatCount == 3) {
+      return seat == 1 ? SeatEdge.right : SeatEdge.left;
+    }
+    return switch (seat) {
+      1 => SeatEdge.right,
+      2 => SeatEdge.top,
+      _ => SeatEdge.left,
+    };
+  }
+
   /// Where [seat]'s card lands, in multiples of the card's own width and
   /// height, measured from the middle of the table.
   ///
   /// Tight enough that the four cards overlap into a pile, as thrown cards
-  /// do, and loose enough that each one's outer half -- the half carrying its
-  /// corner index -- stays uncovered.
+  /// do, and loose enough that each one keeps one of its two corner indices
+  /// uncovered.
   static Offset cardOffset(int seat, int seatCount) {
     if (seatCount == 3) {
       return switch (seat) {
@@ -52,13 +86,21 @@ abstract final class TableGeometry {
     };
   }
 
-  /// Width allowed a side seat's panel. Narrow by necessity: the two side
-  /// seats and the trick share a portrait phone's width.
-  static const double sideSeatWidth = 82;
+  /// Width allowed a side seat's rail.
+  ///
+  /// Deliberately thin. The two side seats and the trick share a portrait
+  /// phone's width, and the trick is what the player is actually reading, so
+  /// the side seats turn their text a quarter turn and give the felt the rest.
+  static const double sideSeatWidth = 42;
 
-  /// Width allowed the seat across the table, which has the full width to
-  /// itself but should not stretch into one long bar.
-  static const double farSeatWidth = 132;
+  /// Height a side rail stands, centred on its edge.
+  static const double sideSeatHeight = 164;
+
+  /// Most the seat across the table may take. It has the full width to
+  /// itself but should not stretch into one long bar; within that cap the
+  /// pill shrink-wraps, so a short name does not get a long badge and a long
+  /// one is not ellipsised before it has to be.
+  static const double farSeatWidth = 230;
 }
 
 /// The table itself: a seat on each edge, with the trick between them.
@@ -77,31 +119,42 @@ final class TableLayout extends StatelessWidget {
     required this.seatCount,
     required this.seatBuilder,
     required this.center,
+    this.overlay,
     super.key,
   });
 
   final int seatCount;
 
   /// Builds the panel for one seat. Seat 0 is the player.
-  final Widget Function(int seat) seatBuilder;
+  final Widget Function(int seat, SeatEdge edge) seatBuilder;
 
   /// What goes in the middle, normally the trick.
   final Widget center;
+
+  /// Drawn over the felt in the bottom-right corner, for the trump badge.
+  /// Kept out of the middle column so it cannot push the trick around.
+  final Widget? overlay;
 
   @override
   Widget build(BuildContext context) => Column(
         children: <Widget>[
           _farEdge(),
           Expanded(
-            child: Row(
+            child: Stack(
               children: <Widget>[
-                _sideSeat(3),
-                Expanded(child: Center(child: center)),
-                _sideSeat(1),
+                Row(
+                  children: <Widget>[
+                    _sideSeat(3),
+                    Expanded(child: Center(child: center)),
+                    _sideSeat(1),
+                  ],
+                ),
+                if (overlay != null)
+                  Positioned(right: 0, bottom: 0, child: overlay!),
               ],
             ),
           ),
-          seatBuilder(0),
+          seatBuilder(0, SeatEdge.bottom),
         ],
       );
 
@@ -112,18 +165,32 @@ final class TableLayout extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          SizedBox(width: TableGeometry.farSeatWidth, child: seatBuilder(2)),
-          SizedBox(width: TableGeometry.farSeatWidth, child: seatBuilder(1)),
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: TableGeometry.farSeatWidth,
+            ),
+            child: seatBuilder(2, SeatEdge.left),
+          ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: TableGeometry.farSeatWidth,
+            ),
+            child: seatBuilder(1, SeatEdge.right),
+          ),
         ],
       );
     }
-    return SizedBox(
-      width: TableGeometry.farSeatWidth,
-      child: seatBuilder(2),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: TableGeometry.farSeatWidth,
+        ),
+        child: seatBuilder(2, SeatEdge.top),
+      ),
     );
   }
 
-  /// A left or right seat, vertically centred on its edge. A three-handed
+  /// A left or right rail, vertically centred on its edge. A three-handed
   /// table has none, so the trick gets the whole width.
   Widget _sideSeat(int seat) {
     if (seatCount < 4) {
@@ -131,7 +198,9 @@ final class TableLayout extends StatelessWidget {
     }
     return SizedBox(
       width: TableGeometry.sideSeatWidth,
-      child: Center(child: seatBuilder(seat)),
+      child: Center(
+        child: seatBuilder(seat, TableGeometry.edgeOf(seat, seatCount)),
+      ),
     );
   }
 }

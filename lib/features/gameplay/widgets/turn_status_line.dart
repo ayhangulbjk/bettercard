@@ -25,7 +25,9 @@ final class TurnStatusLine extends StatelessWidget {
 
     final String status;
     if (session.isAwaitingDeclaration) {
-      status = strings.gameplayDeclarePrompt;
+      // The picker over the table asks the question in full. Repeating it
+      // here printed the same sentence twice on one screen.
+      status = '';
     } else if (session.isDeclaring) {
       status = strings.gameplayDeclaring;
     } else {

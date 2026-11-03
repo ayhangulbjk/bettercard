@@ -4,22 +4,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/l10n/app_strings.dart';
 import '../../app/providers.dart';
-import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/cards/card_sorting.dart';
 import '../../core/cards/playing_card.dart';
 import '../../core/persistence/app_settings.dart';
 import '../../core/rules/rule_profile.dart';
-import '../../core/rules/scoring_rules.dart';
 import '../../core/table/seat_names.dart';
 import '../../games/spades_batak/spades_batak_engine.dart';
 import 'match_controller.dart';
+import 'match_labels.dart';
+import 'match_pacing.dart';
 import 'match_session.dart';
 import 'match_turn.dart';
 import 'widgets/declaration_panel.dart';
 import 'widgets/felt_background.dart';
 import 'widgets/hand_fan.dart';
 import 'widgets/hand_summary_sheet.dart';
+import 'widgets/leave_match_dialog.dart';
 import 'widgets/match_over_panel.dart';
 import 'widgets/match_table.dart';
 import 'widgets/score_sheet_panel.dart';
@@ -49,6 +50,16 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
   /// Screen state, not match state: closing the app with it open should not
   /// reopen it, and the controller has no business knowing a sheet is up.
   bool _showScores = false;
+
+  /// The player's hand in fan order, as it was when the hand was dealt.
+  ///
+  /// Kept for the whole hand so the cards that are left keep their places
+  /// instead of closing up after every trick; see [HandFan]. Presentation
+  /// state, which is why it lives here and not in the session.
+  List<PlayingCard?> _slots = const <PlayingCard?>[];
+
+  /// Which hand [_slots] belongs to, so a new deal rebuilds it.
+  int? _slotsHandIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -134,6 +145,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                           session: session,
                           strings: strings,
                           seatNames: seatNames,
+                          gatherDuration: MatchPacing(settings).trickGather,
                           highlightDropZone: candidate.isNotEmpty,
                         ),
                       ),
@@ -141,9 +153,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     TurnStatusLine(session: session, strings: strings),
                     const SizedBox(height: AppSpacing.sm),
                     HandFan(
-                      cards: CardSorting.bySuitStrongestFirst(
-                        session.humanHand,
-                      ),
+                      cards: _handSlots(session),
                       legalCards: _legalCards(session),
                       showHints: settings.showLegalMoveHints,
                       allowDrag: settings.allowDragToPlay,
@@ -189,14 +199,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     session: session,
                     strings: strings,
                     seatNames: seatNames,
-                    caption: _caption(strings, session),
+                    caption: MatchLabels.caption(strings, session),
                     onClose: () => setState(() => _showScores = false),
                   ),
                 if (session.isOver)
                   MatchOverPanel(
                     strings: strings,
-                    headline: _headline(strings, session),
-                    detail: _detail(strings, session, seatNames),
+                    headline: MatchLabels.headline(strings, session),
+                    detail: MatchLabels.detail(strings, session, seatNames),
                     seatNames: seatNames,
                     totals: session.totals,
                     onRematch: () => ref.read(matchProvider.notifier).rematch(),
@@ -232,6 +242,30 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     ref.read(matchProvider.notifier).declare(tricks);
   }
 
+  /// The player's hand as fan slots: dealt order, holes where cards have
+  /// already been played.
+  ///
+  /// Memoised per hand rather than recomputed from what is left, which is the
+  /// whole point: sorting the remaining cards every build is what made the
+  /// fan close up after each trick. The layout is rebuilt when the engine
+  /// deals a new hand, and also when the hand is somehow larger than the
+  /// slots -- which is what a match resumed mid-hand looks like, since the
+  /// save restores cards but not the arrangement they were last seen in.
+  List<PlayingCard?> _handSlots(MatchSession session) {
+    final List<PlayingCard> inHand = session.humanHand;
+    final int handIndex = session.match.handIndex;
+    if (_slotsHandIndex != handIndex || inHand.length > _slots.length) {
+      _slots = CardSorting.bySuitStrongestFirst(inHand);
+      _slotsHandIndex = handIndex;
+      return _slots;
+    }
+    final Set<PlayingCard> remaining = inHand.toSet();
+    return <PlayingCard?>[
+      for (final PlayingCard? card in _slots)
+        if (card != null && remaining.contains(card)) card else null,
+    ];
+  }
+
   /// The cards the player may tap, straight from the engine.
   Set<PlayingCard> _legalCards(MatchSession session) {
     if (!session.isHumanTurn) {
@@ -240,59 +274,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     return _engine.legalCards(session.match, session.humanSeat).toSet();
   }
 
-  /// `Dagitim 3 / 8`, or the hand number plus the target score.
-  String _caption(AppStrings strings, MatchSession session) {
-    final BatakScoringRules rules = session.profile.scoringRules;
-    return switch (rules.endCondition) {
-      MatchEndCondition.fixedRounds =>
-        strings.handProgress(session.displayHandNumber, rules.roundCount),
-      MatchEndCondition.targetScore =>
-        '${strings.handProgress(session.displayHandNumber, null)}'
-            '   ${strings.targetScore(rules.targetScore)}',
-    };
-  }
-
-  String _headline(AppStrings strings, MatchSession session) {
-    if (session.winners.length > 1) {
-      return strings.gameplayDraw;
-    }
-    return session.humanWon ? strings.gameplayYouWon : strings.gameplayYouLost;
-  }
-
-  String _detail(
-    AppStrings strings,
-    MatchSession session,
-    List<String> seatNames,
-  ) {
-    final List<String> names = <String>[
-      for (final int seat in session.winners)
-        seat < seatNames.length ? seatNames[seat] : '',
-    ];
-    return names.length == 1
-        ? strings.winnerLine(names.first)
-        : names.join(', ');
-  }
-
   Future<void> _confirmLeave(AppStrings strings) async {
-    final bool? leave = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        backgroundColor: AppColors.surfaceElevated,
-        title: Text(strings.gameplayLeaveConfirmTitle),
-        content: Text(strings.gameplayLeaveConfirmMessage),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(strings.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(strings.gameplayLeaveConfirmAction),
-          ),
-        ],
-      ),
-    );
-    if (leave ?? false) {
+    if (await showLeaveMatchDialog(context, strings) && mounted) {
       _leave();
     }
   }

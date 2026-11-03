@@ -9,6 +9,7 @@ import '../../app/routes.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/ai/ai_difficulty.dart';
+import '../../core/rules/declaration_rules.dart';
 import '../../core/rules/game_mode.dart';
 import '../../core/rules/rule_profile.dart';
 import '../../core/rules/rule_validation.dart';
@@ -16,6 +17,7 @@ import '../gameplay/match_controller.dart';
 import '../gameplay/widgets/felt_background.dart';
 import '../gameplay/widgets/placeholder_banner.dart';
 import 'widgets/difficulty_selector.dart';
+import 'widgets/overtrick_bust_selector.dart';
 import 'widgets/rule_issue_list.dart';
 import 'widgets/rule_profile_option.dart';
 
@@ -75,6 +77,21 @@ class _GameSetupScreenState extends ConsumerState<GameSetupScreen> {
                   onSelect: () => setState(() => _selected = preset),
                 ),
               ),
+              if (profile.declarationRules.enabled) ...<Widget>[
+                const SizedBox(height: AppSpacing.xl),
+                OvertrickBustSelector(
+                  value: profile.declarationRules.overtrickBustThreshold,
+                  strings: strings,
+                  onChanged: (int? extras) => setState(
+                    () => _selected = profile.copyWith(
+                      declarationRules: profile.declarationRules.copyWith(
+                        overtrickBustThreshold: extras,
+                        clearOvertrickBustThreshold: extras == null,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.xl),
               _ProfileFacts(profile: profile, strings: strings),
               const SizedBox(height: AppSpacing.xl),
@@ -197,6 +214,29 @@ class _ProfileFacts extends StatelessWidget {
               '${profile.biddingRules.minimumBid} - '
                   '${profile.biddingRules.maximumBid}',
             ),
+          if (profile.declarationRules.enabled) ...<Widget>[
+            _row(
+              text,
+              strings.setupDeclarationStake,
+              '${profile.declarationRules.pointsPerDeclaredTrick}',
+            ),
+            _row(
+              text,
+              strings.setupOvertrickValue,
+              profile.declarationRules.overtrickRule == OvertrickRule.scored
+                  ? '${profile.declarationRules.pointsPerOvertrick}'
+                  : '0',
+            ),
+            _row(
+              text,
+              strings.setupOvertrickBustTitle,
+              profile.declarationRules.overtrickBustThreshold == null
+                  ? strings.setupOvertrickBustNever
+                  : strings.overtrickBustOption(
+                      profile.declarationRules.overtrickBustThreshold!,
+                    ),
+            ),
+          ],
           if (profile.buryRules.enabled)
             _row(text, 'Gömülecek kart', '${profile.buryRules.cardsToBury}'),
           if (profile.kingRules != null)

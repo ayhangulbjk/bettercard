@@ -42,6 +42,24 @@ abstract interface class AppStrings {
   String get setupPlayerCount;
   String get setupTricksPerHand;
 
+  /// Heading for the "how many extra tricks sink a made word" choice.
+  String get setupOvertrickBustTitle;
+
+  /// Explains what the choice above decides.
+  String get setupOvertrickBustHint;
+
+  /// The option for a table where extras never sink a hand.
+  String get setupOvertrickBustNever;
+
+  /// `3 yan`: the option that busts on that many extras.
+  String overtrickBustOption(int extras);
+
+  /// Row label: what one declared trick is worth.
+  String get setupDeclarationStake;
+
+  /// Row label: what one extra trick is worth.
+  String get setupOvertrickValue;
+
   // Gameplay.
   String get gameplayTrickLabel;
   String get gameplayYourTurn;

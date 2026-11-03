@@ -20,6 +20,7 @@ import 'widgets/seat_panel.dart';
 import 'widgets/table_layout.dart';
 import 'widgets/trick_area.dart';
 import 'widgets/trick_status_pill.dart';
+import 'widgets/trump_badge.dart';
 
 /// A static preview of the gameplay table.
 ///
@@ -114,8 +115,6 @@ class _TableBody extends StatelessWidget {
       child: Column(
         children: <Widget>[
           TrickStatusPill(
-            trumpTitle: strings.gameplayTrumpLabel,
-            trumpLabel: state.trump?.turkishName ?? strings.gameplayNoTrump,
             progressLabel: strings.trickProgress(
               state.trickNumber + 1,
               profile.tricksPerHand,
@@ -125,9 +124,14 @@ class _TableBody extends StatelessWidget {
           Expanded(
             child: TableLayout(
               seatCount: players,
+              overlay: TrumpBadge(
+                trump: state.trump,
+                label: '${strings.gameplayTrumpLabel}: '
+                    '${state.trump?.turkishName ?? strings.gameplayNoTrump}',
+              ),
               center: TrickArea(trick: state.currentTrick),
-              seatBuilder: (int seat) => SeatPanel(
-                vertical: seat != 0,
+              seatBuilder: (int seat, SeatEdge edge) => SeatPanel(
+                edge: edge,
                 name: seatNames[seat],
                 tricksWon: tricks[seat],
                 isActive: state.turnSeat == seat,

@@ -1,54 +1,33 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_theme.dart';
 import 'felt_background.dart';
 
-/// `El 3 / 13  |  Koz: Maca`.
+/// `El 3 / 13`.
 ///
-/// Sits above the table rather than inside it: with a seat on every edge,
-/// the middle of the felt belongs to the cards and the far edge belongs to
-/// the player sitting there.
+/// Sits above the table rather than inside it: with a seat on every edge, the
+/// middle of the felt belongs to the cards and the far edge belongs to the
+/// player sitting there.
+///
+/// It used to carry the trump as well. The trump moved to [TrumpBadge] on the
+/// felt, where it is next to the cards it governs, and this pill went back to
+/// saying one thing.
 final class TrickStatusPill extends StatelessWidget {
-  const TrickStatusPill({
-    required this.trumpTitle,
-    required this.trumpLabel,
-    required this.progressLabel,
-    super.key,
-  });
-
-  /// Localised word for trump, e.g. `Koz`.
-  final String trumpTitle;
-
-  /// The trump suit's name, or the no-trump label.
-  final String trumpLabel;
+  const TrickStatusPill({required this.progressLabel, super.key});
 
   /// `El 3 / 13`.
   final String progressLabel;
 
   @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-    return AppPanel(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xs,
-      ),
-      borderRadius: AppRadius.pill,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text(progressLabel, style: text.labelSmall),
-          const SizedBox(width: AppSpacing.md),
-          Container(width: 1, height: 14, color: AppColors.goldDim),
-          const SizedBox(width: AppSpacing.md),
-          Text('$trumpTitle: ', style: text.bodySmall),
-          Text(
-            trumpLabel,
-            style: text.titleMedium?.copyWith(color: AppColors.goldBright),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AppPanel(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xxs,
+        ),
+        borderRadius: AppRadius.pill,
+        child: Text(
+          progressLabel,
+          style: Theme.of(context).textTheme.labelSmall,
+        ),
+      );
 }

@@ -28,8 +28,15 @@ enum MatchPhase {
   /// An opponent is deciding.
   opponentThinking,
 
-  /// A trick just completed and is still face up on the table.
+  /// A trick just completed and is lying face up, still, so it can be read.
   trickPause,
+
+  /// The same trick, now travelling to the seat that took it.
+  ///
+  /// A separate phase from [trickPause] because the two beats have different
+  /// lengths and different meanings: one is a hold, the other an animation
+  /// whose duration the player's speed setting controls.
+  trickGather,
 
   /// A hand just finished; its score sheet is up.
   handSummary,
@@ -133,6 +140,7 @@ final class MatchSession {
   Trick? get tableTrick {
     if (lastTrick != null &&
         (phase == MatchPhase.trickPause ||
+            phase == MatchPhase.trickGather ||
             phase == MatchPhase.handSummary ||
             phase == MatchPhase.matchOver)) {
       return lastTrick!.trick;
@@ -141,8 +149,16 @@ final class MatchSession {
   }
 
   /// The seat that took [lastTrick], while it is still being shown.
+  ///
+  /// Set through both beats of a finished trick, so the winner's seat is lit
+  /// while the cards are still lying there and stays lit as they arrive.
   int? get highlightedWinner =>
-      phase == MatchPhase.trickPause ? lastTrick?.winnerSeat : null;
+      phase == MatchPhase.trickPause || phase == MatchPhase.trickGather
+          ? lastTrick?.winnerSeat
+          : null;
+
+  /// Whether the finished trick is travelling to its winner right now.
+  bool get isGatheringTrick => phase == MatchPhase.trickGather;
 
   /// Whether the table is showing a hand that has already been scored.
   ///

@@ -234,7 +234,18 @@ final class MatchController extends Notifier<MatchSession?> {
           _submitDeclaration(seat, declaration);
 
         case MatchPhase.trickPause:
+          // Beat one: the four cards lie still so the player can read them.
           await MatchPacing.wait(_pacing.trickPause);
+          if (generation != _generation || state == null) {
+            return;
+          }
+          state = state!.copyWith(phase: MatchPhase.trickGather);
+
+        case MatchPhase.trickGather:
+          // Beat two: the pile travels to the winner. The wait matches the
+          // animation in TrickArea, which is handed the same duration, so the
+          // next card is never dealt onto cards still in flight.
+          await MatchPacing.wait(_pacing.trickGather);
           if (generation != _generation || state == null) {
             return;
           }

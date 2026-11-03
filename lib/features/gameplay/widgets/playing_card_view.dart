@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
@@ -85,6 +87,14 @@ final class PlayingCardView extends StatelessWidget {
   }
 }
 
+/// The face: a watermark pip in the middle and the index in both corners.
+///
+/// The index is printed twice, upright at the top left and turned around at
+/// the bottom right, exactly as a real card is. On a table that is a
+/// convenience; here it is a requirement, because a card thrown into the
+/// middle is overlapped by the ones thrown after it and only one of its two
+/// corners survives. With a single index, whichever card lands underneath
+/// becomes unreadable.
 class _Face extends StatelessWidget {
   const _Face({required this.card, required this.width});
 
@@ -94,9 +104,7 @@ class _Face extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color ink = card.suit.isRed ? AppColors.cardRed : AppColors.cardBlack;
-    final double rankSize = width * 0.34;
-    final double pipSize = width * 0.26;
-    final double centreSize = width * 0.52;
+    final double centreSize = width * 0.58;
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -110,29 +118,11 @@ class _Face extends StatelessWidget {
         padding: EdgeInsets.all(width * 0.06),
         child: Stack(
           children: <Widget>[
+            // Behind both indices, so neither is ever veiled by it.
             Align(
-              alignment: Alignment.topLeft,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    card.rank.shortLabel,
-                    style: TextStyle(
-                      fontSize: rankSize,
-                      height: 1,
-                      fontWeight: FontWeight.w700,
-                      color: ink,
-                    ),
-                  ),
-                  SuitPip(suit: card.suit, size: pipSize, color: ink),
-                ],
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
+              alignment: Alignment.center,
               child: Opacity(
-                opacity: 0.22,
+                opacity: 0.16,
                 child: SuitPip(
                   suit: card.suit,
                   size: centreSize,
@@ -140,11 +130,49 @@ class _Face extends StatelessWidget {
                 ),
               ),
             ),
+            Align(
+              alignment: Alignment.topLeft,
+              child: _Index(card: card, width: width, ink: ink),
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Transform.rotate(
+                angle: math.pi,
+                child: _Index(card: card, width: width, ink: ink),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+/// Rank over pip: one corner index.
+class _Index extends StatelessWidget {
+  const _Index({required this.card, required this.width, required this.ink});
+
+  final PlayingCard card;
+  final double width;
+  final Color ink;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            card.rank.shortLabel,
+            style: TextStyle(
+              fontSize: width * 0.32,
+              height: 1,
+              fontWeight: FontWeight.w700,
+              color: ink,
+            ),
+          ),
+          SuitPip(suit: card.suit, size: width * 0.24, color: ink),
+        ],
+      );
 }
 
 class _Back extends StatelessWidget {

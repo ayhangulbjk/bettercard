@@ -118,8 +118,29 @@ Cihazda doğrulanacaklar:
 - Koltuk panelinde kart sayısı kaldırıldı; isim altında "alınan / söz" var.
 - Üstteki puan şeridi kaldırıldı. Puan durumu sağ üstteki simgenin arkasında.
 - **Koz Maça'da söz (ihale) turu eklendi.** Her elin başında dört oyuncu da
-  kaç el alacağını söyler; sözünü tutan artı, tutamayan eksi alır, "el almaz"
-  +50/-50. Kurallar `DeclarationRules`'ta, açık sorular K-4..K-6.
+  kaç el alacağını söyler. Kurallar `DeclarationRules`'ta.
+
+Üçüncü cihaz turundan çıkanlar (2026-11-03, hepsi giderildi):
+
+- **Masa düzeni.** Yan koltuklar ince, dik yazılı raylara dönüştü; orta alan
+  belirgin biçimde genişledi. Tepedeki koltuk içeriğine göre daralıyor.
+- **Söz ekranı sadeleşti:** başlık ve yuvarlak sayı düğmeleri, altta tek
+  "El almaz" düğmesi. Açıklama cümlesi kaldırıldı (masanın altında ikinci kez
+  yazılıyordu).
+- **Eldeki kartlar yay şeklinde** diziliyor; uçtaki kartlar hafif yatık ve
+  biraz aşağıda.
+- **Oynanan kartın yeri boş kalıyor.** El, dağıtıldığı andaki yuvalarına
+  sabitlendi; kartlar her elden sonra kayıp birleşmiyor (D-23).
+- **Koz, masanın sağ altında yuvarlak bir rozette.** Üstteki şerit sadece
+  `El 3 / 13` diyor.
+- **Biten el iki aşamalı gösteriliyor:** önce dört kart kıpırdamadan duruyor
+  (1,25 sn; "hızlı oyun"da 0,6 sn), sonra kazananın kenarına doğru küçülerek
+  süzülüyor. Eskiden son kart düşer düşmez toplanmaya başlıyordu.
+- **Ortadaki kartlar büyüdü** ve her kartın sağ alt köşesinde de kendi
+  işareti var, böylece altta kalan kart okunabiliyor.
+- **Koz Maça puanlaması gerçek masaya uyduruldu:** söz başına 10 puan, yan
+  başına 1 puan, varsayılan 3 yanda batma. Kaç yanda batılacağı kurulum
+  ekranından seçiliyor (D-22, B-1/B-2/K-4 kapandı).
 
 > `ios/` ve `android/` klasörleri kasıtlı olarak depoda değil, commit edilmez.
 > `.flutter-plugins-dependencies` de üretilen bir dosya; `.gitignore`'da.
@@ -279,7 +300,7 @@ aralığıyla yeniyor.
 
 | # | Konu | Durum |
 |---|---|---|
-| T-1 | **Koltuk paneli düzeni.** Telefon genişliğinde üç rakip paneline ~80px kalıyor; isim `Bat…` diye kesiliyor. | **Çözüldü** (2026-11-02): `SeatPanel(vertical: true)` — avatar üstte, isim altta. Ayrıca toplamlar ortak skor şeridine taşındı. Ekran görüntüsünde isimler tam sığıyor. |
+| T-1 | **Koltuk paneli düzeni.** Telefon genişliğinde üç rakip paneline ~80px kalıyor; isim `Bat…` diye kesiliyor. | **Çözüldü** (2026-11-03): yan koltuklar 42px genişliğinde, yazısı çeyrek tur döndürülmüş ray; tepedeki koltuk 230px'e kadar içeriğine göre daralıp genişliyor. Orta alan buradan kazanılan yeri alıyor. |
 | T-2 | Türkçe diakritikler | Yapılacak — yukarıdaki "sıradaki adım" |
 | T-3 | `adb` çakışması: `C:\Users\TCAYGUL\platform-tools` ile SDK'nın kopyası | Zararsız uyarı; cihaz algılama sorunu çıkarsa eskisi PATH'ten çıkarılır |
 
@@ -296,6 +317,12 @@ Bunlar **uydurulmadı**; oyunculara sorulması gerekiyor. Tamamı için
   (Şu an 20 elli ve 8 elli iki hazır set var; parti uzunluğu kotalardan
   **türetiliyor**, sabit yazılmadı.)
 - **K-2** — Rıfkı ve Son İki her masada standart mı?
+- **K-5** — "El almaz" bozulunca ceza her el için mi yazılır, yoksa düz -50 mü?
+- **K-6** — Dört sözün toplamı 13 olabilir mi, yoksa yasak mı?
+
+Kapananlar: **B-1**, **B-2** (söz başına 10 puan, yan başına 1 puan),
+**B-3** (koz kesme her masada zorunlu), **K-4** (yan puan kazandırır ama
+seçilen sayıda yan toplanınca el batar). Ayrıntı `DECISIONS.md` D-22'de.
 
 ---
 

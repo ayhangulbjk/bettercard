@@ -40,14 +40,15 @@ final class HandScore {
 
   int? declarationOf(int seat) => declarations[seat];
 
-  /// Whether [seat] kept its word. Null when it declared nothing.
-  bool? madeDeclaration(int seat) {
-    final int? declared = declarations[seat];
-    if (declared == null) {
-      return null;
-    }
-    return declared == 0 ? tricks[seat] == 0 : tricks[seat] >= declared;
-  }
+  /// Whether [seat] came out of the hand ahead. Null in a mode with no
+  /// declaration round.
+  ///
+  /// Read from the points rather than recomputed from the trick count, so it
+  /// cannot disagree with what the seat was actually paid. Reaching the
+  /// declared number is not by itself enough: at a table that busts on extras,
+  /// a seat can clear its word by trick count and still be charged for it.
+  bool? madeDeclaration(int seat) =>
+      declarations[seat] == null ? null : points[seat] > 0;
 
   int get totalPoints => points.fold(0, (int a, int b) => a + b);
 

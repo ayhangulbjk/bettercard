@@ -19,17 +19,31 @@ final class MatchPacing {
   /// How long an opponent appears to think, before scaling.
   static const Duration baseThinkDelay = Duration(milliseconds: 420);
 
-  /// How long a finished trick stays face up, before scaling.
-  static const Duration baseTrickPause = Duration(milliseconds: 780);
+  /// How long a finished trick lies still before it is collected, before
+  /// scaling.
+  ///
+  /// Generous on purpose. This is the only moment in a hand when all four
+  /// cards are visible at once, and it is when the player works out who took
+  /// the trick and with what; the earlier value let the cards start leaving
+  /// almost as soon as the last one landed.
+  static const Duration baseTrickPause = Duration(milliseconds: 1250);
 
-  /// The same pause with quick play on: short enough to keep the pace, long
+  /// The same hold with quick play on: short enough to keep the pace, long
   /// enough that the cards do not vanish unseen.
-  static const Duration quickTrickPause = Duration(milliseconds: 170);
+  static const Duration quickTrickPause = Duration(milliseconds: 600);
+
+  /// How long the pile takes to travel to the seat that won it, before
+  /// scaling.
+  static const Duration baseTrickGather = Duration(milliseconds: 620);
 
   Duration get thinkDelay => _scaled(baseThinkDelay);
 
   Duration get trickPause =>
       _scaled(settings.quickPlay ? quickTrickPause : baseTrickPause);
+
+  /// The collecting animation. Quick play does not shorten it: it is the part
+  /// that answers "who took that?", and a sped-up answer is no answer.
+  Duration get trickGather => _scaled(baseTrickGather);
 
   Duration _scaled(Duration base) => Duration(
         microseconds:

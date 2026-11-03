@@ -122,6 +122,14 @@ const List<_Shot> _shots = <_Shot>[
     route: AppRoutes.match,
     drive: _driveToPlayerTurn,
   ),
+  // A finished trick, lying still with all four cards face up. This is the
+  // beat that answers "who took it, and with what", so it is worth a capture
+  // of its own.
+  _Shot(
+    '10c-match-trick-won',
+    route: AppRoutes.match,
+    drive: _driveToTrickWon,
+  ),
   // The scoreboard, which now lives behind the app bar's button.
   _Shot(
     '10b-match-scoreboard',
@@ -185,6 +193,39 @@ Future<void> _driveToPlayerTurn(
     (MatchSession session) =>
         session.phase == MatchPhase.awaitingHuman &&
         !(session.hand?.currentTrick.isEmpty ?? true),
+  );
+}
+
+/// Runs the table on until it is waiting on a person rather than on a clock.
+///
+/// Called after the image has been written, not before: a capture is allowed
+/// to stop on a timed phase -- a finished trick being shown is exactly such a
+/// phase, and is worth photographing -- but the test framework fails a test
+/// that ends with a timer still pending.
+Future<void> _settleTimers(
+  WidgetTester tester,
+  ProviderContainer container,
+) =>
+    _advance(
+      tester,
+      container,
+      (MatchSession session) =>
+          session.phase == MatchPhase.awaitingHuman ||
+          session.phase == MatchPhase.awaitingDeclaration ||
+          session.phase == MatchPhase.handSummary ||
+          session.phase == MatchPhase.matchOver,
+    );
+
+/// A completed trick, still lying face up before it is collected.
+Future<void> _driveToTrickWon(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) => session.phase == MatchPhase.trickPause,
   );
 }
 
@@ -263,6 +304,7 @@ Future<void> _advance(
       case MatchPhase.opponentDeclaring:
       case MatchPhase.opponentThinking:
       case MatchPhase.trickPause:
+      case MatchPhase.trickGather:
       case MatchPhase.matchOver:
         // The table is on a timer: an opponent thinking or a finished trick
         // being shown. One long pump elapses it, where pumpAndSettle would
@@ -368,6 +410,16 @@ Future<void> _capture(WidgetTester tester, _Shot shot) async {
   final File file = File('${out.path}/${shot.name}.png');
   file.writeAsBytesSync(bytes!);
   stdout.writeln('wrote ${file.absolute.path} (${bytes!.length} bytes)');
+
+  if (shot.drive != null) {
+    await _settleTimers(
+      tester,
+      ProviderScope.containerOf(
+        tester.element(find.byType(BatakKingApp)),
+        listen: false,
+      ),
+    );
+  }
 }
 
 /// Pushes a named route without awaiting its completion.

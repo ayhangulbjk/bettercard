@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 
+import 'declaration_rules.dart';
 import 'game_mode.dart';
 import 'king_rules.dart';
 import 'rule_profile.dart';
@@ -54,6 +55,7 @@ abstract final class RuleProfileValidator {
       ..._validateBury(profile),
       ..._validateKing(profile),
       ..._validateScoring(profile),
+      ..._validateDeclarations(profile),
     ];
     issues.sort((RuleIssue a, RuleIssue b) =>
         (a.isError ? 0 : 1).compareTo(b.isError ? 0 : 1));
@@ -288,6 +290,40 @@ abstract final class RuleProfileValidator {
         severity: RuleIssueSeverity.error,
         code: 'scoring.non_positive_target',
         turkishMessage: 'Hedef puan pozitif olmalıdır.',
+      ));
+    }
+    return issues;
+  }
+
+  static List<RuleIssue> _validateDeclarations(RuleProfile profile) {
+    final DeclarationRules rules = profile.declarationRules;
+    if (!rules.enabled) {
+      return const <RuleIssue>[];
+    }
+    final List<RuleIssue> issues = <RuleIssue>[];
+    if (rules.pointsPerDeclaredTrick <= 0) {
+      issues.add(const RuleIssue(
+        severity: RuleIssueSeverity.error,
+        code: 'declaration.non_positive_stake',
+        turkishMessage: 'Söz başına puan pozitif olmalıdır.',
+      ));
+    }
+    final int? bust = rules.overtrickBustThreshold;
+    if (bust != null && bust < 1) {
+      // Zero would mean a hand that exactly makes its word is already down,
+      // which is not a custom any table plays; it is a mis-set value.
+      issues.add(const RuleIssue(
+        severity: RuleIssueSeverity.error,
+        code: 'declaration.bust_below_one',
+        turkishMessage: 'Batıran yan sayısı en az 1 olmalıdır.',
+      ));
+    }
+    if (bust != null && bust > profile.tricksPerHand) {
+      issues.add(RuleIssue(
+        severity: RuleIssueSeverity.warning,
+        code: 'declaration.bust_unreachable',
+        turkishMessage: 'Batıran yan sayısı ($bust) bir dağıtımdaki el '
+            'sayısından (${profile.tricksPerHand}) büyük; hiç batılmaz.',
       ));
     }
     return issues;
