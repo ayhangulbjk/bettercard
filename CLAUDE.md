@@ -77,6 +77,8 @@ flutter test                                       # all tests
 flutter test test/unit                              # domain tests only
 flutter test test/simulation                        # simulation tests
 dart run tool/benchmarks/run_baseline.dart --hands 2000
+dart run tool/checks/partnership_probe.dart --hands 3000   # esli behaviour
+dart run tool/checks/partnership_roundtrip.dart 60         # esli save/resume
 flutter run                                        # run on a device
 ```
 

@@ -3,13 +3,14 @@ import 'package:meta/meta.dart';
 import '../../core/ai/ai_difficulty.dart';
 import '../../core/cards/playing_card.dart';
 import '../../core/cards/suit.dart';
+import '../../core/game_engine/auction/auction_state.dart';
 import '../../core/game_engine/trick/trick.dart';
 import '../../core/game_engine/trick/trick_play_state.dart';
 import '../../core/rules/rule_profile.dart';
 import '../../core/rules/rule_violation.dart';
-import '../../games/auction_batak/auction_state.dart';
 import '../../games/spades_batak/spades_batak_scorer.dart';
 import 'match_runtime.dart';
+import 'match_turn.dart';
 
 /// What the table is doing right now.
 ///
@@ -120,6 +121,61 @@ final class MatchSession {
   TrickPlayState? get hand => match.hand;
 
   bool get isHumanTurn => phase == MatchPhase.awaitingHuman;
+
+  /// The seat the next card is played **from**, or null when no card is due.
+  ///
+  /// Not the same as who chooses it: in acik esli Batak the declarer chooses
+  /// for its partner's open hand, and the card still comes from the partner.
+  int? get seatToPlay => isPlayingCards ? match.seatToAct : null;
+
+  /// The seat that chooses for [seat].
+  int deciderFor(int seat) => MatchTurn.deciderFor(match, humanSeat, seat);
+
+  /// Whether the player is choosing from their own hand right now.
+  bool get isPlayingOwnHand => isHumanTurn && seatToPlay == humanSeat;
+
+  /// Whether the player is choosing from the open hand opposite right now.
+  bool get isPlayingDummyHand =>
+      isHumanTurn && dummySeat != null && seatToPlay == dummySeat;
+
+  /// The declarer's partner, whose hand is the open one. Null outside a
+  /// partnership contract.
+  int? get dummySeat => match.dummySeat;
+
+  /// Whether the open hand's cards are face up.
+  bool get isDummyRevealed => match.isDummyRevealed;
+
+  /// The open hand's cards, empty until they are face up.
+  List<PlayingCard> get dummyHand => match.dummyHand;
+
+  /// Whether it is the player's own hand that is lying face up.
+  ///
+  /// The deal that needs explaining: a bot won the contract, the player is
+  /// its partner, and the bot is playing the player's cards. The table says
+  /// so rather than leaving a hand that will not respond to a tap.
+  bool get humanIsDummy => isDummyRevealed && dummySeat == humanSeat;
+
+  /// Whether the player holds the contract and therefore plays both hands.
+  bool get humanIsDeclarer => match.declarerSeat == humanSeat;
+
+  /// Whether this mode scores two sides rather than four seats.
+  bool get hasTeams => profile.partnershipRules.enabled;
+
+  /// Cumulative points per side; equal to [totals] where every seat is its
+  /// own side.
+  List<int> get teamTotals => match.teamTotals;
+
+  /// The side [seat] plays for.
+  int teamOf(int seat) => match.seating.teamOf(seat);
+
+  /// The player's own side.
+  int get humanTeam => teamOf(humanSeat);
+
+  /// The side holding the contract, or null before the auction settles.
+  int? get declarerTeam {
+    final int? declarer = declarerSeat;
+    return declarer == null ? null : teamOf(declarer);
+  }
 
   /// Whether the table is waiting for the player's declaration.
   bool get isAwaitingDeclaration => phase == MatchPhase.awaitingDeclaration;
@@ -253,12 +309,6 @@ final class MatchSession {
   int get displayHandNumber =>
       isShowingFinishedHand ? match.handsPlayed : handNumber;
 
-  /// One-based trick number to display, frozen at the last trick of a hand
-  /// that has been scored.
-  int get displayTrickNumber => isShowingFinishedHand
-      ? profile.tricksPerHand
-      : (hand?.trickNumber ?? 0) + 1;
-
   /// Tricks taken in the hand on screen, indexed by seat.
   List<int> get tricksThisHand => isShowingFinishedHand
       ? lastHandScore!.tricks
@@ -278,6 +328,30 @@ final class MatchSession {
   List<int> get winners => match.leadingSeats;
 
   /// Tricks the player has taken across every scored hand of the match.
+  /// Tricks the player's side has taken in the hand on screen.
+  int get humanTeamTricks {
+    int total = 0;
+    final List<int> tricks = tricksThisHand;
+    for (int seat = 0; seat < tricks.length; seat++) {
+      if (teamOf(seat) == humanTeam) {
+        total += tricks[seat];
+      }
+    }
+    return total;
+  }
+
+  /// Tricks the other side has taken in the hand on screen.
+  int get opponentTeamTricks {
+    int total = 0;
+    final List<int> tricks = tricksThisHand;
+    for (int seat = 0; seat < tricks.length; seat++) {
+      if (teamOf(seat) != humanTeam) {
+        total += tricks[seat];
+      }
+    }
+    return total;
+  }
+
   int get humanTricksTotal {
     int total = 0;
     for (final HandScore score in match.history) {
@@ -287,6 +361,11 @@ final class MatchSession {
   }
 
   bool get humanWon => winners.contains(humanSeat);
+
+  /// Tricks left to play in the hand on screen.
+  int get tricksLeftThisHand =>
+      profile.tricksPerHand -
+      (isShowingFinishedHand ? profile.tricksPerHand : hand?.trickNumber ?? 0);
 
   MatchSession copyWith({
     MatchRuntime? match,

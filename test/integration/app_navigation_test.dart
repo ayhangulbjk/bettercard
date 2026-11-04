@@ -124,10 +124,11 @@ void main() {
     await pumpPortraitApp(tester);
 
     // A mode that is not playable yet, so the button offers a preview rather
-    // than a table.
+    // than a table. Esli Ihaleli used to stand here and now has a real
+    // table, so the example moved to one that still does not.
     await revealAndTap(
       tester,
-      find.text(GameMode.partnershipBatak.turkishShortName),
+      find.text(GameMode.king.turkishShortName),
     );
     await revealAndTap(
       tester,

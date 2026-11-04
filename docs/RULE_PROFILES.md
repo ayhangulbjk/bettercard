@@ -68,10 +68,59 @@ seats score one per trick, 8 hands.
 
 ### 2. Esli Ihaleli Batak (`partnership_batak`)
 
-As above, but seats 0+2 play against 1+3 (partners sit opposite). Card play is
-identical; the contract and the score belong to the partnership.
+Seats 0+2 play against 1+3; partners sit opposite. Four things differ from
+Herkes Tek Ihaleli, and every one of them would be a bug if carried across.
 
-Preset `partnership_batak_standard`.
+**The contract belongs to a side.** One seat wins the auction and names the
+trump, but the tricks that count are the partnership's: its two hands add up.
+Bids run 8 to 13, higher than the solo floor of 5, because two hands are
+playing for them. A passed-out hand forces 7 on the seat that opened the
+auction.
+
+**Trump may be led from the first trick.** In the solo mode the declarer waits
+for trump to be broken. Here it does not: drawing the opponents' trumps while
+an open hand sits opposite is most of the plan. `TrickRules.partnershipBatak`
+is `batakStandard` with the restriction lifted; see B-8.
+
+**The defending side's floor is a team floor.** Two tricks *between* the
+partners, not two each, and missing it costs the contract's value. The solo
+mode's "yan batma" charges each defender separately and has no equivalent
+here.
+
+**Extras never sink a hand.** A declaring side that makes its contract scores
+every trick it took. Koz Maca's "yan 3 batar" does not exist in this mode.
+
+Two all-thirteen results sit above the ordinary payoff and are resolved before
+it, never in addition to it:
+
+| Result | Condition | Pays | Ends the match |
+|---|---|---|---|
+| KING | the whole hand bid **and** the whole hand taken | +13 / -13 | yes, by default |
+| 13 yukari / 13 asagi | every trick to one side without having bid them all, from either side | +13 / -13 | no, by default |
+
+Presets: `partnership_batak_open` (the default, acik esli) and
+`partnership_batak_closed` (kapali esli). They differ in exactly one field --
+`PartnershipRules.mode` -- and in nothing else.
+
+#### The open hand
+
+In acik esli, the declarer's partner lays its thirteen cards face up **after
+the trump is named**, and the declarer plays them. Three things are kept
+apart in the engine and must stay apart:
+
+| Concept | Who | Where it lives |
+|---|---|---|
+| whose turn it is, and whose trick it becomes | the card's owner | `TrickPlayState.turnSeat` |
+| who chooses the card | the declarer, for the open hand | `controllerOf` |
+| whose hands the chooser may read | itself plus anything face up | `visibleHandsFor` |
+
+Cards never move between hands. A trick the open hand wins is credited to the
+open hand and led next from its seat.
+
+The ordering is a fairness rule rather than a presentation detail: the
+declarer names the trump without seeing what is opposite it, and
+`isDummyRevealed` is derived from `trump != null` so the two facts cannot get
+out of step. `checkInvariants` asserts it directly.
 
 ### 3. Koz Maca (`spades_batak`)
 
@@ -170,6 +219,9 @@ them to players.
 | B-4 | In three-player buried Batak, how many cards are buried, and do they score for the declarer? | One buried, credited to the declarer | `BuryRules` |
 | B-6 | When everyone passes, is it a redeal or must the dealer bid? | Dealer must bid | `passOutRule` |
 | B-7 | Does the maximum bid score as an all-or-nothing hand? | No | `maximumBidIsShootTheMoon` |
+| B-8 | In Esli Batak, may trump be led before it is broken? | Yes, freely | `trumpLeadRule` |
+| B-9 | Is Esli Batak played with the partner's hand open or closed? | Open (acik esli) | `PartnershipRules.mode` |
+| B-10 | Should the forced contract be 7 when the voluntary floor is 8? | Yes, 7 -- but see below | `forcedBid` |
 | K-1 | How many contracts does each player declare, and in what mix? | Koz x2 plus three penalties | `quotaPerPlayer` |
 | K-2 | Are Rifki and Son Iki part of a standard match? | Available at quota 0 | `quotaPerPlayer` |
 | K-3 | Exact point values per contract | See the table above | `pointsPerUnit` |
@@ -195,6 +247,22 @@ place either currently applies: Koz Maca has no auction, and the auction modes
 are not playable yet. `BatakScoringRules.declarerSuccess` and
 `declarerFailure` are therefore unchanged, and the auction's own payoff is
 still to be confirmed with the owner before those modes are built.
+
+### A measurement that B-10 should be read against
+
+With the shipped defaults -- a floor of 8 and a forced 7 -- the bots pass out
+**61% of hands** over 6,000 deals (`tool/checks/partnership_probe.dart`,
+3,000 per mode). That is not timidity in the bidder. A contract nobody chose
+is genuinely easier than the smallest one anybody may choose, so declining the
+auction is the better play, and the bidder is reading the payoff correctly.
+
+The rule set produces it, so the rule set is where it is recorded rather than
+being tuned away in the AI. `RuleProfileValidator` raises
+`partnership.forced_far_below_minimum` as a **warning** on any profile where
+the forced contract is more than one below the floor, with the consequence
+spelled out, and the setup screen shows it. A table that would rather see
+fewer forced hands raises `forcedBid` to 8, or switches the pass-out rule, and
+both are one tap away.
 
 ### How to resolve one
 

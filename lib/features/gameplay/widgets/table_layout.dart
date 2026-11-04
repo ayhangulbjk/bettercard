@@ -120,6 +120,7 @@ final class TableLayout extends StatelessWidget {
     required this.seatBuilder,
     required this.center,
     this.overlay,
+    this.farEdge,
     super.key,
   });
 
@@ -134,6 +135,16 @@ final class TableLayout extends StatelessWidget {
   /// Drawn over the felt in the bottom-right corner, for the trump badge.
   /// Kept out of the middle column so it cannot push the trick around.
   final Widget? overlay;
+
+  /// Replaces the far edge, for acik esli Batak's open hand.
+  ///
+  /// The open hand belongs to the seat across the felt, so it is drawn there
+  /// instead of that seat's panel rather than somewhere else on the screen:
+  /// a player has to be able to tell which hand a card came out of, and two
+  /// fans side by side at the bottom would make that impossible. The middle
+  /// shrinks to fit, which is the point of laying this out in rows rather
+  /// than stacking it -- the trick can get smaller but can never be covered.
+  final Widget? farEdge;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -158,8 +169,13 @@ final class TableLayout extends StatelessWidget {
         ],
       );
 
-  /// The seat (or, at a three-handed table, the two seats) across the felt.
+  /// The seat (or, at a three-handed table, the two seats) across the felt,
+  /// or whatever has been given to stand in its place.
   Widget _farEdge() {
+    final Widget? replacement = farEdge;
+    if (replacement != null) {
+      return replacement;
+    }
     if (seatCount == 3) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

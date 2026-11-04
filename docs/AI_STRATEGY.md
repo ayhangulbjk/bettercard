@@ -127,6 +127,62 @@ results compare across machines, while the shipping app pins wall-clock so a
 slow device stays responsive. A policy that exceeds its budget must return its
 best answer so far.
 
+## Partnership play
+
+Esli Ihaleli Batak is scored on the **side's** result, which is not the same
+objective as a seat's own trick count and is sometimes its opposite. A policy
+written for the solo modes put in an esli seat is not a weaker opponent but a
+differently motivated one: it would take tricks off its own partner. So the
+mode has its own policies, and the search rolls out with them.
+
+| Decision | Class |
+|---|---|
+| what to bid, what to name as trump | `PartnershipAuctionPolicy` |
+| how a hand is worth bidding for a side | `PartnershipBidEvaluator` |
+| what the side still has to do | `TeamPlan` |
+| which card | `PartnershipPolicy` |
+| the search over all of it | `MonteCarloPolicy` with a partnership rollout |
+
+`PartnershipPolicy` asks a team question in every branch:
+
+* it does not overtake its own partner, and when a compulsory raise forces it
+  to, it pays with the cheapest card that does;
+* it counts the **contract**, not the tricks: a defending side that has not
+  cleared its floor plays for the floor first, because missing it is charged
+  at the contract's value;
+* it knows when a trick is worthless -- a declaring side whose contract is
+  already broken is paid the same whatever else happens -- and stops spending
+  winners, except to break a sweep forming against it, which costs real
+  points;
+* with both hands visible it plans them together: trumps counted across the
+  pair, a winner cashed from whichever hand holds it, a suit led that the
+  partner is out of so the partner's trump takes the trick, and the lead
+  steered to the hand that should open the next one.
+
+Every reason is carried out of the decision as a `PartnershipReason` rather
+than reconstructed afterwards, so an explanation shown to a player would be
+the actual reason the card was chosen. A made-up explanation teaches
+something false, which is worse than no explanation.
+
+### The open hand is not a cheat
+
+In acik esli the declarer's partner's thirteen cards are face up to
+**everybody**, defenders included. They reach a policy through the same single
+funnel every other fact does -- `SeatObservation.fromState` -- gated by a set
+the match state computes. Two gates, deliberately distinct:
+
+* `visibleHands`: what whoever is *deciding* may read. For a declarer playing
+  the open hand that is its own cards plus its partner's.
+* `publicOpenHands`: what the *table* can see. The open hand, and nothing
+  else.
+
+A search rolls its sampled worlds out with the second, never the first.
+Handing the declarer's own hand to an opponent's rollout would be the search
+cheating on its own behalf, and it is the mistake this distinction exists to
+prevent. `CardTracker` and `HiddenHandSampler` honour the same boundary: an
+open hand is placed exactly as it is rather than sampled, and its cards are
+not counted as unseen.
+
 ## Planned module responsibilities
 
 | Module | Responsibility |

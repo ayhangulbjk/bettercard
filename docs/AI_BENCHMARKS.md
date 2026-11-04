@@ -76,6 +76,57 @@ Measured, not targeted, on the runs above.
 The p50 for a sampling policy is far below its p95 because most positions
 have one legal card and never reach the search at all.
 
+### Esli Ihaleli Batak -- behaviour, not strength
+
+**No strength claim is made for the esli bots.** Nothing below is a paired
+comparison against another agent, so none of it says the team policy is better
+than anything; a measured margin over a baseline is still to be run, and until
+it is, the rules in this document say the claim may not be made.
+
+What has been measured is that the mode *behaves*: 6,000 full hands through
+the real engine, 3,000 per profile, every state checked by
+`checkInvariants` on the way past.
+
+    dart run tool/checks/partnership_probe.dart --hands 3000
+    dart run tool/checks/partnership_probe.dart --hands 3000 --mode closed
+
+| Figure | Acik esli | Kapali esli |
+|---|---:|---:|
+| hands | 3000 | 3000 |
+| passed out (forced 7) | 61.1% | 61.1% |
+| contract made | 68.1% | 67.8% |
+| declaring side's tricks | 7.63 of 13 | 7.64 of 13 |
+| declaring side's points | +3.52 /hand | +3.52 /hand |
+| defence missed its floor | 1.5% | 1.2% |
+| all-thirteen hands | 0.4% | 0.2% |
+| a seat raised its own partner | 0 | 0 |
+
+Read three things off it:
+
+1. **No invariant broke in 6,000 hands.** A duplicated or lost card, a
+   mis-seated turn, an illegal move or a score that did not account for
+   thirteen tricks all throw rather than printing a wrong number, so a clean
+   run is the assertion.
+2. **The bots never raised their own partner**, which is the behaviour
+   `partnerRaiseMargin` exists for -- and the engine still permits it, so this
+   is judgement rather than prohibition.
+3. **The 61% pass-out rate is the rule set, not the bidder.** With a floor of
+   8 and a forced 7, declining the auction is the better play. Recorded as
+   open question B-10 in `RULE_PROFILES.md`, with a validator warning on any
+   profile that produces it.
+
+The two profiles agree to within noise on everything but the sweep rate, which
+is what should be expected: they share an auction, a card-legality authority
+and a payoff, and differ only in what the declarer can see.
+
+### What is still to be measured
+
+| Claim | How it would be settled |
+|---|---|
+| the team policy beats the solo policy in an esli seat | paired deals, seats rotated, both sides staffed from the same roster |
+| the search level beats the heuristic level here | the same, `mc` against `partnership` |
+| the open-hand declarer plays better than a closed one | not comparable -- different games; compare contract-made rates only as a sanity check |
+
 ### Tuned constants, and what tuned them
 
 Three numbers in `HeuristicPolicy` were measured rather than chosen. Each is
@@ -87,6 +138,17 @@ guess with a decimal point.
 | `capacityBias` | 0.6 | Swept 0.0-3.2 in self-play. The hand valuation undercounts what a hand takes when it is chased; the peak is flat between 0.3 and 0.9 and falls away sharply above 1.2. |
 | `declarationSpread` | 1.3 | Swept 0.7-1.45. Nearly flat: with a three-wide payoff window the best word barely moves with the spread. Kept at the measured error width rather than tuned to the benchmark. |
 | `duckEffectiveness` | 0.0 | Swept 0.0-0.9 and left off. Modelling the leak pushed the word down, which measurement says is the wrong direction; `capacityBias` already carries the correction and two parameters fighting each other is worse than one. |
+
+The esli bidder's constants were set the same way, from
+`tool/checks/partnership_probe.dart`, and each is documented at its
+declaration in `PartnershipBidEvaluator`. Two of them were set by *fixing a
+defect the probe exposed* rather than by sweeping a range:
+
+| Constant | Value | How it was set |
+|---|---|---|
+| `declarerAdvantage` | 1.2 | The probe reported the declaring side taking 7.6 of 13 while the plain team appraisal centred on 6.3. Added where a contract is valued, and nowhere else. |
+| `defenceSensitivity` | 0.5 | Replaced a constant share of the hand, which credited the same cards with 7.5 tricks declaring and 3.5 defending. Symmetric by construction: the two sides' tricks now sum to the deal in every case the model produces. |
+| `partnerRaiseMargin` | 2.0 | Set to the point where raising one's own partner stopped happening at all across 3,000 hands, which is the behaviour the rule is for. |
 
 **`capacityBias` must be calibrated in self-play, not against a weak
 opponent.** Tuned against `random` it landed at 1.8, which looked right until

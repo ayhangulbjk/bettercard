@@ -1,14 +1,15 @@
 # Yol Haritası ve Görev Listesi
 
-Son güncelleme: **2026-11-02**
+Son güncelleme: **2026-11-04**
 
 ---
 
 ## Şu an neredeyiz
 
-**Koz Maça oynanabilir.** Dağıt, oyna, puanla, sonraki dağıtım, parti sonu —
-hepsi gerçek motor üzerinden, karttan anlayan rakiplerle. Diğer dört mod hâlâ
-ihale/gömme/sözleşme yaşam döngüsünden yoksun ve üründe öyle etiketli.
+**Üç mod oynanabilir:** Koz Maça, Herkes Tek İhaleli Batak ve **Eşli İhaleli
+Batak** (açık eş ve kapalı eş). Dağıt, ihale et, kozu seç, açık eli aç, oyna,
+takım puanını yaz, sonraki dağıtım, parti sonu — hepsi gerçek motor üzerinden.
+Üçlü Gömmeli ve King hâlâ yaşam döngüsünden yoksun ve üründe öyle etiketli.
 
 Sezgisel oyuncunun gücü ölçüldü: rastgele temel çizgiye karşı
 **+1,27 ± 0,03 el/dağıtım** (1500 dağıtım, dört koltuğa döndürülmüş,
@@ -17,9 +18,9 @@ eşleştirilmiş). Başlangıç seviyesi +0,84 ± 0,03. Kontrol koşusu
 
 | Ölçüm | Değer |
 |---|---|
-| `lib/` | 76 Dart dosyası, 9.827 satır |
-| `test/` | 16 dosya, 2.390 satır, **166 test** |
-| `tool/` | 2 benchmark CLI + kayıt doğrulama + ekran görüntüsü aracı |
+| `lib/` | 129 Dart dosyası, 22.781 satır |
+| `test/` | 23 dosya, 4.377 satır, **241 test** |
+| `tool/` | 2 benchmark CLI + 2 kayıt doğrulama + 2 sonda + ekran görüntüsü aracı |
 | Araç zinciri | Flutter 3.47.9 · Dart 3.13.7 · Android SDK 36 · NDK 28.2 · JDK 21 |
 | Paket adı | `com.batakking.batak_king` |
 | `flutter analyze` | 0 sorun |
@@ -34,21 +35,22 @@ oynanabilir, kaydediliyor, istatistikler birikiyor.
 sorun gelirse **o önceliklidir** — iki makinede aynı dosyaya paralel
 dokunmamak için, Mac'teki oturum kod değiştirecekse önce burada konuşulur.
 
-**Sıradaki geliştirme:** 3. kilometre taşı, ihale yaşam döngüsü. Ortak bir
-ihale motoru (artırma/pas/koz ilanı) yazılıp önce `auction_batak`, sonra
-`partnership_batak` üzerine kurulacak. Koz Maça'nın dikey dilimi şablon:
-`SpadesBatakEngine` + `MatchController` + `MatchTurn` + `MatchPersistence`
-aynı şekilde tekrarlanır, yalnızca ihale fazı eklenir.
+**Sıradaki geliştirme:** Eşli Batak'ın *ölçümü*. Mod oynanıyor ve 6.000 elde
+hiçbir değişmez bozulmuyor, ama **hiçbir güç iddiası yok**: takım politikasının
+tek kişilik politikadan güçlü olduğu eşleştirilmiş tohumlarla ve koltuk
+rotasyonuyla henüz ölçülmedi. `docs/AI_BENCHMARKS.md` içindeki "What is still
+to be measured" tablosu sıradaki işi veriyor.
 
-**İhale gelince dikkat edilecek iki şey:**
+**Eşli Batak'ta dikkat edilecek üç şey:**
 
-1. `HeuristicPolicy` **yalnızca el sayısını** büyütmeye çalışır. İhaleli
-   modlarda savunmacı, ihaleyi batırmaya oynar; bu farklı bir değerlendirme
-   fonksiyonudur ve politikanın belgelerinde de öyle yazıyor. Koz Maça
-   politikasını ihaleli moda bağlamak "kanıtsız güç iddiası" olur.
-2. `SavedMatch` hamle günlüğü tutuyor (D-19). İhale de bir komut olduğu için
-   günlüğe **ihale komutları da** girmeli, yoksa yarım kalmış bir ihale geri
-   yüklenemez.
+1. **Sırası gelen koltuk ile kararı veren koltuk farklıdır.** Açık elde kart
+   eşin elinden çıkar, kararı ihaleci verir. `seatToPlay` ile `deciderFor`
+   karıştırılırsa kart yanlış koltuktan oynanır. D-30.
+2. **Açık el koz seçildikten sonra açılır, önce değil.** `isDummyRevealed`
+   türetilmiştir, bayrak değildir; bayrağa çevirmeyin. D-31.
+3. **Üç ayrı puanlama var** ve bir profil en fazla birini açabilir
+   (`partnership.double_payoff`). Bir aramanın sorduğu tek yer
+   `MatchContext.handPointsFor`. D-32.
 
 ---
 
@@ -318,14 +320,20 @@ aralığıyla yeniyor.
 
 ---
 
-## 3. kilometre taşı — ihaleli modlar
+## 3. kilometre taşı — ihaleli modlar ✅ (2026-11-04)
 
-- [ ] İhale yaşam döngüsü: artırma, pas, herkes pas geçerse çözüm, koz ilanı
-- [ ] `lib/games/auction_batak/` ve `lib/games/partnership_batak/`
-- [ ] `BidEvaluator` ve `ContractSelector`
-- [ ] Eşli Batak için `PartnershipStrategy`
-- [ ] İhale arayüzü: artırma merdiveni, koz seçici, sözleşme göstergesi
-- [ ] Benchmark: zorluk başına sözleşme tutturma oranı
+- [x] İhale yaşam döngüsü: artırma, pas, herkes pas geçerse çözüm, koz ilanı
+- [x] `lib/games/auction_batak/` ve `lib/games/partnership_batak/`
+- [x] Ortak ihale durumu `lib/core/game_engine/auction/` içine taşındı (D-33)
+- [x] `BidEvaluator` ve `PartnershipBidEvaluator`
+- [x] Eşli Batak için `PartnershipPolicy` + `TeamPlan` + `PartnershipAuctionPolicy`
+- [x] Açık el: sahiplik / kontrol / görünürlük ayrımı (D-30, D-31)
+- [x] Takım puanlaması: KING ve 13 yukarı / 13 aşağı dahil (D-32)
+- [x] İhale arayüzü: artırma merdiveni, koz seçici, takım skor çubuğu, açık el
+- [x] Kayıt ve devam etme: `tool/checks/partnership_roundtrip.dart`
+- [x] "Nasıl oynanır?" rehberi (Kurallar ekranı, 22 başlık)
+- [ ] Benchmark: zorluk başına sözleşme tutturma oranı — **ölçülmedi**,
+      davranış ölçüldü (`AI_BENCHMARKS.md`), güç iddiası yok
 
 ---
 
@@ -378,6 +386,15 @@ aralığıyla yeniyor.
 | T-3 | `adb` çakışması: `C:\Users\TCAYGUL\platform-tools` ile SDK'nın kopyası | Zararsız uyarı; cihaz algılama sorunu çıkarsa eskisi PATH'ten çıkarılır |
 
 ---
+
+## Eşli Batak'tan kalan işler
+
+- [ ] Takım politikasının tek kişilik politikaya karşı eşleştirilmiş ölçümü
+- [ ] Zorluk seviyeleri arası eşli benchmark (`mc` vs `partnership`)
+- [ ] Botun kart kararını oyuncuya açıklaması — `PartnershipReason` alan
+      modelinde hesaplanıyor, arayüze bağlanmadı
+- [ ] Açık elin fanındaki son kartın kenardan birkaç piksel taşması
+- [ ] İzleyici modu için animasyon hızı kısayolu (insan açık el olduğunda)
 
 ## Açık kural soruları
 

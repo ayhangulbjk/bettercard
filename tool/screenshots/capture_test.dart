@@ -185,6 +185,38 @@ const List<_Shot> _shots = <_Shot>[
     drive: _driveToMatchOver,
     thenRoute: AppRoutes.statistics,
   ),
+  // Esli Ihaleli, whose whole point is on screen and nowhere else: a hand
+  // laid face up at the seat opposite, the two team totals, and a player
+  // choosing cards out of somebody else's hand.
+  _Shot(
+    '19-partnership-setup',
+    route: AppRoutes.gameSetup,
+    arguments: GameMode.partnershipBatak,
+  ),
+  _Shot(
+    '20-partnership-bidding',
+    route: AppRoutes.match,
+    drive: _driveToPartnershipBidding,
+  ),
+  _Shot(
+    '21-partnership-open-hand',
+    route: AppRoutes.match,
+    drive: _driveToPartnershipPlay,
+  ),
+  // The same table at a larger system font. The far edge now carries an open
+  // hand as well as a seat, so this is where it would collide with the trick
+  // if it were going to.
+  _Shot(
+    '21b-partnership-large-text',
+    route: AppRoutes.match,
+    drive: _driveToPartnershipPlay,
+    textScale: 1.4,
+  ),
+  _Shot(
+    '22-partnership-hand-summary',
+    route: AppRoutes.match,
+    drive: _driveToPartnershipHandSummary,
+  ),
   _Shot(
     '14-home-resume',
     route: AppRoutes.match,
@@ -249,6 +281,52 @@ Future<void> _driveToAuctionPlay(
     (MatchSession session) =>
         session.phase == MatchPhase.awaitingHuman &&
         !(session.hand?.currentTrick.isEmpty ?? true),
+  );
+}
+
+/// The esli auction, waiting on the player.
+Future<void> _driveToPartnershipBidding(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container, mode: GameMode.partnershipBatak);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) => session.phase == MatchPhase.awaitingBid,
+  );
+}
+
+/// A partnership hand being played with the open hand face up.
+///
+/// Stops at the first moment the open hand is visible and the player is the
+/// one choosing -- whichever hand that is. Both cases are worth seeing and
+/// the seed decides which one this deal produces; what the capture is for is
+/// that the far edge holds thirteen readable cards without taking the trick's
+/// space, which is true either way.
+Future<void> _driveToPartnershipPlay(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container, mode: GameMode.partnershipBatak);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) =>
+        session.isDummyRevealed && session.phase == MatchPhase.awaitingHuman,
+  );
+}
+
+/// A finished partnership hand, with the team score sheet up.
+Future<void> _driveToPartnershipHandSummary(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await _startMatch(tester, container, mode: GameMode.partnershipBatak);
+  await _advance(
+    tester,
+    container,
+    (MatchSession session) => session.phase == MatchPhase.handSummary,
   );
 }
 
@@ -358,8 +436,11 @@ Future<void> _advance(
     }
     switch (session.phase) {
       case MatchPhase.awaitingHuman:
+        // The hand on turn, not the player's own: an esli declarer chooses
+        // for its partner's open hand, and taking the player's seat here
+        // would offer a card that is not in the hand being played from.
         final List<PlayingCard> legal =
-            session.match.legalCards(session.humanSeat);
+            session.match.legalCards(session.seatToPlay ?? session.humanSeat);
         container.read(matchProvider.notifier).playCard(legal.first);
         await tester.pumpAndSettle();
       case MatchPhase.awaitingDeclaration:

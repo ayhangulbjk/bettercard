@@ -1,5 +1,7 @@
 import '../../core/rules/auction_scoring_rules.dart';
 import '../../core/rules/bidding_rules.dart';
+import '../../core/rules/partnership_rules.dart';
+import '../../core/rules/rule_profile.dart';
 import '../../core/rules/rule_violation.dart';
 import 'app_strings.dart';
 
@@ -160,6 +162,98 @@ final class TurkishStrings implements AppStrings {
 
   @override
   String get gameplayWaitingForTrump => 'Koz seçiliyor';
+
+  @override
+  String get teamOursLabel => 'SİZ';
+
+  @override
+  String get teamTheirsLabel => 'RAKİP';
+
+  @override
+  String teamContractLine(String name, int tricks, bool ours) =>
+      'İhale: $name $tricks (${ours ? 'bizde' : 'rakipte'})';
+
+  @override
+  String teamTrickSplit(int ours, int theirs) => 'Biz $ours - Onlar $theirs';
+
+  @override
+  String teamTricksLeft(int tricks) => 'Kalan $tricks';
+
+  @override
+  String dummyPartnerCaption(String name) => 'Eşiniz $name - açık el';
+
+  @override
+  String dummyPartnerTurnCaption(String name) =>
+      'Eşiniz $name - sıra onda, kartı siz seçin';
+
+  @override
+  String dummyYoursCaption(String name) => 'Kartlarınız açık - $name oynuyor';
+
+  @override
+  String get gameplayYouAreDummy =>
+      'İhaleyi eşiniz aldı; açık el sizsiniz, kartlarınızı o oynuyor.';
+
+  @override
+  String get gameplayPlayingDummy => 'Eşinizin açık elinden kart seçin';
+
+  @override
+  String get handResultKing => 'KING! 13 ihale, 13 el';
+
+  @override
+  String get handResultSweep => '13 yukarı / 13 aşağı';
+
+  @override
+  String get setupPartnershipModeTitle => 'Eşli tür';
+
+  @override
+  String partnershipModeOption(PartnershipMode mode) => switch (mode) {
+        PartnershipMode.openDummy => 'Açık eş',
+        PartnershipMode.closedPartnership => 'Kapalı eş',
+      };
+
+  @override
+  String get setupPartnershipModeHint =>
+      'Açık eşte koz seçildikten sonra ihalecinin eşinin 13 kartı masaya '
+      'açılır ve o kartları ihaleci oynar. Kapalı eşte herkes kendi kartını '
+      'oynar, hiçbir el açılmaz.';
+
+  @override
+  String get setupDummyControlTitle => 'Açık el sizde kalsın';
+
+  @override
+  String get setupDummyControlHint =>
+      'Klasik kuralda açık eli ihaleci oynar; ihaleyi bot alırsa sizin '
+      'kartlarınızı da o oynar. Bu seçenek açıkken kendi açık elinizi siz '
+      'oynarsınız. Özelleştirilmiş moddur.';
+
+  @override
+  String get setupTargetScore => 'Bitiş puanı';
+
+  @override
+  String targetScoreOption(int points) => '$points puan';
+
+  @override
+  String get setupDefenderFloorTitle => 'Savunmanın en az lövesi';
+
+  @override
+  String defenderFloorOption(int tricks) => '$tricks el';
+
+  @override
+  String get setupDefenderFloorHint =>
+      'Savunma takımı bu sayıya ulaşamazsa ihale kadar eksi yazar. Sayı '
+      'takımın toplamıdır; iki oyuncunun ayrı ayrı alması gerekmez.';
+
+  @override
+  String get setupSpecialResultsTitle => 'Özel sonuçlar';
+
+  @override
+  String get setupKingLabel => 'KING (13 ihale + 13 el)';
+
+  @override
+  String get setupKingEndsMatchLabel => 'KING partiyi bitirir';
+
+  @override
+  String get setupSweepLabel => '13 yukarı / 13 aşağı';
 
   @override
   String get gameplayTrickLabel => 'El';
@@ -409,9 +503,6 @@ final class TurkishStrings implements AppStrings {
   String get seatSelf => 'Siz';
 
   @override
-  String trickProgress(int current, int total) => 'El $current / $total';
-
-  @override
   String contractSummary(int tricks) => '$tricks el ihale';
 
   @override
@@ -427,6 +518,165 @@ final class TurkishStrings implements AppStrings {
 
   @override
   String winnerLine(String name) => '$name kazandı';
+
+  @override
+  String get rulesHowToPlayTitle => 'Nasıl oynanır?';
+
+  @override
+  List<RuleGuideEntry> partnershipGuide(RuleProfile profile) {
+    final int tricks = profile.tricksPerHand;
+    final int minimum = profile.biddingRules.minimumBid;
+    final int maximum = profile.biddingRules.maximumBid;
+    final int forced = profile.biddingRules.effectiveForcedBid;
+    final int floor = profile.partnershipScoringRules.defenderMinimumTricks;
+    final int target = profile.scoringRules.targetScore;
+    final bool open = profile.partnershipRules.revealsDummy;
+    return <RuleGuideEntry>[
+      const RuleGuideEntry(
+        'Eşli İhaleli Batak nedir?',
+        'Dört oyuncu iki takım olur. Bir oyuncu ihaleyi alır, kozu seçer ve '
+            'takımı o ihaleyi tutmaya çalışır. Puan oyuncuya değil takıma '
+            'yazılır.',
+      ),
+      const RuleGuideEntry(
+        'Takımlar nasıl oluşur?',
+        'Eşler karşı karşıya oturur. Siz ve karşınızdaki oyuncu bir takımsınız; '
+            'sağınızdaki ve solunuzdaki oyuncu diğer takımdır. Takımlar parti '
+            'boyunca değişmez.',
+      ),
+      RuleGuideEntry(
+        'Kartlar nasıl dağıtılır?',
+        '52 kartlık deste kullanılır, joker yoktur. Herkese $tricks kart '
+            'dağıtılır, artan kart kalmaz. Bir dağıtım tam $tricks lövedir. '
+            'Dağıtıcılık her dağıtımda değişir.',
+      ),
+      const RuleGuideEntry(
+        'İhale nasıl yapılır?',
+        'İhale dağıtıcının sağındaki oyuncudan başlar. Sıra size geldiğinde '
+            'ya mevcut teklifin üstüne çıkarsınız ya da pas dersiniz. Bir kez '
+            'pas diyen o dağıtımın ihalesine geri dönemez. Tek aktif teklif '
+            'sahibi kalınca ihale kapanır.',
+      ),
+      RuleGuideEntry(
+        'Minimum ihale neden $minimum?',
+        'Çünkü ihaleyi bir takım tutar, bir kişi değil. İki el birlikte '
+            'oynadığı için masa $tricks lövenin $minimum tanesinden aşağısını '
+            'dinlemez. En yüksek ihale $maximum olabilir.',
+      ),
+      RuleGuideEntry(
+        'Herkes pas derse ne olur?',
+        'İhaleyi açan oyuncu $forced el zorunlu ihale alır. Bu sayı '
+            'gönüllü en düşük ihaleden ($minimum) küçüktür: kimse istemediği '
+            'bir eli, seçilebilecek en küçüğü kadar ağır saymak doğru olmaz. '
+            'Bu kuralı oyun kurulumundan değiştirebilirsiniz.',
+      ),
+      const RuleGuideEntry(
+        'Kozu kim seçer?',
+        'İhaleyi kazanan oyuncu. Dört renkten birini seçer ve koz dağıtım '
+            'boyunca değişmez.',
+      ),
+      RuleGuideEntry(
+        'Açık eşli oyun nedir?',
+        open
+            ? 'Koz seçildikten sonra ihalecinin eşinin $tricks kartı masaya '
+                'açılır. Bu kartları herkes görür, ama onları ihaleci oynar. '
+                'İhaleci böylece iki eli tek bir plan içinde yönetir.'
+            : 'Bu kural setinde kapalı eşli oynanıyor: hiçbir el açılmaz. '
+                'Açık eşliyi oyun kurulumundan seçebilirsiniz.',
+      ),
+      const RuleGuideEntry(
+        'İhalecinin eşinin kartları ne zaman açılır?',
+        'Yalnızca koz kesinleştikten sonra. Dağıtım, ihale ve koz seçimi '
+            'boyunca kapalı kalır; yoksa ihaleci kozu eşinin kartlarını '
+            'bilerek seçmiş olurdu.',
+      ),
+      const RuleGuideEntry(
+        'Açık el kartlarını kim oynar?',
+        'İhaleci. Kart gerçek sahibinin elinden çıkar ve löveyi o koltuk '
+            'kazanır; ihaleci yalnızca hangi kartın oynanacağına karar verir. '
+            'İhaleyi bot alıp siz onun eşi olursanız kendi kartlarınızı bot '
+            'oynar. İsterseniz kurulumdan "Açık el sizde kalsın" seçeneğini '
+            'açarak kendi açık elinizi kendiniz oynayabilirsiniz.',
+      ),
+      const RuleGuideEntry(
+        'Renk takip etme nedir?',
+        'Löve hangi renkle açıldıysa elinizde o renkten kart varsa onu '
+            'oynamak zorundasınız.',
+      ),
+      const RuleGuideEntry(
+        'Yükseltme zorunluluğu nedir?',
+        'Açılan renkten yerdeki en büyük kartı geçebiliyorsanız geçmek '
+            'zorundasınız. En büyük kartınızı atmanız gerekmez, geçmeye yeten '
+            'herhangi biri olur. Löve daha önce kozla kesilmişse bu zorunluluk '
+            'kalkar.',
+      ),
+      const RuleGuideEntry(
+        'Koz kesme nedir?',
+        'Elinizde açılan renkten kart yoksa ve kozunuz varsa koz oynamak '
+            'zorundasınız. Yerde koz varsa ve geçebiliyorsanız onu da geçmek '
+            'zorundasınız.',
+      ),
+      const RuleGuideEntry(
+        'Kozla açma nasıl yapılır?',
+        'Eşli Batak\'ta serbesttir: koz kırılmasını beklemeden ilk löveyi '
+            'kozla açabilirsiniz. Bu, Herkes Tek İhaleli Batak\'tan önemli '
+            'bir farktır.',
+      ),
+      const RuleGuideEntry(
+        'Löveyi kim kazanır?',
+        'Lövede koz varsa en büyük koz, yoksa açılan rengin en büyüğü. '
+            'Kazanan sonraki löveyi açar. Açık el kazanırsa sonraki löveyi de '
+            'onun koltuğu açar; kartı yine ihaleci seçer.',
+      ),
+      const RuleGuideEntry(
+        'Takım puanları nasıl hesaplanır?',
+        'İhaleci takım söylediği kadar veya daha fazla löve alırsa aldığı '
+            'löve kadar artı yazar. Savunma takımı da aldığı löve kadar artı '
+            'yazar. İki oyuncunun löveleri birlikte sayılır; ayrı ayrı bir '
+            'hedefi yoktur.',
+      ),
+      const RuleGuideEntry(
+        'İhaleci takım ne zaman batar?',
+        'Söylediğinden az löve aldığında. O zaman ihale kadar eksi yazar; '
+            'bir el mi eksik on el mi eksik fark etmez. Fazla löve almak '
+            'batırmaz.',
+      ),
+      RuleGuideEntry(
+        'Savunma takımı neden en az $floor löve almalı?',
+        'Almazsa ihale kadar eksi yazar. Böylece savunmadaki iki oyuncunun da '
+            'eli boş kalmasın diye uğraşması gerekir. Bu sayı takımın '
+            'toplamıdır: iki oyuncunun ayrı ayrı $floor löve alması gerekmez.',
+      ),
+      RuleGuideEntry(
+        'KING nedir?',
+        'İhaleci takım $maximum ihale verip $tricks lövenin tamamını alırsa '
+            'KING olur: $tricks artı, karşı takıma $tricks eksi. Varsayılan '
+            'ayarda parti o anda biter.',
+      ),
+      RuleGuideEntry(
+        '13 yukarı / 13 aşağı nedir?',
+        'Bir takım $maximum ihale vermeden $tricks lövenin tamamını alırsa '
+            'yine $tricks artı yazar, diğer takım $tricks eksi. Savunma '
+            'takımının bütün löveleri alması da buna dahildir. Bu hesap normal '
+            'puanlamadan önce yapılır ve normal puanlama ikinci kez '
+            'uygulanmaz.',
+      ),
+      RuleGuideEntry(
+        'Parti nasıl kazanılır?',
+        '$target puana ulaşan takım kazanır. Aynı dağıtımda iki takım da '
+            'hedefe ulaşırsa yüksek puanlı takım kazanır; puanlar eşitse bir '
+            'dağıtım daha oynanır. KING varsayılan olarak partiyi anında '
+            'bitirir.',
+      ),
+      const RuleGuideEntry(
+        'Açık ve kapalı eşli farkı nedir?',
+        'Açık eşlide ihalecinin eşinin kartları masaya açılır ve iki eli '
+            'ihaleci oynar. Kapalı eşlide hiçbir el açılmaz, herkes kendi '
+            'kartını oynar ve eşler yalnızca ihaleden ve oynanan kartlardan '
+            'çıkarım yaparak işbirliği kurar.',
+      ),
+    ];
+  }
 
   @override
   String moveRejected(RuleViolationCode code) => switch (code) {

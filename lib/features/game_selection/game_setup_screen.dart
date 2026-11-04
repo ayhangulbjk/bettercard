@@ -18,6 +18,7 @@ import '../gameplay/widgets/placeholder_banner.dart';
 import 'widgets/auction_options.dart';
 import 'widgets/difficulty_selector.dart';
 import 'widgets/overtrick_bust_selector.dart';
+import 'widgets/partnership_options.dart';
 import 'widgets/rule_issue_list.dart';
 import 'widgets/rule_profile_option.dart';
 
@@ -89,6 +90,15 @@ class _GameSetupScreenState extends ConsumerState<GameSetupScreen> {
                     if (profile.auctionScoringRules.enabled) ...<Widget>[
                       const SizedBox(height: AppSpacing.lg),
                       AuctionOptions(
+                        profile: profile,
+                        strings: strings,
+                        onChanged: (RuleProfile next) =>
+                            setState(() => _selected = next),
+                      ),
+                    ],
+                    if (profile.partnershipScoringRules.enabled) ...<Widget>[
+                      const SizedBox(height: AppSpacing.lg),
+                      PartnershipOptions(
                         profile: profile,
                         strings: strings,
                         onChanged: (RuleProfile next) =>

@@ -144,6 +144,22 @@ kısmında aynıdır.** Bu yüzden kart oyunu bir kez yazıldı:
 | `TrickPlayState` | Kart oyunu fazının değişmez anlık görüntüsü |
 | `TrickPlayEngine` | `PlayCardCommand`'ı doğrular ve uygular |
 
+### Sırası gelen koltuk ile kararı veren koltuk
+
+Açık Eşli Batak'ta bu ikisi farklı olabilir: kart eşin elinden çıkar, kararı
+ihaleci verir. Motor bunları **ayrı** tutar ve birleştirmez:
+
+| Kavram | Kim | Nerede |
+|---|---|---|
+| Sırası gelen, löveyi kazanacak koltuk | kartın sahibi | `TrickPlayState.turnSeat` |
+| Kartı seçen koltuk | açık el için ihaleci | `controllerOf` |
+| Seçenin okumaya hakkı olan eller | kendisi + açık olanlar | `visibleHandsFor` |
+
+Kartlar eller arasında **taşınmaz**. `PlayCardCommand` kartın sahibinin
+koltuğunu taşır, kurallılık o elin kartlarına göre denetlenir; bu yüzden
+`TrickPlayEngine` bu mod için hiç değişmedi. Ayrıntı için `docs/DECISIONS.md`
+D-30.
+
 `TrickLegalMoves` kararını `TrickRules`'tan okur — bölgesel farklılık tam
 olarak burada yaşar:
 

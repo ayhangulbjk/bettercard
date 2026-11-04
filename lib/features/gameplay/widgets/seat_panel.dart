@@ -9,8 +9,10 @@ import 'table_layout.dart';
 /// move.
 ///
 /// Compact by necessity. In portrait there is no room for a full avatar per
-/// seat, so the seat reads as a small badge and the eye stays on the trick in
-/// the middle of the table.
+/// seat, so a seat is its name and its trick count and nothing else, and the
+/// eye stays on the trick in the middle of the table. An initial in a circle
+/// used to sit in front of the name; it was removed because it repeated the
+/// first letter of the word next to it.
 ///
 /// Under the name goes one number: tricks taken. The remaining card count used
 /// to sit beside it and was dropped -- it is the same for everyone until
@@ -33,6 +35,7 @@ final class SeatPanel extends StatelessWidget {
     this.declaration,
     this.awaitingDeclaration = false,
     this.contract,
+    this.isPartner = false,
     super.key,
   });
 
@@ -55,6 +58,14 @@ final class SeatPanel extends StatelessWidget {
 
   /// Contract summary, when the mode has one.
   final String? contract;
+
+  /// Whether this seat is the player's partner.
+  ///
+  /// A partnership table has to be readable at a glance -- which of the three
+  /// other chairs is on my side -- and in portrait there is no room for a
+  /// label saying so. A tint on the name is enough, and it costs nothing the
+  /// solo modes would notice, since nobody is a partner there.
+  final bool isPartner;
 
   bool get _isRail => edge == SeatEdge.left || edge == SeatEdge.right;
 
@@ -87,11 +98,7 @@ final class SeatPanel extends StatelessWidget {
                 Flexible(
                   child: Text(
                     name,
-                    style: text.bodyMedium?.copyWith(
-                      color: isActive
-                          ? AppColors.goldBright
-                          : AppColors.textPrimary,
-                    ),
+                    style: text.bodyMedium?.copyWith(color: _nameColour),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -121,15 +128,10 @@ final class SeatPanel extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _badge(text),
-            const SizedBox(width: AppSpacing.sm),
             Flexible(
               child: Text(
                 name,
-                style: text.titleMedium?.copyWith(
-                  color:
-                      isActive ? AppColors.goldBright : AppColors.textPrimary,
-                ),
+                style: text.titleMedium?.copyWith(color: _nameColour),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -145,23 +147,14 @@ final class SeatPanel extends StatelessWidget {
         ),
       );
 
-  Widget _badge(TextTheme text) => Container(
-        width: 24,
-        height: 24,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isActive ? AppColors.goldDim : AppColors.surfaceSunken,
-          border: Border.all(
-            color: isActive ? AppColors.goldBright : AppColors.textMuted,
-            width: 0.8,
-          ),
-        ),
-        child: Text(
-          name.isEmpty ? '-' : name.substring(0, 1).toUpperCase(),
-          style: text.labelSmall?.copyWith(color: AppColors.textPrimary),
-        ),
-      );
+  /// The seat's name colour: lit while it is to move, tinted for a partner,
+  /// plain otherwise.
+  Color get _nameColour {
+    if (isActive) {
+      return AppColors.goldBright;
+    }
+    return isPartner ? AppColors.legalMoveGlow : AppColors.textPrimary;
+  }
 
   /// The line beside the name: tricks taken, against the promise when there
   /// is one.

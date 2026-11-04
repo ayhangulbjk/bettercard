@@ -1,6 +1,7 @@
 import '../../core/cards/deck.dart';
 import '../../core/cards/playing_card.dart';
 import '../../core/cards/suit.dart';
+import '../../core/game_engine/auction/auction_state.dart';
 import '../../core/game_engine/game_command.dart';
 import '../../core/game_engine/game_engine.dart';
 import '../../core/game_engine/seating.dart';
@@ -11,7 +12,6 @@ import '../../core/rules/rule_violation.dart';
 import '../spades_batak/spades_batak_scorer.dart' show HandScore;
 import 'auction_batak_match_state.dart';
 import 'auction_batak_scorer.dart';
-import 'auction_state.dart';
 
 /// Herkes Tek Ihaleli Batak, end to end: deal, auction, name trump, play
 /// thirteen tricks, score, deal again.

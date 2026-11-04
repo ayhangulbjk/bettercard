@@ -674,3 +674,136 @@ The unplayable modes are now dimmed in the menu as well as badged. A row that
 looked identical to the playable ones invited the tap the badge was there to
 discourage; they stay tappable, because the setup screen behind them still
 shows the rules and a table preview.
+
+---
+
+## D-30: The open hand is three concepts, not one seat
+
+**Context.** Acik Esli Batak lays the declarer's partner's thirteen cards face
+up and the declarer plays them. The obvious implementation -- move those cards
+into the declarer's hand -- is wrong in a way that only shows up late: a trick
+the open hand wins must be credited to the open hand, and the next trick must
+be led from the open hand's seat. Merge the hands and both of those become
+impossible to express.
+
+**Decision.** Three things stay separate everywhere:
+
+| Concept | Answer | Where |
+|---|---|---|
+| whose turn, whose trick | the card's owner | `TrickPlayState.turnSeat` |
+| who chooses the card | the declarer, for the open hand | `controllerOf` |
+| whose hands the chooser may read | itself plus anything face up | `visibleHandsFor` |
+
+The engine's validation is untouched by any of it. `PlayCardCommand` carries
+the **owner's** seat, legality is checked against the owner's hand, and a
+declarer that tries to play one of its own cards on its partner's turn gets
+`cardNotInHand` -- not a special case, just the existing rule.
+
+**Consequences.** `TrickPlayEngine` needed no change at all. The controller
+asks `deciderFor(seat)` instead of comparing against `humanSeat`, and the one
+exception that cannot live in the rules layer --
+`humanDummyControlOverride`, which depends on which seat the person is
+sitting in -- lives in `MatchTurn.deciderFor`, the one place that knows both.
+
+**Rejected.** A `dummyHand` field on the declarer's state. It would have
+duplicated the cards, and two copies of a hand is one copy too many.
+
+---
+
+## D-31: The open hand is revealed by the trump, not by a flag
+
+**Context.** The rule that matters most in this mode is that the declarer
+chooses the trump **before** seeing what is opposite it. A `bool
+dummyRevealed` set at the right moment satisfies it today and silently stops
+satisfying it the first time a code path sets it early.
+
+**Decision.** `isDummyRevealed` is derived: `revealsDummy && trump != null &&
+hand != null`. There is no flag to set, so there is no flag to set wrongly.
+`dummyHand` returns an empty list while it is false, so a caller cannot read
+the cards early even by mistake, and `checkInvariants` throws if cards are
+readable with no trump named.
+
+**Consequences.** No `revealingDummy` command and no phase for it in the
+engine. The UI transition -- the trump picker closing, the open hand
+appearing -- is the beat, and it needs no state of its own.
+
+---
+
+## D-32: Three payoffs, three scorers, one validator rule
+
+**Context.** The app now pays hands three different ways: four independent
+promises (Koz Maca), one contract against three defenders (Herkes Tek
+Ihaleli), and one contract between two sides (Esli Ihaleli). The temptation is
+a single scorer with flags.
+
+**Decision.** Three records (`DeclarationRules`, `AuctionScoringRules`,
+`PartnershipScoringRules`) and three scorers, with a validator rule that a
+profile may enable **at most one** (`partnership.double_payoff`). A policy
+never has to decide which to believe.
+
+The seam where they meet is `MatchContext.handPointsFor`, which takes the
+whole hand's trick counts rather than one seat's -- because a team payoff is a
+function of the side's tricks and a single-seat count cannot express it. Every
+search asks that one method, so the Monte Carlo policy and the endgame solver
+became team-aware without either of them learning what a team is.
+
+**Consequences.** `PartnershipScoringRules` has two entry points over one
+implementation: `score`, which requires a finished hand, and `project`, which
+does not. A projection that treated three tricks out of thirteen as a sweep
+would have been the obvious bug; requiring the sum only in `score` makes it
+unrepresentable.
+
+---
+
+## D-33: The auction state machine moved to the shared engine layer
+
+**Context.** `AuctionState` was written for Herkes Tek Ihaleli and lived in
+`lib/games/auction_batak/`. Esli Ihaleli bids the same way -- a seat raises or
+it is out -- and importing it across game folders would have said the
+partnership mode is a variation on the solo one, which it is not.
+
+**Decision.** It moved to `lib/core/game_engine/auction/`. It owns the open
+auction and nothing about what winning one *means*; that belongs to each
+mode's scorer.
+
+**Consequences.** Partnerships deliberately change nothing inside it. An esli
+table lets a seat raise its own partner, so validity stays a question of the
+standing bid and who has passed -- never of which side a seat is on. Whether
+raising your own partner is a *good* idea is a judgement, and judgements
+belong to the bidding AI (`partnerRaiseMargin`), not to the rules.
+
+---
+
+## D-34: A team bidder subtracts the overlap, and measures the rest
+
+**Context.** The natural way to bid for two hands is to estimate your own
+tricks, estimate your partner's, and add them. It is wrong, and wrong in a
+compounding direction: a trick can only be won once, there are only thirteen,
+and every seat at the table makes the same error, so every hand gets bid a
+level too high and every contract goes down.
+
+**Decision.** `PartnershipBidEvaluator` builds the estimate in three named
+pieces: this hand's own capacity (reusing `BidEvaluator.appraise`), an unknown
+partner's contribution estimated from what is *outstanding* -- a third of the
+honours and a third of the trumps this seat cannot see -- and an overlap
+correction that damps the second by how much of the deal the first already
+claims.
+
+Two further things are modelled rather than assumed:
+
+* **The declarer advantage is added where a contract is valued and nowhere
+  else.** A side that picks the trump and leads takes more than the same cards
+  defending. Folding it into the appraisal would have inflated the defence
+  estimate by the same amount, which is backwards.
+* **Defence is derived from the contract, not from a share of the hand.** The
+  first version scaled a side's capacity by a constant, which credited the
+  *same cards* with 7.5 tricks declaring and 3.5 defending -- the two sides'
+  tricks must sum to the deal, and that version made bidding look reckless and
+  defending look free. It is now centred on what the contract leaves us,
+  shifted by how far this hand is from average.
+
+**Consequences.** Every constant is named, documented with its reasoning, and
+set from `tool/checks/partnership_probe.dart` rather than from taste. The
+probe is also what caught both errors above: the first version passed out 86%
+of hands, which no unit test would have called a failure.
+

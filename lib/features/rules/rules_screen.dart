@@ -6,7 +6,9 @@ import '../../app/providers.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/rules/game_mode.dart';
+import '../../core/rules/rule_presets.dart';
 import '../gameplay/widgets/felt_background.dart';
+import 'widgets/how_to_play_section.dart';
 import 'widgets/mode_rules_section.dart';
 
 /// Reference for the implemented rule profiles.
@@ -25,6 +27,9 @@ final class RulesScreen extends ConsumerWidget {
     'B-2: İhale batarsa ceza ihale kadar mı, iki katı mı?',
     'B-3: Koz kesme zorunluluğu her masada var mı?',
     'B-4: Üçlü gömmeli Batak oyununda kaç kart gömülür, gömülen kime yazar?',
+    'B-8: Eşli Batak\'ta koz kırılmadan kozla açmak serbest mi?',
+    'B-9: Eşli Batak varsayılan olarak açık eş mi oynanır, kapalı eş mi?',
+    'B-10: Eşli ihalenin tabanı 8 iken zorunlu ihale 7 olmalı mı?',
     'K-1: King partisinde her oyuncu kaç sözleşme seçer?',
     'K-2: Rıfkı ve Son İki sözleşmeleri standart partiye dahil mi?',
   ];
@@ -47,8 +52,19 @@ final class RulesScreen extends ConsumerWidget {
               AppSpacing.thumbZoneReserve,
             ),
             children: <Widget>[
-              for (final GameMode mode in GameMode.values)
+              for (final GameMode mode in GameMode.values) ...<Widget>[
                 ModeRulesSection(mode: mode),
+                // The full guide, for the one mode whose rules a player is
+                // least likely to already know -- an open hand played by
+                // somebody else takes explaining in a way following suit does
+                // not. Written against the mode's default profile, which is
+                // what a player who opens it from here will be offered.
+                if (mode == GameMode.partnershipBatak)
+                  HowToPlaySection.partnership(
+                    strings: strings,
+                    profile: RulePresets.defaultFor(mode),
+                  ),
+              ],
               const SizedBox(height: AppSpacing.xl),
               Text(strings.rulesOpenQuestionsTitle, style: text.labelSmall),
               const SizedBox(height: AppSpacing.sm),

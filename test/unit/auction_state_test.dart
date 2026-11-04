@@ -2,8 +2,8 @@
 // every other mode in this app. One contract, raised until three seats have
 // given up, and a pass that is final.
 
+import 'package:batak_king/core/game_engine/auction/auction_state.dart';
 import 'package:batak_king/core/rules/bidding_rules.dart';
-import 'package:batak_king/games/auction_batak/auction_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const BiddingRules _rules = BiddingRules.fourPlayerStandard;

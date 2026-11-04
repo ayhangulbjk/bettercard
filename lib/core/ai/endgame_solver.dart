@@ -121,15 +121,23 @@ final class _Search {
 
   /// What every seat scores for the hand as it now stands.
   ///
-  /// Through [MatchContext.pointsFor], so the search optimises what the
-  /// scoreboard pays under whichever payoff this hand is using. A seat with
-  /// no payoff of its own falls back to its trick count, which keeps the
-  /// comparison meaningful in a mode that scores nothing else.
+  /// Through [MatchContext.handPointsFor], so the search optimises what the
+  /// scoreboard pays under whichever of the three payoffs this hand is using
+  /// -- a team payoff included, which is a function of the side's tricks
+  /// rather than of one seat's. A seat with no payoff of its own falls back
+  /// to its trick count, which keeps the comparison meaningful in a mode that
+  /// scores nothing else.
   List<double> _payoff(TrickPlayState state) {
     final List<int> tricks = state.tricksWon;
+    final int tricksPerHand = state.tricksPerHand;
     return <double>[
       for (int seat = 0; seat < tricks.length; seat++)
-        (match.pointsFor(seat: seat, tricksTaken: tricks[seat]) ?? tricks[seat])
+        (match.handPointsFor(
+                  seat: seat,
+                  tricksBySeat: tricks,
+                  tricksPerHand: tricksPerHand,
+                ) ??
+                tricks[seat])
             .toDouble(),
     ];
   }

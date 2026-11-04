@@ -89,6 +89,24 @@ class TrickPlayState {
   /// Number of tricks finished so far.
   int get trickNumber => completedTricks.length;
 
+  /// Tricks in the whole deal: finished, in progress, and still to come.
+  ///
+  /// Derived rather than carried, because the deal length is already implied
+  /// by the position and a stored copy could disagree with it. A seat that
+  /// has played to the trick in progress holds one card fewer than one that
+  /// has not, so the longest hand is what counts, plus the open trick.
+  int get tricksPerHand {
+    int longest = 0;
+    for (final List<PlayingCard> hand in hands) {
+      if (hand.length > longest) {
+        longest = hand.length;
+      }
+    }
+    return completedTricks.length +
+        longest +
+        (currentTrick.plays.isEmpty ? 0 : 1);
+  }
+
   /// Cards remaining in [seat]'s hand.
   List<PlayingCard> handOf(int seat) => hands[seat];
 

@@ -64,6 +64,23 @@ class TrickRules {
     trumpLeadRule: TrumpLeadRule.onlyAfterBroken,
   );
 
+  /// Esli Ihaleli Batak: the same compulsory following, raising, cutting and
+  /// overcutting as [batakStandard], but trump may be led from the first
+  /// trick.
+  ///
+  /// That difference is real and it is the one most easily carried across by
+  /// mistake. In Herkes Tek Ihaleli the declarer must wait for trump to be
+  /// broken; at an esli table it leads the ace of trump to the first trick if
+  /// it wants to, because drawing the opponents' trumps while holding an open
+  /// hand opposite is most of the plan. The restriction remains available as
+  /// a table setting -- see open question B-6 in docs/RULE_PROFILES.md -- but
+  /// it is off in the shipped profile.
+  static const TrickRules partnershipBatak = TrickRules(
+    mustPlayTrumpWhenVoid: true,
+    mustOvertrumpWhenPossible: true,
+    mustBeatLeadSuitWhenPossible: true,
+  );
+
   /// King's penalty contracts: no trump exists, so only following applies.
   static const TrickRules noTrump = TrickRules();
 

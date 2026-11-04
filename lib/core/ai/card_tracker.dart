@@ -25,6 +25,16 @@ import 'seat_observation.dart';
 /// trust a card placement that cannot happen, so the soundness of all of this
 /// is asserted directly against the real hidden hands in
 /// `test/simulation/card_tracker_soundness_test.dart`.
+///
+/// ### Hands that are open
+///
+/// A hand the observation says is face up (acik esli Batak's dummy) is not
+/// unseen, and treating it as unseen would be wrong in the direction that
+/// matters: a card lying face up on the table would keep counting against
+/// the observer's masters. So [unseenCards] excludes every card the
+/// observation may read, and [couldHold] answers an open seat's hand
+/// exactly, which is also what keeps the sampler from inventing cards for a
+/// seat whose cards everybody can see.
 final class CardTracker {
   CardTracker._({
     required this.observerSeat,
@@ -33,7 +43,11 @@ final class CardTracker {
     required Set<PlayingCard> unseenCards,
     required List<Set<Suit>> knownVoids,
     required List<Map<Suit, int>> knownCeilings,
+    required List<List<PlayingCard>> openHands,
   })  : playedCards = Set<PlayingCard>.unmodifiable(playedCards),
+        openHands = List<List<PlayingCard>>.unmodifiable(
+          openHands.map(List<PlayingCard>.unmodifiable),
+        ),
         unseenCards = Set<PlayingCard>.unmodifiable(unseenCards),
         knownVoids = List<Set<Suit>>.unmodifiable(
           knownVoids.map(Set<Suit>.unmodifiable),
@@ -53,10 +67,11 @@ final class CardTracker {
   }) {
     final Set<PlayingCard> played = observation.publiclyPlayedCards.toSet();
     final Set<PlayingCard> deck = fullDeck ?? standardDeck;
+    final Set<PlayingCard> known = observation.allKnownCards.toSet();
 
     final Set<PlayingCard> unseen = <PlayingCard>{
       for (final PlayingCard card in deck)
-        if (!played.contains(card) && !observation.hand.contains(card)) card,
+        if (!played.contains(card) && !known.contains(card)) card,
     };
 
     final int players = observation.seating.playerCount;
@@ -82,6 +97,12 @@ final class CardTracker {
       unseenCards: unseen,
       knownVoids: voids,
       knownCeilings: ceilings,
+      openHands: <List<PlayingCard>>[
+        for (int seat = 0; seat < players; seat++)
+          seat == observation.seat
+              ? const <PlayingCard>[]
+              : observation.openHandOf(seat),
+      ],
     );
   }
 
@@ -106,6 +127,13 @@ final class CardTracker {
   /// Suits each seat has proved it cannot hold, indexed by seat. The
   /// observer's own entry stays empty, since it knows its hand exactly.
   final List<Set<Suit>> knownVoids;
+
+  /// Other seats' cards that lie face up, indexed by seat and empty where
+  /// nothing is open. The observer's own entry stays empty.
+  final List<List<PlayingCard>> openHands;
+
+  /// Whether [seat]'s cards are face up to the observer.
+  bool seesHandOf(int seat) => openHands[seat].isNotEmpty;
 
   /// The highest strength each seat can still hold per suit, where it has
   /// proved a ceiling by declining to raise. Absent means no ceiling known.
@@ -141,6 +169,11 @@ final class CardTracker {
   /// place is what stops a sampler honouring voids but quietly ignoring
   /// ceilings.
   bool couldHold(int seat, PlayingCard card) {
+    // An open hand is not a guess. It either holds the card or it does not,
+    // and no inference can improve on that.
+    if (openHands[seat].isNotEmpty) {
+      return openHands[seat].contains(card);
+    }
     if (isKnownVoid(seat, card.suit)) {
       return false;
     }

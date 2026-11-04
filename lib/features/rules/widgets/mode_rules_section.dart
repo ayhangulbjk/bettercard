@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/rules/auction_scoring_rules.dart';
 import '../../../core/rules/game_mode.dart';
+import '../../../core/rules/partnership_rules.dart';
 import '../../../core/rules/rule_presets.dart';
 import '../../../core/rules/rule_profile.dart';
+import '../../../core/rules/scoring_rules.dart';
+import '../../../core/rules/trick_rules.dart';
 import '../../gameplay/widgets/felt_background.dart';
 
 /// One mode's rule presets, summarised from the shipped profiles.
@@ -80,6 +83,24 @@ final class ModeRulesSection extends StatelessWidget {
               'el alamayan savunma ihale kadar batar',
           },
         ],
+        if (profile.partnershipRules.enabled)
+          switch (profile.partnershipRules.mode) {
+            PartnershipMode.openDummy => 'açık eş (ihalecinin eşi açılır)',
+            PartnershipMode.closedPartnership => 'kapalı eş',
+          },
+        if (profile.partnershipScoringRules.enabled) ...<String>[
+          'ihaleyi alan kozu seçer',
+          'takım puanı',
+          'savunma en az '
+              '${profile.partnershipScoringRules.defenderMinimumTricks} el',
+          if (profile.partnershipScoringRules.kingEnabled) 'KING açık',
+          if (profile.partnershipScoringRules.sweepEnabled)
+            '13 yukarı / 13 aşağı açık',
+          if (profile.trickRules.trumpLeadRule == TrumpLeadRule.unrestricted)
+            'kozla açma serbest',
+        ],
+        if (profile.scoringRules.endCondition == MatchEndCondition.targetScore)
+          '${profile.scoringRules.targetScore} puana kadar',
         if (profile.buryRules.enabled)
           '${profile.buryRules.cardsToBury} kart gömme',
         if (profile.kingRules != null)

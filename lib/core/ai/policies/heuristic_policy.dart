@@ -35,7 +35,7 @@ import 'declaration_evaluator.dart';
 /// No strength claim is attached to it yet. Measuring it against
 /// `RandomLegalPolicy` on paired deals is a separate step; see
 /// docs/AI_BENCHMARKS.md.
-final class HeuristicPolicy implements AiPolicy {
+final class HeuristicPolicy implements AiPolicy, SyncCardPolicy {
   HeuristicPolicy({
     required int seed,
     this.blunderRate = 0,
@@ -143,8 +143,7 @@ final class HeuristicPolicy implements AiPolicy {
     return promise;
   }
 
-  /// Synchronous variant for the headless simulator and the benchmark CLI,
-  /// which run millions of decisions and should not pay for a future per card.
+  @override
   PlayingCard chooseCardSync(SeatObservation observation) {
     final List<PlayingCard> legal = observation.legalMoves;
     if (legal.isEmpty) {

@@ -130,6 +130,31 @@ abstract final class MatchTurn {
     );
   }
 
+  /// The seat that **decides** the card [seat] plays.
+  ///
+  /// Itself in every mode but acik esli Batak, where the declarer plays its
+  /// partner's open hand -- so the seat on turn and the seat choosing are not
+  /// the same, and "is it my move" has to be asked of this rather than of the
+  /// turn.
+  ///
+  /// The rule layer answers it first, through `MatchRuntime.controllerOf`.
+  /// What is applied on top is the one player-facing exception:
+  /// `PartnershipRules.humanDummyControlOverride` lets the person at the
+  /// device keep their own cards when the deal makes them the open hand. That
+  /// cannot live in the rules layer, which does not know which seat the
+  /// person is sitting in, so it lives here -- the one place that knows both.
+  /// It changes nothing the engine checks: the card is still played from the
+  /// open hand's seat and still has to be legal in it.
+  static int deciderFor(MatchRuntime match, int humanSeat, int seat) {
+    if (match.profile.partnershipRules.humanDummyControlOverride &&
+        seat == humanSeat &&
+        match.dummySeat == humanSeat &&
+        match.isDummyRevealed) {
+      return humanSeat;
+    }
+    return match.controllerOf(seat);
+  }
+
   /// Whose move it is, as a phase.
   ///
   /// Asked of the runtime's step rather than of either game's internals, so a
@@ -139,7 +164,11 @@ abstract final class MatchTurn {
     if (match.isOver || seat == null) {
       return MatchPhase.matchOver;
     }
-    final bool mine = seat == humanSeat;
+    // Bidding, naming a trump and declaring are always the seat's own
+    // decisions. Only a card can be chosen by somebody else.
+    final bool mine = match.step == MatchStep.playing
+        ? deciderFor(match, humanSeat, seat) == humanSeat
+        : seat == humanSeat;
     return switch (match.step) {
       MatchStep.bidding =>
         mine ? MatchPhase.awaitingBid : MatchPhase.opponentBidding,

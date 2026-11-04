@@ -46,6 +46,19 @@ abstract interface class AiPolicy {
   );
 }
 
+/// A policy that can answer a card question without a future.
+///
+/// Exists so a search can roll a hand out with whichever policy actually
+/// plays the mode in front of it, rather than being wired to one of them --
+/// a trick-maximising rollout inside a team game would be measuring the wrong
+/// objective. Also what the headless simulator and the benchmark CLIs call,
+/// since they run millions of decisions and should not pay for a future per
+/// card.
+abstract interface class SyncCardPolicy {
+  /// Chooses a card from `observation.legalMoves`.
+  PlayingCard chooseCardSync(SeatObservation observation);
+}
+
 /// Thrown when a policy is asked to move from a position with no legal play.
 /// That is an engine bug, so it fails loudly rather than guessing.
 class NoLegalMoveError extends StateError {

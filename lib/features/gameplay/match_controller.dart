@@ -7,6 +7,7 @@ import '../../core/ai/ai_decision_service.dart';
 import '../../core/ai/ai_difficulty.dart';
 import '../../core/ai/ai_policy.dart';
 import '../../core/ai/auction_policy.dart';
+import '../../core/ai/policies/partnership_auction_policy.dart';
 import '../../core/ai/seat_observation.dart';
 import '../../core/cards/playing_card.dart';
 import '../../core/cards/suit.dart';
@@ -42,12 +43,24 @@ final NotifierProvider<MatchController, MatchSession?> matchProvider =
 /// microseconds, but they are still awaited through [AiDecisionService], so
 /// the search-based levels drop in behind the same seam.
 final class MatchController extends Notifier<MatchSession?> {
-  /// The auction player, for the modes that have one.
+  /// The auction player for the match on the table.
   ///
-  /// Stateless and shared: unlike a card policy it carries no generator,
-  /// because a bid is a function of the hand and the scoreboard rather than
-  /// of a random draw.
-  static const HeuristicAuctionPolicy _auction = HeuristicAuctionPolicy();
+  /// Stateless, so it is built per match rather than held: unlike a card
+  /// policy it carries no generator, because a bid is a function of the hand,
+  /// the calls already made and the scoreboard rather than of a random draw.
+  ///
+  /// Which one depends on the mode, and the difference is not cosmetic: a
+  /// team contract is bid for two hands, one of them unseen, and passing can
+  /// mean handing the contract to a partner. A solo bidder in that seat would
+  /// read its partner's bid as a number to beat.
+  AuctionPolicy get _auction {
+    final MatchSession? session = state;
+    final AiDifficulty difficulty = _opponents.difficulty;
+    if (session != null && session.profile.partnershipScoringRules.enabled) {
+      return PartnershipAuctionPolicy(difficulty: difficulty);
+    }
+    return HeuristicAuctionPolicy(difficulty: difficulty);
+  }
 
   /// The opponents at this table. Empty when no match is open.
   OpponentRoster _opponents = OpponentRoster.empty;
@@ -91,6 +104,7 @@ final class MatchController extends Notifier<MatchSession?> {
     _generation++;
     _opponents = OpponentRoster.forMatch(
       difficulty: difficulty,
+      profile: profile,
       matchSeed: matchSeed,
       seatCount: match.seatCount,
       humanSeat: humanSeat,
@@ -126,6 +140,7 @@ final class MatchController extends Notifier<MatchSession?> {
     _generation++;
     _opponents = OpponentRoster.forMatch(
       difficulty: save.difficulty,
+      profile: save.ruleProfile,
       matchSeed: save.dealSeed,
       seatCount: restored.seatCount,
       humanSeat: save.humanSeat,
@@ -189,13 +204,22 @@ final class MatchController extends Notifier<MatchSession?> {
     unawaited(_drive(_generation));
   }
 
-  /// Plays [card] from the player's hand. Ignored unless it is their turn.
+  /// Plays [card]. Ignored unless the player is the one choosing right now.
+  ///
+  /// The card leaves whichever hand is on turn, which is not always the
+  /// player's own: a declarer playing the open hand opposite taps a card
+  /// there, and it is played from that seat. Looking the seat up here rather
+  /// than assuming the player's own is what makes the two cases one method.
   void playCard(PlayingCard card) {
     final MatchSession? session = state;
     if (session == null || session.phase != MatchPhase.awaitingHuman) {
       return;
     }
-    _submit(session.humanSeat, card);
+    final int? owner = session.seatToPlay;
+    if (owner == null) {
+      return;
+    }
+    _submit(owner, card);
     unawaited(_drive(_generation));
   }
 
@@ -292,6 +316,8 @@ final class MatchController extends Notifier<MatchSession?> {
               cards,
               bidder,
               match: auctioning.aiContext,
+              visibleHands: auctioning.visibleHandsFor(bidder),
+              publicHands: auctioning.publicOpenHands,
             ),
             auctioning.legalBids(bidder),
           );
@@ -322,6 +348,13 @@ final class MatchController extends Notifier<MatchSession?> {
                 held,
                 winner,
                 match: naming.aiContext,
+                // The open hand is NOT in this set: it goes face up after the
+                // trump is named, which is the rule that stops a declarer
+                // choosing a trump already knowing what is opposite it. The
+                // match state is what enforces the ordering; this call just
+                // asks it.
+                visibleHands: naming.visibleHandsFor(winner),
+                publicHands: naming.publicOpenHands,
               ),
               naming.legalTrumps,
             ),
@@ -354,16 +387,21 @@ final class MatchController extends Notifier<MatchSession?> {
             return;
           }
           final MatchRuntime playing = session.match;
-          final int seat = hand.turnSeat;
+          // The seat the card comes from, and the seat that chooses it. The
+          // two differ for an open hand, and getting them the wrong way round
+          // would play the declarer's card out of its partner's seat.
+          final int owner = hand.turnSeat;
+          final int decider = session.deciderFor(owner);
           await MatchPacing.wait(_pacing.thinkDelay);
           if (generation != _generation || state == null) {
             return;
           }
-          final PlayingCard? card = await _decide(seat, playing, hand);
+          final PlayingCard? card =
+              await _decide(owner, decider, playing, hand);
           if (card == null || generation != _generation || state == null) {
             return;
           }
-          _submit(seat, card);
+          _submit(owner, card);
       }
     }
   }
@@ -455,13 +493,21 @@ final class MatchController extends Notifier<MatchSession?> {
     );
   }
 
-  /// Asks [seat]'s policy for a card, through the decision service.
+  /// Asks [decider]'s policy for the card [owner] plays.
+  ///
+  /// The observation is built for [owner] -- its hand is the hand being
+  /// played from, and its legal moves are the legal moves -- while which
+  /// *other* hands the decision may read comes from [decider]. That is the
+  /// whole of the open-hand mechanic on this side of the seam: the declarer
+  /// decides, the partner plays, and the information boundary belongs to
+  /// whoever is deciding.
   Future<PlayingCard?> _decide(
-    int seat,
+    int owner,
+    int decider,
     MatchRuntime match,
     TrickPlayState hand,
   ) async {
-    final AiPolicy? policy = _opponents.policyFor(seat);
+    final AiPolicy? policy = _opponents.policyFor(decider);
     if (policy == null) {
       return null;
     }
@@ -472,8 +518,10 @@ final class MatchController extends Notifier<MatchSession?> {
             policy: policy,
             observation: SeatObservation.fromState(
               hand,
-              seat,
+              owner,
               match: match.aiContext,
+              visibleHands: match.visibleHandsFor(decider),
+              publicHands: match.publicOpenHands,
             ),
             // Per level, from the difficulty itself: the heuristic levels
             // spend nothing, the search levels get a bound they must return
@@ -509,6 +557,8 @@ final class MatchController extends Notifier<MatchSession?> {
               hand,
               seat,
               match: match.aiContext,
+              visibleHands: match.visibleHandsFor(seat),
+              publicHands: match.publicOpenHands,
             ),
             // From the engine, never from the policy: what may be declared is
             // a rule, and rules have one authority.

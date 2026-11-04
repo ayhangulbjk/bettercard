@@ -2,11 +2,11 @@ import 'package:meta/meta.dart';
 
 import '../../core/ai/match_context.dart';
 import '../../core/cards/suit.dart';
+import '../../core/game_engine/auction/auction_state.dart';
 import '../../core/game_engine/trick/trick_play_state.dart';
 import '../../core/rules/rule_profile.dart';
 import '../../core/rules/scoring_rules.dart';
 import '../spades_batak/spades_batak_scorer.dart' show HandScore;
-import 'auction_state.dart';
 
 /// Where a hand of Herkes Tek Ihaleli Batak has got to.
 ///
@@ -138,6 +138,7 @@ final class AuctionBatakMatchState {
         ],
         totalScores: totals,
         auctionScoringRules: profile.auctionScoringRules,
+        auction: auction,
         declarerSeat: declarerSeat,
         contractBid: contractBid,
       );

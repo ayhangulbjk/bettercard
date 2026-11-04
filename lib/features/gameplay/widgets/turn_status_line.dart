@@ -39,6 +39,12 @@ final class TurnStatusLine extends StatelessWidget {
       status = strings.gameplayWaitingForBids;
     } else if (session.isChoosingTrump) {
       status = strings.gameplayWaitingForTrump;
+    } else if (session.isPlayingDummyHand) {
+      // The player's own fan is not the hand being played from, so saying
+      // "your turn" over it would point at the wrong cards.
+      status = strings.gameplayPlayingDummy;
+    } else if (session.humanIsDummy && session.isPlayingCards) {
+      status = strings.gameplayYouAreDummy;
     } else {
       status = yours ? strings.gameplayYourTurn : strings.gameplayWaiting;
     }

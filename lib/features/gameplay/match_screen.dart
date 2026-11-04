@@ -18,6 +18,7 @@ import 'match_session.dart';
 import 'match_turn.dart';
 import 'widgets/bidding_panel.dart';
 import 'widgets/declaration_panel.dart';
+import 'widgets/dummy_hand_view.dart';
 import 'widgets/felt_background.dart';
 import 'widgets/hand_fan.dart';
 import 'widgets/hand_summary_sheet.dart';
@@ -60,6 +61,14 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
 
   /// Which hand [_slots] belongs to, so a new deal rebuilds it.
   int? _slotsHandIndex;
+
+  /// The same, for the open hand across the table.
+  ///
+  /// Kept for the same reason the player's own is: a fan that re-flowed after
+  /// every trick would move the card the player was about to tap, and the
+  /// open hand is tapped by the declarer exactly as often as its own.
+  List<PlayingCard?> _dummySlots = const <PlayingCard?>[];
+  int? _dummySlotsHandIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +141,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                       child: DragTarget<PlayingCard>(
                         onWillAcceptWithDetails:
                             (DragTargetDetails<PlayingCard> details) =>
-                                session.isHumanTurn,
+                                session.isPlayingOwnHand,
                         onAcceptWithDetails:
                             (DragTargetDetails<PlayingCard> details) =>
                                 _play(details.data, settings),
@@ -147,6 +156,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                           seatNames: seatNames,
                           gatherDuration: MatchPacing(settings).trickGather,
                           highlightDropZone: candidate.isNotEmpty,
+                          farEdge:
+                              _openHand(session, strings, seatNames, settings),
                         ),
                       ),
                     ),
@@ -154,10 +165,16 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     const SizedBox(height: AppSpacing.sm),
                     HandFan(
                       cards: _handSlots(session),
-                      legalCards: _legalCards(session),
+                      legalCards: _legalCards(session, session.humanSeat),
                       showHints: settings.showLegalMoveHints,
-                      allowDrag: settings.allowDragToPlay,
-                      onCardTap: session.isHumanTurn
+                      // Dragging plays from the player's own hand onto the
+                      // felt. The open hand opposite is tapped instead: a
+                      // drag from the far edge across the trick would be
+                      // indistinguishable from one out of the player's own
+                      // fan, which is the one thing that must stay obvious.
+                      allowDrag:
+                          settings.allowDragToPlay && session.isPlayingOwnHand,
+                      onCardTap: session.isPlayingOwnHand
                           ? (PlayingCard card) => _play(card, settings)
                           : null,
                     ),
@@ -171,7 +188,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     score: session.lastHandScore!,
                     totals: session.totals,
                     seatNames: seatNames,
-                    title: strings.gameplayHandSummaryTitle,
+                    title: MatchLabels.handTitle(strings, session),
                     actionLabel: strings.gameplayNextHand,
                     onContinue: () =>
                         ref.read(matchProvider.notifier).continueAfterHand(),
@@ -307,6 +324,64 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     ref.read(matchProvider.notifier).declare(tricks);
   }
 
+  /// The open hand across the table, or null when there is none to show.
+  ///
+  /// Shown whenever it is face up, whoever is playing it. When the player is
+  /// the declarer the cards are tappable on the open hand's turn; when a bot
+  /// is the declarer and the open hand is the **player's own**, the same
+  /// cards are shown and nothing responds -- which is the classic rule, and
+  /// the caption says so rather than leaving a hand that ignores taps.
+  Widget? _openHand(
+    MatchSession session,
+    AppStrings strings,
+    List<String> seatNames,
+    AppSettings settings,
+  ) {
+    final int? dummy = session.dummySeat;
+    if (!session.isDummyRevealed || dummy == null) {
+      return null;
+    }
+    final bool mine = session.isPlayingDummyHand;
+    final String caption;
+    if (session.humanIsDummy) {
+      final int? declarer = session.declarerSeat;
+      caption = strings.dummyYoursCaption(
+        declarer != null && declarer < seatNames.length
+            ? seatNames[declarer]
+            : '',
+      );
+    } else {
+      final String name = dummy < seatNames.length ? seatNames[dummy] : '';
+      caption = mine
+          ? strings.dummyPartnerTurnCaption(name)
+          : strings.dummyPartnerCaption(name);
+    }
+    return DummyHandView(
+      cards: _dummyHandSlots(session),
+      caption: caption,
+      legalCards: _legalCards(session, dummy),
+      showHints: settings.showLegalMoveHints,
+      onCardTap: mine ? (PlayingCard card) => _play(card, settings) : null,
+    );
+  }
+
+  /// The open hand as fan slots.
+  List<PlayingCard?> _dummyHandSlots(MatchSession session) {
+    final List<PlayingCard> inHand = session.dummyHand;
+    final int handIndex = session.match.handIndex;
+    if (_dummySlotsHandIndex != handIndex ||
+        inHand.length > _dummySlots.length) {
+      _dummySlots = CardSorting.bySuitStrongestFirst(inHand);
+      _dummySlotsHandIndex = handIndex;
+      return _dummySlots;
+    }
+    final Set<PlayingCard> remaining = inHand.toSet();
+    return <PlayingCard?>[
+      for (final PlayingCard? card in _dummySlots)
+        if (card != null && remaining.contains(card)) card else null,
+    ];
+  }
+
   /// The player's hand as fan slots: dealt order, holes where cards have
   /// already been played.
   ///
@@ -331,12 +406,17 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     ];
   }
 
-  /// The cards the player may tap, straight from the engine.
-  Set<PlayingCard> _legalCards(MatchSession session) {
-    if (!session.isHumanTurn) {
+  /// The cards the player may tap in [seat]'s hand, straight from the engine.
+  ///
+  /// Empty unless the player is the one choosing **and** that hand is the one
+  /// on turn. Both halves matter in a partnership deal: a declarer looking at
+  /// two hands must see highlights on exactly the one it is playing from, or
+  /// the highlight stops meaning anything.
+  Set<PlayingCard> _legalCards(MatchSession session, int seat) {
+    if (!session.isHumanTurn || session.seatToPlay != seat) {
       return const <PlayingCard>{};
     }
-    return session.match.legalCards(session.humanSeat).toSet();
+    return session.match.legalCards(seat).toSet();
   }
 
   Future<void> _confirmLeave(AppStrings strings) async {

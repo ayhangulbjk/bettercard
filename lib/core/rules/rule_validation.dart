@@ -4,6 +4,7 @@ import 'auction_scoring_rules.dart';
 import 'declaration_rules.dart';
 import 'game_mode.dart';
 import 'king_rules.dart';
+import 'partnership_scoring_rules.dart';
 import 'rule_profile.dart';
 
 /// Severity of a rule-profile finding.
@@ -58,6 +59,7 @@ abstract final class RuleProfileValidator {
       ..._validateScoring(profile),
       ..._validateDeclarations(profile),
       ..._validateAuctionScoring(profile),
+      ..._validatePartnership(profile),
     ];
     issues.sort((RuleIssue a, RuleIssue b) =>
         (a.isError ? 0 : 1).compareTo(b.isError ? 0 : 1));
@@ -369,6 +371,115 @@ abstract final class RuleProfileValidator {
           severity: RuleIssueSeverity.warning,
         ),
       );
+    }
+    return issues;
+  }
+
+  /// The two-team payoff, and what it cannot share a profile with.
+  ///
+  /// Three payoffs now exist -- four independent promises, one contract
+  /// against three defenders, one contract between two teams -- and a hand
+  /// is paid by exactly one of them. Any two enabled at once would score the
+  /// hand twice with no sensible way to resolve it, so it is an error.
+  static List<RuleIssue> _validatePartnership(RuleProfile profile) {
+    final PartnershipScoringRules rules = profile.partnershipScoringRules;
+    final List<RuleIssue> issues = <RuleIssue>[];
+
+    if (profile.partnershipRules.enabled != profile.mode.hasPartnerships) {
+      issues.add(RuleIssue(
+        severity: RuleIssueSeverity.error,
+        code: 'partnership.mode_mismatch',
+        turkishMessage: profile.mode.hasPartnerships
+            ? '${profile.mode.turkishName} eşli oynanır ama eşlik kapalı.'
+            : '${profile.mode.turkishName} eşsizdir ama eşlik açık.',
+      ));
+    }
+    if (rules.enabled && !profile.partnershipRules.enabled) {
+      issues.add(const RuleIssue(
+        severity: RuleIssueSeverity.error,
+        code: 'partnership.scoring_without_teams',
+        turkishMessage: 'Takım puanlaması açık ama bu kural setinde takım yok.',
+      ));
+    }
+    if (rules.enabled &&
+        (profile.auctionScoringRules.enabled ||
+            profile.declarationRules.enabled)) {
+      issues.add(const RuleIssue(
+        severity: RuleIssueSeverity.error,
+        code: 'partnership.double_payoff',
+        turkishMessage: 'Bir el ya takım ihalesiyle, ya tek kişilik ihaleyle, '
+            'ya da herkesin sözüyle puanlanır; birden fazlası açık olamaz.',
+      ));
+    }
+    if (!rules.enabled) {
+      if (profile.partnershipRules.enabled) {
+        issues.add(const RuleIssue(
+          severity: RuleIssueSeverity.error,
+          code: 'partnership.teams_without_scoring',
+          turkishMessage:
+              'Eşlik açık ama takım puanlaması yok; el nasıl yazılacağı '
+              'belirsiz kalıyor.',
+        ));
+      }
+      return issues;
+    }
+    if (rules.pointsPerTrick <= 0) {
+      issues.add(const RuleIssue(
+        severity: RuleIssueSeverity.error,
+        code: 'partnership.non_positive_trick_points',
+        turkishMessage: 'El başına takım puanı pozitif olmalıdır.',
+      ));
+    }
+    if (rules.defenderMinimumTricks < 0 ||
+        rules.defenderMinimumTricks > profile.tricksPerHand) {
+      issues.add(RuleIssue(
+        severity: RuleIssueSeverity.error,
+        code: 'partnership.defender_floor_out_of_range',
+        turkishMessage: 'Savunmanın en az ${rules.defenderMinimumTricks} el '
+            'alması isteniyor; bu dağıtımda ${profile.tricksPerHand} el var.',
+      ));
+    }
+    if (profile.playerCount != 4) {
+      issues.add(RuleIssue(
+        severity: RuleIssueSeverity.error,
+        code: 'partnership.not_four_seats',
+        turkishMessage:
+            'Eşli oyun iki kişilik iki takım gerektirir; bu profilde '
+            '${profile.playerCount} oyuncu var.',
+      ));
+    }
+    final int forced = profile.biddingRules.effectiveForcedBid;
+    if (forced < 1 || forced > profile.tricksPerHand) {
+      issues.add(RuleIssue(
+        severity: RuleIssueSeverity.error,
+        code: 'partnership.forced_bid_out_of_range',
+        turkishMessage: 'Zorunlu ihale $forced, bu dağıtımda oynanamaz.',
+      ));
+    } else if (forced + 1 < profile.biddingRules.minimumBid) {
+      // Measured, not guessed: with a floor of 8 and a forced 7, the bots
+      // pass out roughly three hands in five, because a contract nobody
+      // chose is genuinely easier than the smallest one they could choose.
+      // See docs/RULE_PROFILES.md, open question B-8.
+      issues.add(RuleIssue(
+        severity: RuleIssueSeverity.warning,
+        code: 'partnership.forced_far_below_minimum',
+        turkishMessage: 'Zorunlu ihale ($forced) en düşük gönüllü ihaleden '
+            '(${profile.biddingRules.minimumBid}) belirgin şekilde küçük. '
+            'Pas geçmek kârlı hâle geldiği için eller sık sık zorunlu '
+            'ihaleye kalır.',
+      ));
+    }
+    // A defending side that is told to take more than half the hand would be
+    // asked for something only an exceptional contract leaves available. Not
+    // an inconsistency, but worth saying out loud.
+    if (rules.defenderMinimumTricks * 2 > profile.tricksPerHand) {
+      issues.add(const RuleIssue(
+        severity: RuleIssueSeverity.warning,
+        code: 'partnership.defender_floor_high',
+        turkishMessage:
+            'Savunmanın alması gereken el sayısı dağıtımın yarısından fazla; '
+            'savunma neredeyse her elde batar.',
+      ));
     }
     return issues;
   }

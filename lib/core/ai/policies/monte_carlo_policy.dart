@@ -35,8 +35,15 @@ import 'heuristic_policy.dart';
 /// It never sees a real hidden hand. Its worlds come from the observation and
 /// the tracker, exactly like every other policy's.
 final class MonteCarloPolicy implements AiPolicy {
-  MonteCarloPolicy({required int seed, this.rolloutSeed = 17})
-      : _random = SeededRandom(seed);
+  MonteCarloPolicy({
+    required int seed,
+    this.rolloutSeed = 17,
+    SyncCardPolicy Function(int seed)? rolloutPolicy,
+  })  : _rolloutPolicy = rolloutPolicy ?? _defaultRollout,
+        _random = SeededRandom(seed);
+
+  static SyncCardPolicy _defaultRollout(int seed) =>
+      HeuristicPolicy(seed: seed);
 
   /// Worlds drawn per decision when the budget does not say otherwise.
   static const int defaultWorlds = 24;
@@ -48,6 +55,14 @@ final class MonteCarloPolicy implements AiPolicy {
   final int rolloutSeed;
 
   final SeededRandom _random;
+
+  /// How a rollout seat plays.
+  ///
+  /// Handed in rather than fixed, because the objective a rollout maximises
+  /// has to be the objective of the mode being searched: rolling a team game
+  /// out with four seats each chasing their own tricks would measure a game
+  /// nobody is playing.
+  final SyncCardPolicy Function(int seed) _rolloutPolicy;
 
   static const TrickPlayEngine _engine = TrickPlayEngine();
   static const HiddenHandSampler _sampler = HiddenHandSampler();
@@ -110,7 +125,7 @@ final class MonteCarloPolicy implements AiPolicy {
       // No consistent world could be drawn, which a tight void pattern can
       // cause. Falling back beats guessing, and it is the same policy the
       // rollouts would have used anyway.
-      return HeuristicPolicy(seed: rolloutSeed).chooseCardSync(observation);
+      return _rolloutPolicy(rolloutSeed).chooseCardSync(observation);
     }
 
     final Stopwatch clock = Stopwatch()..start();
@@ -201,9 +216,9 @@ final class MonteCarloPolicy implements AiPolicy {
   ) {
     TrickPlayState state = _positionIn(observation, world);
 
-    final List<HeuristicPolicy> rollouts = <HeuristicPolicy>[
+    final List<SyncCardPolicy> rollouts = <SyncCardPolicy>[
       for (int seat = 0; seat < observation.seating.playerCount; seat++)
-        HeuristicPolicy(seed: rolloutSeed + seat),
+        _rolloutPolicy(rolloutSeed + seat),
     ];
 
     TrickPlayState? next = _apply(state, observation.seat, card);
@@ -218,7 +233,17 @@ final class MonteCarloPolicy implements AiPolicy {
     while (!_engine.isTerminal(state)) {
       final int seat = state.turnSeat;
       final PlayingCard played = rollouts[seat].chooseCardSync(
-        SeatObservation.fromState(state, seat, match: observation.match),
+        SeatObservation.fromState(
+          state,
+          seat,
+          match: observation.match,
+          // Only what the table can see. The open hand is public and every
+          // rollout seat may read it; the declarer's own cards are not, and
+          // handing them to an opponent's rollout would be the search
+          // cheating on its own behalf.
+          visibleHands: observation.publicOpenSeats,
+          publicHands: observation.publicOpenSeats,
+        ),
       );
       next = _apply(state, seat, played);
       if (next == null) {
@@ -227,21 +252,27 @@ final class MonteCarloPolicy implements AiPolicy {
       state = next;
     }
 
-    return _valueOf(observation, state.tricksWon[observation.seat]);
+    return _valueOf(observation, state);
   }
 
-  /// What [tricks] is worth to this seat at the end of the hand.
+  /// What a finished [state] is worth to this seat.
   ///
-  /// Through [MatchContext.pointsFor], which picks the payoff this hand is
-  /// actually being paid under -- four independent promises, or one contract
-  /// against three defenders -- so the search optimises the scoreboard rather
-  /// than a proxy for it, in either mode. With neither payoff in force the
-  /// tricks themselves are the score, which is what those modes pay.
-  static double _valueOf(SeatObservation observation, int tricks) =>
-      (observation.match
-                  .pointsFor(seat: observation.seat, tricksTaken: tricks) ??
-              tricks)
-          .toDouble();
+  /// Through [MatchContext.handPointsFor], which picks the payoff this hand
+  /// is actually being paid under -- four independent promises, one contract
+  /// against three defenders, or one contract between two teams -- so the
+  /// search optimises the scoreboard rather than a proxy for it, in every
+  /// mode. With no payoff in force the tricks themselves are the score, which
+  /// is what those modes pay.
+  static double _valueOf(SeatObservation observation, TrickPlayState state) {
+    final List<int> tricks = state.tricksWon;
+    return (observation.match.handPointsFor(
+              seat: observation.seat,
+              tricksBySeat: tricks,
+              tricksPerHand: state.tricksPerHand,
+            ) ??
+            tricks[observation.seat])
+        .toDouble();
+  }
 
   static TrickPlayState? _apply(
     TrickPlayState state,

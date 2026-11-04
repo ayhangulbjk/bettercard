@@ -7,6 +7,8 @@ import 'bury_rules.dart';
 import 'declaration_rules.dart';
 import 'game_mode.dart';
 import 'king_rules.dart';
+import 'partnership_rules.dart';
+import 'partnership_scoring_rules.dart';
 import 'scoring_rules.dart';
 import 'trick_rules.dart';
 
@@ -32,6 +34,8 @@ class RuleProfile {
     required this.buryRules,
     this.declarationRules = DeclarationRules.none,
     this.auctionScoringRules = AuctionScoringRules.none,
+    this.partnershipRules = PartnershipRules.none,
+    this.partnershipScoringRules = PartnershipScoringRules.none,
     this.kingRules,
     this.fixedTrump,
     this.deckExclusions = const <int>{},
@@ -44,8 +48,11 @@ class RuleProfile {
   /// declarations off, which is what it was played under. Version 3 adds
   /// [auctionScoringRules], and an older profile is read with it off for the
   /// same reason: it is what that match was played under, and no existing
-  /// field is reinterpreted.
-  static const int currentSchemaVersion = 3;
+  /// field is reinterpreted. Version 4 adds [partnershipRules] and
+  /// [partnershipScoringRules], and an older profile reads with both off --
+  /// which is what it was played under, since no partnership mode had a
+  /// table before version 4 existed.
+  static const int currentSchemaVersion = 4;
 
   /// Stable identifier, e.g. `auction_batak_standard`.
   final String id;
@@ -70,6 +77,19 @@ class RuleProfile {
   /// one contract through this, and a profile with both enabled is rejected
   /// by the validator rather than silently resolved.
   final AuctionScoringRules auctionScoringRules;
+
+  /// How the two partnerships see each other's cards, in a mode that has
+  /// partnerships.
+  final PartnershipRules partnershipRules;
+
+  /// The payoff for a two-team contract hand, when the mode plays one.
+  ///
+  /// A third payoff alongside [scoringRules] and [auctionScoringRules], and
+  /// separate for the same reason they are separate from each other: one
+  /// contract between two teams is a different game from one contract against
+  /// three independent defenders, and the validator rejects a profile with
+  /// more than one of them enabled rather than silently resolving it.
+  final PartnershipScoringRules partnershipScoringRules;
 
   /// Present only for [GameMode.king].
   final KingRules? kingRules;
@@ -125,6 +145,8 @@ class RuleProfile {
     BuryRules? buryRules,
     DeclarationRules? declarationRules,
     AuctionScoringRules? auctionScoringRules,
+    PartnershipRules? partnershipRules,
+    PartnershipScoringRules? partnershipScoringRules,
     KingRules? kingRules,
     Suit? fixedTrump,
     bool clearFixedTrump = false,
@@ -141,6 +163,9 @@ class RuleProfile {
         buryRules: buryRules ?? this.buryRules,
         declarationRules: declarationRules ?? this.declarationRules,
         auctionScoringRules: auctionScoringRules ?? this.auctionScoringRules,
+        partnershipRules: partnershipRules ?? this.partnershipRules,
+        partnershipScoringRules:
+            partnershipScoringRules ?? this.partnershipScoringRules,
         kingRules: clearKingRules ? null : (kingRules ?? this.kingRules),
         fixedTrump: clearFixedTrump ? null : (fixedTrump ?? this.fixedTrump),
         deckExclusions: deckExclusions ?? this.deckExclusions,
@@ -158,6 +183,8 @@ class RuleProfile {
         'buryRules': buryRules.toJson(),
         'declarationRules': declarationRules.toJson(),
         'auctionScoringRules': auctionScoringRules.toJson(),
+        'partnershipRules': partnershipRules.toJson(),
+        'partnershipScoringRules': partnershipScoringRules.toJson(),
         'kingRules': kingRules?.toJson(),
         'fixedTrump': fixedTrump?.name,
         'deckExclusions': deckExclusions.toList(growable: false)..sort(),
@@ -191,6 +218,16 @@ class RuleProfile {
           : AuctionScoringRules.fromJson(
               json['auctionScoringRules']! as Map<String, Object?>,
             ),
+      partnershipRules: json['partnershipRules'] == null
+          ? PartnershipRules.none
+          : PartnershipRules.fromJson(
+              json['partnershipRules']! as Map<String, Object?>,
+            ),
+      partnershipScoringRules: json['partnershipScoringRules'] == null
+          ? PartnershipScoringRules.none
+          : PartnershipScoringRules.fromJson(
+              json['partnershipScoringRules']! as Map<String, Object?>,
+            ),
       declarationRules: json['declarationRules'] == null
           ? DeclarationRules.none
           : DeclarationRules.fromJson(
@@ -221,6 +258,8 @@ class RuleProfile {
       other.buryRules == buryRules &&
       other.declarationRules == declarationRules &&
       other.auctionScoringRules == auctionScoringRules &&
+      other.partnershipRules == partnershipRules &&
+      other.partnershipScoringRules == partnershipScoringRules &&
       other.kingRules == kingRules &&
       other.fixedTrump == fixedTrump &&
       other.schemaVersion == schemaVersion &&
@@ -238,6 +277,8 @@ class RuleProfile {
         buryRules,
         declarationRules,
         auctionScoringRules,
+        partnershipRules,
+        partnershipScoringRules,
         kingRules,
         fixedTrump,
         schemaVersion,

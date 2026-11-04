@@ -90,21 +90,18 @@ enum GameMode {
   /// Whether the mode runs a trick auction before play.
   final bool hasAuction;
 
-  /// Whether this mode's full lifecycle is implemented and playable.
-  ///
-  /// Koz Maca is: deal, play, score, next hand, end of match, with opponents
-  /// that reason about their cards. The other four still lack their auction,
-  /// contract or burying lifecycle, so they stay false and the home screen
-  /// labels them rather than opening a table that cannot be played.
   /// Whether a mode can be played from the product today.
   ///
-  /// Koz Maca and Herkes Tek Ihaleli Batak have tables; the rest do not yet,
-  /// and the menu shows them dimmed rather than letting a tap reach an engine
-  /// that would refuse their profile. `MatchRuntime.start` is the other half
-  /// of the same guarantee: it throws for a profile no table exists for,
-  /// rather than falling back to another game's engine.
+  /// Koz Maca, Herkes Tek Ihaleli Batak and Esli Ihaleli Batak have tables;
+  /// the rest do not yet, and the menu shows them dimmed rather than letting
+  /// a tap reach an engine that would refuse their profile.
+  /// `MatchRuntime.start` is the other half of the same guarantee: it throws
+  /// for a profile no table exists for, rather than falling back to another
+  /// game's engine.
   bool get isPlayable =>
-      this == GameMode.spadesBatak || this == GameMode.auctionBatak;
+      this == GameMode.spadesBatak ||
+      this == GameMode.auctionBatak ||
+      this == GameMode.partnershipBatak;
 
   /// Looks up a mode by its persisted [id].
   static GameMode fromId(String id) => values.firstWhere(

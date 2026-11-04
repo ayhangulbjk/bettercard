@@ -2,7 +2,9 @@ import '../../core/ai/ai_difficulty.dart';
 import '../../core/ai/ai_policy.dart';
 import '../../core/ai/policies/heuristic_policy.dart';
 import '../../core/ai/policies/monte_carlo_policy.dart';
+import '../../core/ai/policies/partnership_policy.dart';
 import '../../core/persistence/app_settings.dart';
+import '../../core/rules/rule_profile.dart';
 
 /// How long the table waits, and for what.
 ///
@@ -75,6 +77,7 @@ final class OpponentRoster {
   /// from that one seed.
   factory OpponentRoster.forMatch({
     required AiDifficulty difficulty,
+    required RuleProfile profile,
     required int matchSeed,
     required int seatCount,
     required int humanSeat,
@@ -85,6 +88,7 @@ final class OpponentRoster {
             if (seat != humanSeat)
               seat: _policyFor(
                 difficulty,
+                profile,
                 matchSeed ^ (0x9E3779B1 * (seat + 1)),
               ),
         },
@@ -112,13 +116,33 @@ final class OpponentRoster {
   /// level that is not stronger would make the selector a lie. They are
   /// mapped to the strongest policy that does exist, so a stale stored
   /// setting plays rather than crashes.
-  static AiPolicy _policyFor(AiDifficulty difficulty, int seed) =>
-      switch (difficulty) {
-        AiDifficulty.beginner => HeuristicPolicy.beginner(seed: seed),
-        AiDifficulty.normal => HeuristicPolicy(seed: seed),
-        AiDifficulty.hard ||
-        AiDifficulty.expert ||
-        AiDifficulty.legendary =>
-          MonteCarloPolicy(seed: seed),
-      };
+  /// The policy for one difficulty level, in the mode on the table.
+  ///
+  /// A team game is scored on the side's result, so its seats are staffed by
+  /// the team-aware policy and its searches roll out with the same one. Using
+  /// the solo policy there would not be a weaker opponent but a differently
+  /// motivated one: it would take tricks off its own partner.
+  static AiPolicy _policyFor(
+    AiDifficulty difficulty,
+    RuleProfile profile,
+    int seed,
+  ) {
+    final bool teams = profile.partnershipScoringRules.enabled;
+    return switch (difficulty) {
+      AiDifficulty.beginner => teams
+          ? PartnershipPolicy.beginner(seed: seed)
+          : HeuristicPolicy.beginner(seed: seed),
+      AiDifficulty.normal =>
+        teams ? PartnershipPolicy(seed: seed) : HeuristicPolicy(seed: seed),
+      AiDifficulty.hard ||
+      AiDifficulty.expert ||
+      AiDifficulty.legendary =>
+        MonteCarloPolicy(
+          seed: seed,
+          rolloutPolicy: teams
+              ? (int s) => PartnershipPolicy(seed: s)
+              : (int s) => HeuristicPolicy(seed: s),
+        ),
+    };
+  }
 }

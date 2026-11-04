@@ -34,6 +34,9 @@ final class SampledDeal {
 /// Consistency means every sampled deal satisfies, exactly:
 ///
 /// * the observer's own hand is unchanged,
+/// * a hand the observation may read -- acik esli Batak's open dummy -- is
+///   placed exactly as it is rather than sampled, which is the whole point of
+///   it being face up,
 /// * no sampled hand contains a card already played,
 /// * each seat receives exactly as many cards as it publicly holds,
 /// * no seat receives a suit it has proved it is void in,
@@ -67,7 +70,8 @@ final class HiddenHandSampler {
     final int players = observation.seating.playerCount;
     final List<int> capacity = List<int>.generate(
       players,
-      (int seat) => seat == observation.seat ? 0 : observation.handSizes[seat],
+      (int seat) =>
+          observation.seesHandOf(seat) ? 0 : observation.handSizes[seat],
       growable: false,
     );
     final int demand =
@@ -134,7 +138,9 @@ final class HiddenHandSampler {
     int buriedRemaining = buriedCount;
     final List<List<PlayingCard>> hands = List<List<PlayingCard>>.generate(
       observation.seating.playerCount,
-      (_) => <PlayingCard>[],
+      (int seat) => observation.seesHandOf(seat)
+          ? observation.openHandOf(seat).toList()
+          : <PlayingCard>[],
       growable: false,
     );
     final List<PlayingCard> buried = <PlayingCard>[];
@@ -169,7 +175,6 @@ final class HiddenHandSampler {
       }
     }
 
-    hands[observation.seat] = observation.hand.toList();
     return SampledDeal(hands: hands, buried: buried);
   }
 

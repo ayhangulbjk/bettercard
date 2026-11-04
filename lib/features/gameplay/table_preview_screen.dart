@@ -19,7 +19,6 @@ import 'widgets/placeholder_banner.dart';
 import 'widgets/seat_panel.dart';
 import 'widgets/table_layout.dart';
 import 'widgets/trick_area.dart';
-import 'widgets/trick_status_pill.dart';
 import 'widgets/trump_badge.dart';
 
 /// A static preview of the gameplay table.
@@ -78,7 +77,14 @@ final class TablePreviewScreen extends ConsumerWidget {
                   profile: profile,
                 ),
               ),
-              HandFan(cards: hand, legalCards: legal),
+              // Narrower cards for a long hand. Three-player Batak deals
+              // seventeen, which wraps the fan into a third row and used to
+              // push the preview past the bottom of the screen.
+              HandFan(
+                cards: hand,
+                legalCards: legal,
+                cardWidth: hand.length > 13 ? 56 : 72,
+              ),
               const SizedBox(height: AppSpacing.md),
             ],
           ),
@@ -114,13 +120,6 @@ class _TableBody extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Column(
         children: <Widget>[
-          TrickStatusPill(
-            progressLabel: strings.trickProgress(
-              state.trickNumber + 1,
-              profile.tricksPerHand,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
           Expanded(
             child: TableLayout(
               seatCount: players,

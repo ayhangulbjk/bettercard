@@ -57,6 +57,20 @@ class BiddingRules {
     forcedBid: 4,
   );
 
+  /// Esli Ihaleli Batak: bids run from 8 to 13.
+  ///
+  /// The floor is higher than Herkes Tek Ihaleli's five because the contract
+  /// is taken for a *team*: two hands are playing for it, so eight of
+  /// thirteen is where a table starts listening. A passed-out hand sticks the
+  /// seat that opened the auction with seven -- below the floor, as everywhere
+  /// else, because nobody chose it.
+  static const BiddingRules fourPlayerPartnership = BiddingRules(
+    minimumBid: 8,
+    maximumBid: 13,
+    passOutRule: PassOutRule.openerMustBid,
+    forcedBid: 7,
+  );
+
   /// Three-player buried Batak: 17 tricks are in play, so the bid range and
   /// the more-than-half threshold both shift.
   static const BiddingRules threePlayerBuried = BiddingRules(

@@ -13,6 +13,7 @@ import 'package:batak_king/core/cards/playing_card.dart';
 import 'package:batak_king/core/cards/suit.dart';
 import 'package:batak_king/core/game_engine/game_command.dart';
 import 'package:batak_king/core/game_engine/game_engine.dart';
+import 'package:batak_king/core/rules/auction_scoring_rules.dart';
 import 'package:batak_king/core/rules/rule_presets.dart';
 import 'package:batak_king/core/rules/rule_profile.dart';
 import 'package:batak_king/games/auction_batak/auction_batak_engine.dart';
@@ -32,8 +33,17 @@ void main() {
   group('contract hands hold their invariants', () {
     for (final RuleProfile profile in <RuleProfile>[
       RulePresets.auctionBatakStandard(),
-      RulePresets.auctionBatakGamyun(),
-      RulePresets.auctionBatakPerTrick(),
+      // The Gamyun and per-trick payoffs are no longer offered as presets --
+      // the product ships one Herkes Tek Ihaleli rule set -- but the payoff
+      // shapes still exist as settings, so the soak keeps covering them.
+      RulePresets.auctionBatakStandard().copyWith(
+        id: 'auction_batak_gamyun',
+        auctionScoringRules: AuctionScoringRules.gamyun,
+      ),
+      RulePresets.auctionBatakStandard().copyWith(
+        id: 'auction_batak_per_trick',
+        auctionScoringRules: AuctionScoringRules.perTrick,
+      ),
     ]) {
       test('${profile.id}: $_handsPerProfile hands', () {
         int contracts = 0;

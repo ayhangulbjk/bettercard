@@ -1,6 +1,6 @@
 import 'package:meta/meta.dart';
 
-import '../../core/rules/bidding_rules.dart';
+import '../../rules/bidding_rules.dart';
 
 /// One thing a seat said during the auction.
 @immutable
@@ -40,14 +40,21 @@ final class AuctionCall {
   String toString() => isPass ? 'Pass(seat: $seat)' : 'Bid($seat: $tricks)';
 }
 
-/// The open auction: one contract, raised until three seats have given up.
+/// The open auction: one contract, raised until one seat is left standing.
 ///
-/// This is where Herkes Tek Ihaleli Batak parts company with Koz Maca most
-/// sharply, and the reason it is a state machine of its own rather than a
-/// variation on the declaration round. There, four seats each make an
-/// independent promise and all four are paid against it. Here, four seats
-/// compete for **one** contract, only the winner is held to a number, and a
-/// pass is final.
+/// This is where the auction modes part company with Koz Maca most sharply,
+/// and the reason it is a state machine of its own rather than a variation on
+/// the declaration round. There, four seats each make an independent promise
+/// and all four are paid against it. Here, the seats compete for **one**
+/// contract, only the winner is held to a number, and a pass is final.
+///
+/// Shared by Herkes Tek Ihaleli and Esli Ihaleli rather than duplicated,
+/// because the bidding is the same shape in both: a seat raises or it is out.
+/// What differs is what winning the contract *means* -- one seat against
+/// three, or one side against the other -- and that belongs to each mode's
+/// own scorer. Partnerships deliberately change nothing here: an esli table
+/// lets a seat raise its own partner, so validity is a question of the
+/// standing bid and who has passed, never of which side a seat is on.
 ///
 /// The auction is derived from its call history rather than stored as a
 /// handful of flags, so a flag and the record can never disagree and the
@@ -151,18 +158,29 @@ final class AuctionState {
   /// Whether every seat passed without a single bid.
   bool get passedOut => standingBid == null && passedSeats.length == seatCount;
 
+  /// The seat a pass-out **would** stick the contract on, whether or not the
+  /// hand has actually passed out yet.
+  ///
+  /// Separate from [forcedSeat] because a bidding policy needs it before the
+  /// fact: the last seat with nothing on the table is choosing between a
+  /// contract of its own and a forced one, and which side the forced one
+  /// lands on is already decided by the rules and the deal.
+  int? get seatIfPassedOut => switch (rules.passOutRule) {
+        PassOutRule.redeal => null,
+        PassOutRule.dealerMustBid => dealerSeat,
+        PassOutRule.openerMustBid => openingSeat,
+      };
+
   /// The seat a passed-out hand is forced on, or null when the rule is to
   /// redeal.
-  int? get forcedSeat {
-    if (!passedOut) {
-      return null;
-    }
-    return switch (rules.passOutRule) {
-      PassOutRule.redeal => null,
-      PassOutRule.dealerMustBid => dealerSeat,
-      PassOutRule.openerMustBid => openingSeat,
-    };
-  }
+  int? get forcedSeat => passedOut ? seatIfPassedOut : null;
+
+  /// Whether a pass by the seat on turn would end the auction with no bid.
+  ///
+  /// True only for the last seat still in a silent auction, where it is a
+  /// certainty rather than a guess -- which is what makes it worth valuing.
+  bool get passWouldForceContract =>
+      standingBid == null && activeSeats.length <= 1;
 
   /// Whether this hand must be redealt: everyone passed at a table that does
   /// not force a contract.

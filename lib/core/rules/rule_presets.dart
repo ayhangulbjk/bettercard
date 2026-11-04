@@ -5,6 +5,8 @@ import 'bury_rules.dart';
 import 'declaration_rules.dart';
 import 'game_mode.dart';
 import 'king_rules.dart';
+import 'partnership_rules.dart';
+import 'partnership_scoring_rules.dart';
 import 'rule_profile.dart';
 import 'scoring_rules.dart';
 import 'trick_rules.dart';
@@ -38,43 +40,60 @@ abstract final class RulePresets {
         buryRules: BuryRules.disabled,
       );
 
-  /// The same game scored the Gamyun way: a made contract pays a premium and
-  /// a shut-out defender pays a flat fifty.
-  static RuleProfile auctionBatakGamyun() => const RuleProfile(
-        id: 'auction_batak_gamyun',
-        turkishName: 'Tek İhaleli Batak - Gamyun',
-        mode: GameMode.auctionBatak,
-        trickRules: TrickRules.batakStandard,
-        biddingRules: BiddingRules.fourPlayerStandard,
-        scoringRules: BatakScoringRules(roundCount: 9),
-        auctionScoringRules: AuctionScoringRules.gamyun,
-        buryRules: BuryRules.disabled,
-      );
-
-  /// El basina puan: the same game kept in tricks rather than points, with
-  /// no penalty for a defender that takes none.
-  static RuleProfile auctionBatakPerTrick() => const RuleProfile(
-        id: 'auction_batak_per_trick',
-        turkishName: 'Tek İhaleli Batak - El Başına',
-        mode: GameMode.auctionBatak,
-        trickRules: TrickRules.batakStandard,
-        biddingRules: BiddingRules.fourPlayerStandard,
-        scoringRules: BatakScoringRules(roundCount: 9),
-        auctionScoringRules: AuctionScoringRules.perTrick,
-        buryRules: BuryRules.disabled,
-      );
-
-  /// Eşli İhaleli Batak: same card play, partnership scoring.
-  static RuleProfile partnershipBatakStandard() => const RuleProfile(
-        id: 'partnership_batak_standard',
-        turkishName: 'Eşli İhaleli Batak - Standart',
+  /// Açık Eşli İhaleli Batak, the default esli profile.
+  ///
+  /// Two fixed partnerships sitting opposite, one contract taken for a team,
+  /// bids from 8 to 13 and a forced 7 if nobody wants the hand. Once the
+  /// trump is named the declarer's partner lays its thirteen cards face up
+  /// and the declarer plays both hands.
+  ///
+  /// Three things here are deliberately *not* Herkes Tek İhaleli's rules, and
+  /// each one would be wrong if carried across:
+  ///
+  /// * trump may be led from the first trick, because drawing trumps opposite
+  ///   an open hand is the plan rather than an exception;
+  /// * the defending side's floor is two tricks **between the partners**, not
+  ///   two each;
+  /// * extras never sink a made contract, and there is no "yan batma" for an
+  ///   individual seat.
+  ///
+  /// The match runs to 31 team points. `roundCount` is not the length but the
+  /// backstop: a match that stays exactly level at the target plays another
+  /// hand, and this is where that stops.
+  static RuleProfile partnershipBatakOpen() => const RuleProfile(
+        id: 'partnership_batak_open',
+        turkishName: 'Eşli İhaleli Batak - Açık Eş',
         mode: GameMode.partnershipBatak,
-        trickRules: TrickRules.batakStandard,
-        biddingRules: BiddingRules.fourPlayerStandard,
+        trickRules: TrickRules.partnershipBatak,
+        biddingRules: BiddingRules.fourPlayerPartnership,
         scoringRules: BatakScoringRules(
-          declarerSuccess: DeclarerSuccessScore.tricksTaken,
-          pointsPerTrickForOthers: 1,
+          endCondition: MatchEndCondition.targetScore,
+          targetScore: 31,
+          roundCount: 30,
         ),
+        partnershipRules: PartnershipRules.openDummy,
+        partnershipScoringRules: PartnershipScoringRules.classic,
+        buryRules: BuryRules.disabled,
+      );
+
+  /// Kapalı Eşli İhaleli Batak: the same game with four closed hands.
+  ///
+  /// Nobody's cards are shown, every seat plays its own, and the partners
+  /// cooperate on the auction, the cards already played and the voids those
+  /// prove. Same auction, same card rules, same payoff.
+  static RuleProfile partnershipBatakClosed() => const RuleProfile(
+        id: 'partnership_batak_closed',
+        turkishName: 'Eşli İhaleli Batak - Kapalı Eş',
+        mode: GameMode.partnershipBatak,
+        trickRules: TrickRules.partnershipBatak,
+        biddingRules: BiddingRules.fourPlayerPartnership,
+        scoringRules: BatakScoringRules(
+          endCondition: MatchEndCondition.targetScore,
+          targetScore: 31,
+          roundCount: 30,
+        ),
+        partnershipRules: PartnershipRules.closedPartnership,
+        partnershipScoringRules: PartnershipScoringRules.classic,
         buryRules: BuryRules.disabled,
       );
 
@@ -148,9 +167,8 @@ abstract final class RulePresets {
   /// Every preset, in menu order.
   static List<RuleProfile> all() => <RuleProfile>[
         auctionBatakStandard(),
-        auctionBatakGamyun(),
-        auctionBatakPerTrick(),
-        partnershipBatakStandard(),
+        partnershipBatakOpen(),
+        partnershipBatakClosed(),
         kozMacaStandard(),
         buriedBatakStandard(),
         kingClassic(),

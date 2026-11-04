@@ -1,6 +1,24 @@
 import '../../core/rules/auction_scoring_rules.dart';
 import '../../core/rules/bidding_rules.dart';
+import '../../core/rules/partnership_rules.dart';
+import '../../core/rules/rule_profile.dart';
 import '../../core/rules/rule_violation.dart';
+
+/// One heading of a how-to-play guide.
+///
+/// A record rather than two strings per question on the interface: the esli
+/// guide alone is over twenty headings, and forty-odd getters would be a
+/// worse interface than a list -- while still keeping every word of Turkish
+/// out of the widgets, which is the rule this is obeying.
+class RuleGuideEntry {
+  const RuleGuideEntry(this.question, this.answer);
+
+  /// `Acik esli oyun nedir?`
+  final String question;
+
+  /// The answer, worded for the rules actually in force.
+  final String answer;
+}
 
 /// The application's user-visible text, as an interface.
 ///
@@ -113,6 +131,90 @@ abstract interface class AppStrings {
   /// Status line while the contract winner is choosing a trump.
   String get gameplayWaitingForTrump;
 
+  // Gameplay - partnerships.
+
+  /// `SIZ` on the team scoreboard.
+  String get teamOursLabel;
+
+  /// `RAKIP` on the team scoreboard.
+  String get teamTheirsLabel;
+
+  /// `Ihale: Selin 9 (bizde)` -- who holds the contract, for how much, and
+  /// which side that is.
+  String teamContractLine(String name, int tricks, bool ours);
+
+  /// `Biz 7 - Onlar 3`.
+  String teamTrickSplit(int ours, int theirs);
+
+  /// `Kalan 3`.
+  String teamTricksLeft(int tricks);
+
+  /// Caption over the open hand when it is the player's partner's.
+  String dummyPartnerCaption(String name);
+
+  /// The same, while the player is choosing a card from it.
+  String dummyPartnerTurnCaption(String name);
+
+  /// Caption over the open hand when the open hand is the **player's** and a
+  /// bot is playing it.
+  String dummyYoursCaption(String name);
+
+  /// Status line while a bot declarer is playing the player's own cards.
+  String get gameplayYouAreDummy;
+
+  /// Status line while the player is choosing from the open hand opposite.
+  String get gameplayPlayingDummy;
+
+  /// `KING! 13 ihale, 13 el` on the hand summary.
+  String get handResultKing;
+
+  /// `13 yukari` / `13 asagi` on the hand summary.
+  String get handResultSweep;
+
+  // Game setup - partnerships.
+
+  /// Heading for the open-versus-closed choice.
+  String get setupPartnershipModeTitle;
+
+  /// One option of that choice.
+  String partnershipModeOption(PartnershipMode mode);
+
+  /// Explains what the choice above changes.
+  String get setupPartnershipModeHint;
+
+  /// Heading for the "play my own open hand" switch.
+  String get setupDummyControlTitle;
+
+  /// Explains that the switch departs from the classic rule.
+  String get setupDummyControlHint;
+
+  /// Heading for the target-score choice.
+  String get setupTargetScore;
+
+  /// `31 puan`.
+  String targetScoreOption(int points);
+
+  /// Heading for the defending side's trick floor.
+  String get setupDefenderFloorTitle;
+
+  /// `2 el`.
+  String defenderFloorOption(int tricks);
+
+  /// Explains what missing the floor costs.
+  String get setupDefenderFloorHint;
+
+  /// Heading for the KING and sweep switches.
+  String get setupSpecialResultsTitle;
+
+  /// Label for the KING switch.
+  String get setupKingLabel;
+
+  /// Label for the "KING ends the match" switch.
+  String get setupKingEndsMatchLabel;
+
+  /// Label for the 13 asagi / 13 yukari switch.
+  String get setupSweepLabel;
+
   // Gameplay.
   String get gameplayTrickLabel;
   String get gameplayYourTurn;
@@ -216,9 +318,6 @@ abstract interface class AppStrings {
   /// match seed instead; see `SeatNames`.
   String get seatSelf;
 
-  /// `El 3 / 13`.
-  String trickProgress(int current, int total);
-
   /// `Dagitim 3`, or `Dagitim 3 / 8` when the match has a fixed length.
   String handProgress(int current, int? total);
 
@@ -236,4 +335,15 @@ abstract interface class AppStrings {
 
   /// Sub-line of the resume card: `Koz Maca - Dagitim 3 - Puan 12`.
   String resumeSummary(String mode, int hand, int score);
+
+  /// Heading above a mode's how-to-play guide.
+  String get rulesHowToPlayTitle;
+
+  /// The how-to-play guide for Esli Ihaleli Batak.
+  ///
+  /// Takes the [profile] because the answers have to be true of the rules
+  /// actually selected: a guide that says "savunma en az 2 el almali" at a
+  /// table set to three is worse than no guide. Every number in it is read
+  /// off the profile rather than written into the sentence.
+  List<RuleGuideEntry> partnershipGuide(RuleProfile profile);
 }
